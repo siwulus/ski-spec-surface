@@ -4,14 +4,14 @@
 
 Ski Surface Spec Extension to aplikacja webowa stworzona dla zaawansowanych narciarzy skiturowych i freeride'owych, która uzupełnia standardowe specyfikacje nart o dwa kluczowe parametry: powierzchnię narty oraz wagę względną. Aplikacja umożliwia użytkownikom wprowadzanie danych technicznych nart, automatyczne wyliczanie brakujących parametrów oraz porównywanie różnych modeli nart na jednolitych zasadach.
 
-Aplikacja jest skierowana do doświadczonych narciarzy, którzy potrzebują precyzyjnych danych do świadomego wyboru sprzętu dopasowanego do warunków terenowych, stylu jazdy i indywidualnych preferencji. System wymaga rejestracji i logowania, co zapewnia każdemu użytkownikowi prywatną przestrzeń do zarządzania własnymi specyfikacjami nart.
+Aplikacja jest skierowana do doświadczonych narciarzy, którzy potrzebują precyzyjnych danych do świadomego wyboru sprzętu dopasowanego do warunków terenowych, stylu jazdy i indywidualnych preferencji. System wymaga rejestracji i logowania, co zapewnia każdemu użytkownikowi prywatną przestrzeń do zarządzania własnymi specyfikacjami nart. Każda specyfikacja może zawierać opcjonalny opis, umożliwiający użytkownikom dodanie dodatkowych informacji o modelu, takich jak producent, seria, przeznaczenie czy krótkie notatki.
 
 Kluczowe założenia:
 
 - Aplikacja webowa dostępna przez przeglądarkę
 - Dostęp tylko dla zalogowanych użytkowników
 - Każdy rozmiar narty traktowany jako oddzielny model
-- Wszystkie pola specyfikacji są obowiązkowe
+- Wszystkie pola specyfikacji technicznych (wymiary, waga) są obowiązkowe, opis specyfikacji jest opcjonalny
 - Algorytm obliczania powierzchni realizuje zdefiniowany interfejs i może być podmieniany od najprostszego wymaganego w PoC po bardziej zaawansowany oparty na krzywych w wersji MVP
 - Algorytm liczenia powierzchni "by design" zakłada estymację przybliżonej powierzchni. Porównywanie wyników dla różnych specyfikacji nart wykonane tym samym algorytmem jest wystarczające do realizacji przyjętych celów aplikacji
 - Szczegółowa specyfikacja algorytmu zostanie zdefiniowana w osobnym dokumencie technicznym
@@ -41,7 +41,9 @@ Obecnie narciarze muszą samodzielnie szacować te parametry lub polegać na sub
 - Edycja istniejących specyfikacji
 - Usuwanie specyfikacji
 - Przeglądanie listy zapisanych specyfikacji
-- Każda specyfikacja zawiera: nazwę, długość [cm], szerokość tip/waist/tail [mm], promień [m], wagę jednej narty [g]
+- Wyświetlanie widoku szczegółów specyfikacji z pełnymi parametrami i powiązanymi notatkami
+- Nawigacja z listy specyfikacji do widoku szczegółów wybranej specyfikacji
+- Każda specyfikacja zawiera: nazwę, opis (opcjonalny), długość [cm], szerokość tip/waist/tail [mm], promień [m], wagę jednej narty [g]
 
 ### 3.2 Obliczenia parametrów
 
@@ -57,8 +59,10 @@ Obecnie narciarze muszą samodzielnie szacować te parametry lub polegać na sub
 - Walidacja promienia [m]: 1 <= wartość <= 30
 - Walidacja wagi [g]: 500 <= wartość <= 3000
 - Walidacja długości [cm]: 100 <= wartość <= 250
+- Walidacja opisu: maksymalnie 2000 znaków (pole opcjonalne)
 - Blokada zapisu przy niepoprawnych danych
 - Wyświetlanie komunikatów o błędach
+- Walidacja notatki: maksymalnie 2000 znaków (pole opcjonalne)
 
 ### 3.4 Porównywanie specyfikacji
 
@@ -73,7 +77,9 @@ Obecnie narciarze muszą samodzielnie szacować te parametry lub polegać na sub
 
 - Import specyfikacji z pliku CSV
 - Eksport zapisanych specyfikacji do pliku CSV
+- Import/eksport uwzględnia opis specyfikacji o ile jest ona obecna
 - Walidacja importowanych danych
+- Poprawne escapowanie opisów w formacie CSV (obsługa znaków specjalnych, nowych linii)
 - Obsługa błędów podczas importu
 
 ### 3.6 System uwierzytelniania
@@ -91,15 +97,33 @@ Obecnie narciarze muszą samodzielnie szacować te parametry lub polegać na sub
 - Waga: g, tylko wartosci całkowite
 - Powierzchnia: cm², liczba ułamkowa z dwoma miejscami po przecinku
 - Waga względna: g/cm², liczba ułamkowa z dwoma miejscami po przecinku
+- Opis: tekst wielowierszowy, opcjonalny, maksimum 2000 znaków
 - Parser akceptujący zarówno kropkę jak i przecinek jako separator dziesiętny
 - Wewnętrzna standaryzacja na kropce
 - Wyświetlanie jednostek w interfejsie
+
+### 3.8 Zarządzanie notatkami
+
+- Dodawanie nowych notatek do specyfikacji narty
+- Edycja istniejących notatek
+- Usuwanie notatek
+- Przeglądanie listy notatek w widoku szczegółów specyfikacji
+- Jedna specyfikacja może mieć zero lub wiele notatek
+- Każda notatka zawiera: treść (tekst wielowierszowy), datę utworzenia, datę ostatniej edycji
+- Notatki są sortowane chronologicznie (najnowsze na górze)
+- System automatycznie zapisuje datę utworzenia przy dodawaniu notatki
+- System automatycznie aktualizuje datę ostatniej edycji przy zapisywaniu zmian
+- Notatki są usuwane automatycznie przy usunięciu specyfikacji
+- Wyświetlanie licznika notatek przy każdej specyfikacji na liście
+- Walidacja długości treści notatki (minimum 1 znak, maksimum 2000 znaków)
 
 ## 4. Granice produktu
 
 ### 4.1 Funkcjonalności wchodzące w zakres MVP
 
 - Pełny CRUD specyfikacji nart
+- Widok szczegółów specyfikacji
+- Pełny CRUD notatek powiązanych ze specyfikacjami
 - Obliczenia powierzchni i wagi względnej
 - Porównywanie do 4 modeli jednocześnie
 - Import/eksport CSV
@@ -109,9 +133,15 @@ Obecnie narciarze muszą samodzielnie szacować te parametry lub polegać na sub
 ### 4.2 Funkcjonalności poza zakresem MVP
 
 - Wyszukiwanie specyfikacji nart na podstawie opisu (producent/seria/model) z użyciem LLM
+- Wyszukiwanie pełnotekstowe w notatkach
+- Tagowanie notatek
+- Załączniki do notatek (zdjęcia, filmy)
+- Formatowanie tekstu w notatkach (markdown, rich text)
+- Kategorie notatek (test, obserwacja, serwis, itp.)
+- Eksport notatek do PDF
 - Rekomendacje modeli nart dostępnych na rynku
 - Porównywanie więcej niż 4 specyfikacji jednocześnie
-- Współdzielenie i publiczne udostępnianie specyfikacji
+- Współdzielenie i publiczne udostępnianie specyfikacji wraz z notatkami
 - Wizualizacja konturu narty
 - Onboarding i tryb demo
 - Tryb gościa (bez logowania)
@@ -127,11 +157,12 @@ Obecnie narciarze muszą samodzielnie szacować te parametry lub polegać na sub
 
 ### 4.4 Do doprecyzowania
 
-- Konkretne wartości min/max dla walidacji
+- Konkretne wartości min/max dla walidacji specyfikacji i notatek
 - Wybór dostawcy uwierzytelniania
-- Schemat pliku CSV
+- Schemat pliku CSV (czy uwzględniać notatki w eksporcie)
 - Polityka prywatności i RODO
 - Dokładne wartości KPI
+- Format daty w notatkach (lokalizacja)
 
 ## 5. Historyjki użytkowników
 
@@ -193,11 +224,15 @@ Obecnie narciarze muszą samodzielnie szacować te parametry lub polegać na sub
 - Opis: Jako użytkownik chcę dodać nową specyfikację narty, aby móc ją analizować i porównywać
 - Kryteria akceptacji:
   - Formularz zawiera wszystkie wymagane pola: nazwa, długość, tip/waist/tail, promień, waga
-  - System wyświetla jednostki przy każdym polu
+  - Formularz zawiera opcjonalne pole tekstowe wielowierszowe na opis specyfikacji
+  - Pole opisu umożliwia wprowadzenie maksymalnie 2000 znaków
+  - Wyświetlany jest licznik pozostałych znaków dla pola opisu
+  - System wyświetla jednostki przy każdym polu numerycznym
   - System akceptuje zarówno kropkę jak i przecinek jako separator dziesiętny
   - Walidacja sprawdza relację tip ≥ waist ≤ tail
   - Walidacja sprawdza czy promień > 0
   - Walidacja sprawdza zakresy min/max dla wszystkich pól
+  - Walidacja sprawdza maksymalną długość opisu (2000 znaków)
   - Po zapisie system automatycznie oblicza powierzchnię i wagę względną
   - Użytkownik otrzymuje potwierdzenie zapisania specyfikacji
 
@@ -205,10 +240,12 @@ Obecnie narciarze muszą samodzielnie szacować te parametry lub polegać na sub
 
 - ID: US-006
 - Tytuł: Edycja zapisanej specyfikacji
-- Opis: Jako użytkownik chcę edytować zapisaną specyfikację, aby poprawić błędne dane
+- Opis: Jako użytkownik chcę edytować zapisaną specyfikację, aby poprawić błędne dane lub zaktualizować opis
 - Kryteria akceptacji:
-  - Przycisk edycji jest dostępny przy każdej specyfikacji
-  - Formularz edycji wypełniony jest aktualnymi danymi
+  - Przycisk edycji jest dostępny przy każdej specyfikacji na liście oraz w widoku szczegółów
+  - Formularz edycji wypełniony jest aktualnymi danymi, włącznie z istniejącym opisem
+  - Użytkownik może edytować wszystkie pola, w tym opcjonalny opis
+  - Wyświetlany jest licznik pozostałych znaków dla pola opisu
   - Obowiązują te same reguły walidacji co przy dodawaniu
   - Po zapisie system przelicza powierzchnię i wagę względną
   - Użytkownik może anulować edycję bez zapisywania zmian
@@ -221,7 +258,7 @@ Obecnie narciarze muszą samodzielnie szacować te parametry lub polegać na sub
 - Kryteria akceptacji:
   - Przycisk usuwania jest dostępny przy każdej specyfikacji
   - System wyświetla potwierdzenie przed usunięciem
-  - Po potwierdzeniu specyfikacja jest trwale usunięta
+  - Po potwierdzeniu specyfikacja jest trwale usunięta wraz ze wszystkimi powiązanymi notatkami
   - Użytkownik otrzymuje komunikat o pomyślnym usunięciu
   - Nie można cofnąć operacji usunięcia
 
@@ -233,9 +270,11 @@ Obecnie narciarze muszą samodzielnie szacować te parametry lub polegać na sub
 - Kryteria akceptacji:
   - Lista wyświetla wszystkie zapisane specyfikacje użytkownika
   - Dla każdej specyfikacji widoczne są: nazwa, długość, szerokości, powierzchnia, waga względna
+  - Przy każdej specyfikacji wyświetlany jest licznik powiązanych notatek (np. "3 notatki")
   - Jednostki są wyświetlane przy wartościach
   - Lista jest czytelna i przejrzysta
-  - Dostępne są przyciski akcji: edycja, usuń, porównaj
+  - Dostępne są przyciski akcji: szczegóły, edycja, usuń, porównaj
+  - Kliknięcie w nazwę specyfikacji lub przycisk "szczegóły" prowadzi do widoku szczegółów
 
 ### 5.3 Obliczenia parametrów
 
@@ -300,10 +339,11 @@ Obecnie narciarze muszą samodzielnie szacować te parametry lub polegać na sub
 - Kryteria akceptacji:
   - Przycisk importu jest dostępny w interfejsie
   - System akceptuje pliki w formacie CSV
-  - System waliduje strukturę i dane w pliku
-  - Błędne rekordy są raportowane z numerem linii
-  - Poprawne rekordy są dodane do bazy użytkownika
-  - System wyświetla podsumowanie importu
+  - Plik CSV może zawierać kolumnę z opisem specyfikacji (opcjonalnie)
+  - System waliduje strukturę i dane w pliku, włącznie z długością opisu (max 2000 znaków)
+  - Błędne rekordy są raportowane z numerem linii i opisem błędu
+  - Poprawne rekordy są dodane do bazy użytkownika wraz z opisami
+  - System wyświetla podsumowanie importu (ile rekordów dodano, ile odrzucono)
 
 #### US-014: Eksport specyfikacji do CSV
 
@@ -314,8 +354,10 @@ Obecnie narciarze muszą samodzielnie szacować te parametry lub polegać na sub
   - Przycisk eksportu jest dostępny w interfejsie
   - System generuje plik CSV ze wszystkimi specyfikacjami użytkownika
   - Plik zawiera nagłówki kolumn z jednostkami
-  - Dane są poprawnie sformatowane
-  - Plik jest automatycznie pobierany
+  - Plik zawiera kolumnę z opisem specyfikacji (jeśli został wprowadzony)
+  - Opisy w CSV są poprawnie escapowane (cudzysłowy, przecinki, nowe linie)
+  - Dane są poprawnie sformatowane zgodnie ze standardem CSV
+  - Plik jest automatycznie pobierany z odpowiednią nazwą (np. ski-specs-YYYY-MM-DD.csv)
 
 ### 5.6 Obsługa błędów i przypadki brzegowe
 
@@ -353,6 +395,82 @@ Obecnie narciarze muszą samodzielnie szacować te parametry lub polegać na sub
   - Użytkownik ma możliwość ponowienia operacji
   - Dane w formularzach nie są tracone przy błędzie
 
+### 5.7 Zarządzanie notatkami i widok szczegółów
+
+#### US-018: Wyświetlanie widoku szczegółów specyfikacji
+
+- ID: US-018
+- Tytuł: Przeglądanie szczegółów specyfikacji narty
+- Opis: Jako użytkownik chcę zobaczyć szczegółowy widok wybranej specyfikacji wraz z opisem i wszystkimi powiązanymi notatkami, aby mieć pełny obraz danego modelu nart
+- Kryteria akceptacji:
+  - Widok szczegółów wyświetla wszystkie parametry specyfikacji: nazwę, opis, długość, szerokości, promień, wagę, powierzchnię, wagę względną
+  - Opis specyfikacji wyświetlany jest jako osobna sekcja, bezpośrednio pod nazwą lub głównymi parametrami
+  - Jeśli opis nie został wprowadzony, wyświetlany jest komunikat "Brak opisu" lub pole pozostaje puste
+  - Opis może być edytowany bezpośrednio w widoku szczegółów (edycja inline)
+  - Jednostki są wyświetlane przy wartościach numerycznych
+  - Poniżej parametrów wyświetlana jest sekcja z listą notatek
+  - Jeśli brak notatek, wyświetlany jest komunikat zachęcający do dodania pierwszej notatki
+  - Dostępny jest przycisk "Dodaj notatkę"
+  - Dostępny jest przycisk powrotu do listy specyfikacji
+  - Dostępne są przyciski edycji i usunięcia specyfikacji
+
+#### US-019: Dodawanie notatki do specyfikacji
+
+- ID: US-019
+- Tytuł: Dodawanie nowej notatki
+- Opis: Jako użytkownik chcę dodać notatkę do specyfikacji narty, aby zapisać swoje obserwacje i wrażenia z testów
+- Kryteria akceptacji:
+  - Przycisk "Dodaj notatkę" jest widoczny w widoku szczegółów specyfikacji
+  - Formularz zawiera pole tekstowe wielowierszowe na treść notatki
+  - Formularz waliduje minimalną długość (1 znak) i maksymalną długość (2000 znaków)
+  - Wyświetlany jest licznik pozostałych znaków
+  - System automatycznie zapisuje datę utworzenia notatki
+  - Po zapisaniu notatka pojawia się na liście notatek
+  - Użytkownik otrzymuje potwierdzenie dodania notatki
+  - Użytkownik może anulować dodawanie bez zapisywania
+
+#### US-020: Przeglądanie listy notatek
+
+- ID: US-020
+- Tytuł: Wyświetlanie notatek powiązanych ze specyfikacją
+- Opis: Jako użytkownik chcę przeglądać listę notatek dla danej specyfikacji, aby przypomnieć sobie wcześniejsze obserwacje
+- Kryteria akceptacji:
+  - Notatki wyświetlane są w widoku szczegółów specyfikacji
+  - Notatki są sortowane chronologicznie (najnowsze na górze)
+  - Każda notatka wyświetla: treść, datę utworzenia, datę ostatniej edycji (jeśli była edytowana)
+  - Format daty: DD.MM.YYYY HH:MM
+  - Jeśli notatka była edytowana, wyświetlana jest informacja "Edytowano: [data]"
+  - Przy każdej notatce dostępne są przyciski: edycja, usuń
+  - Lista notatek jest czytelna i przejrzysta
+
+#### US-021: Edycja notatki
+
+- ID: US-021
+- Tytuł: Edycja istniejącej notatki
+- Opis: Jako użytkownik chcę edytować zapisaną notatkę, aby zaktualizować lub poprawić jej treść
+- Kryteria akceptacji:
+  - Przycisk edycji jest dostępny przy każdej notatce
+  - Formularz edycji wypełniony jest aktualną treścią notatki
+  - Obowiązują te same reguły walidacji co przy dodawaniu
+  - Wyświetlany jest licznik pozostałych znaków
+  - System automatycznie aktualizuje datę ostatniej edycji
+  - Po zapisie notatka wyświetla zaktualizowaną treść i datę edycji
+  - Użytkownik może anulować edycję bez zapisywania zmian
+  - Użytkownik otrzymuje potwierdzenie zapisania zmian
+
+#### US-022: Usuwanie notatki
+
+- ID: US-022
+- Tytuł: Usuwanie notatki
+- Opis: Jako użytkownik chcę usunąć niepotrzebną notatkę, aby utrzymać porządek w dokumentacji
+- Kryteria akceptacji:
+  - Przycisk usuwania jest dostępny przy każdej notatce
+  - System wyświetla potwierdzenie przed usunięciem z fragmentem treści notatki
+  - Po potwierdzeniu notatka jest trwale usunięta
+  - Użytkownik otrzymuje komunikat o pomyślnym usunięciu
+  - Nie można cofnąć operacji usunięcia
+  - Licznik notatek przy specyfikacji jest automatycznie aktualizowany
+
 ## 6. Metryki sukcesu
 
 ### 6.1 Kluczowe wskaźniki wydajności (KPI)
@@ -368,7 +486,3 @@ Obecnie narciarze muszą samodzielnie szacować te parametry lub polegać na sub
 - Cel: średnio ≥3 porównane modele na sesję użytkownika
 - Pomiar: suma wszystkich porównań / liczba sesji z użyciem porównania
 - Okres pomiaru: miesięczny
-
-### 6.2 Cele do doprecyzowania
-
-- Dokładne wartości progowe dla walidacji danych
