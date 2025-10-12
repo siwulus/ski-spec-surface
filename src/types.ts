@@ -1,56 +1,71 @@
-import type { Database } from "./db/database.types";
-
-// =============================================================================
-// DATABASE ENTITY TYPES
-// =============================================================================
-
 /**
- * Ski specification entity from database
+ * DTO and Command Model Type Definitions
+ *
+ * This file contains all Data Transfer Object (DTO) types and Command Models
+ * used throughout the application's API layer. All types are derived from the
+ * database entity definitions in database.types.ts to ensure type safety and
+ * consistency between the database layer and API layer.
  */
-export type SkiSpecEntity = Database["public"]["Tables"]["ski_specs"]["Row"];
+
+import type { Tables } from "@/db/database.types";
+
+// ============================================================================
+// Base Entity Types (derived from database)
+// ============================================================================
 
 /**
- * Ski specification insert type for database operations
+ * Base ski specification entity from database
  */
-export type SkiSpecInsert = Database["public"]["Tables"]["ski_specs"]["Insert"];
+export type SkiSpecEntity = Tables<"ski_specs">;
 
 /**
- * Ski specification update type for database operations
+ * Base ski spec note entity from database
  */
-export type SkiSpecUpdate = Database["public"]["Tables"]["ski_specs"]["Update"];
+export type SkiSpecNoteEntity = Tables<"ski_spec_notes">;
+
+// ============================================================================
+// Ski Specification DTOs
+// ============================================================================
 
 /**
- * Note entity from database
- */
-export type NoteEntity = Database["public"]["Tables"]["ski_spec_notes"]["Row"];
-
-/**
- * Note insert type for database operations
- */
-export type NoteInsert = Database["public"]["Tables"]["ski_spec_notes"]["Insert"];
-
-/**
- * Note update type for database operations
- */
-export type NoteUpdate = Database["public"]["Tables"]["ski_spec_notes"]["Update"];
-
-// =============================================================================
-// SKI SPECIFICATION DTOs
-// =============================================================================
-
-/**
- * Complete ski specification DTO returned by API endpoints.
- * Extends database entity with additional computed field (notes_count).
+ * Complete ski specification DTO including notes count.
+ * Used in: List, Get, Create response, Update response
+ * Extends the base entity with aggregated data (notes_count)
  */
 export type SkiSpecDTO = SkiSpecEntity & {
   notes_count: number;
 };
 
 /**
- * Simplified ski specification DTO for comparison endpoint.
- * Omits user_id, timestamps, algorithm_version, and notes_count.
+ * Command model for creating a new ski specification.
+ * Used in: POST /api/ski-specs
+ *
+ * Contains only user-provided fields. Calculated fields (surface_area,
+ * relative_weight, algorithm_version) and auto-generated fields (id, user_id,
+ * timestamps) are excluded as they're set by the system.
  */
-export type SkiSpecCompareDTO = Pick<
+export type CreateSkiSpecCommand = Pick<
+  SkiSpecEntity,
+  "name" | "description" | "length" | "tip" | "waist" | "tail" | "radius" | "weight"
+>;
+
+/**
+ * Command model for updating an existing ski specification.
+ * Used in: PUT /api/ski-specs/{id}
+ *
+ * Has the same structure as CreateSkiSpecCommand. All fields are required
+ * to ensure complete specification data.
+ */
+export type UpdateSkiSpecCommand = CreateSkiSpecCommand;
+
+/**
+ * Simplified ski specification DTO for comparison view.
+ * Used in: GET /api/ski-specs/compare
+ *
+ * Excludes metadata fields (user_id, algorithm_version, notes_count, timestamps)
+ * to focus on the technical specifications being compared.
+ */
+export type SkiSpecComparisonDTO = Pick<
   SkiSpecEntity,
   | "id"
   | "name"
@@ -65,140 +80,41 @@ export type SkiSpecCompareDTO = Pick<
   | "relative_weight"
 >;
 
-/**
- * Query parameters for listing ski specifications
- */
-export interface SkiSpecListQueryParams {
-  page?: number;
-  limit?: number;
-  sort_by?: "name" | "length" | "surface_area" | "relative_weight" | "created_at";
-  sort_order?: "asc" | "desc";
-  search?: string;
-}
+// ============================================================================
+// Note DTOs
+// ============================================================================
 
 /**
- * Query parameters for comparing ski specifications
+ * Complete note DTO.
+ * Used in: List, Get, Create response, Update response
+ * Directly maps to the database entity as no additional data is needed.
  */
-export interface SkiSpecCompareQueryParams {
-  ids: string; // Comma-separated UUIDs (2-4 items)
-}
-
-/**
- * Query parameters for exporting ski specifications
- */
-export interface SkiSpecExportQueryParams {
-  format?: "csv";
-}
-
-// =============================================================================
-// SKI SPECIFICATION COMMAND MODELS
-// =============================================================================
-
-/**
- * Command model for creating a new ski specification.
- * Includes only user-provided fields. Calculated fields (surface_area, relative_weight, algorithm_version)
- * and system fields (id, user_id, timestamps) are omitted.
- */
-export type CreateSkiSpecCommand = Pick<
-  SkiSpecEntity,
-  "name" | "description" | "length" | "tip" | "waist" | "tail" | "radius" | "weight"
->;
-
-/**
- * Command model for updating a ski specification.
- * Same fields as CreateSkiSpecCommand - all user-editable fields are required.
- */
-export type UpdateSkiSpecCommand = CreateSkiSpecCommand;
-
-// =============================================================================
-// SKI SPECIFICATION IMPORT/EXPORT DTOs
-// =============================================================================
-
-/**
- * Summary statistics for import operation
- */
-export interface ImportSummary {
-  total_rows: number;
-  successful: number;
-  failed: number;
-  skipped: number;
-}
-
-/**
- * Successfully imported row information
- */
-export interface ImportedRow {
-  row: number;
-  name: string;
-  id: string;
-}
-
-/**
- * Failed row import information with validation errors
- */
-export interface ImportErrorRow {
-  row: number;
-  name: string;
-  errors: ValidationError[];
-}
-
-/**
- * Complete import result DTO
- */
-export interface ImportSkiSpecResultDTO {
-  summary: ImportSummary;
-  imported: ImportedRow[];
-  errors: ImportErrorRow[];
-}
-
-// =============================================================================
-// NOTE DTOs
-// =============================================================================
-
-/**
- * Note DTO returned by API endpoints.
- * Identical to database entity - no additional fields needed.
- */
-export type NoteDTO = NoteEntity;
-
-/**
- * Query parameters for listing notes
- */
-export interface NotesListQueryParams {
-  page?: number;
-  limit?: number;
-}
-
-// =============================================================================
-// NOTE COMMAND MODELS
-// =============================================================================
+export type NoteDTO = SkiSpecNoteEntity;
 
 /**
  * Command model for creating a new note.
- * Only includes content field - ski_spec_id comes from URL path parameter.
+ * Used in: POST /api/ski-specs/{specId}/notes
+ *
+ * Only requires content. The ski_spec_id comes from the URL path parameter,
+ * and other fields (id, timestamps) are auto-generated.
  */
-export type CreateNoteCommand = Pick<NoteEntity, "content">;
+export type CreateNoteCommand = Pick<SkiSpecNoteEntity, "content">;
 
 /**
- * Command model for updating a note.
- * Same as CreateNoteCommand - only content is editable.
+ * Command model for updating an existing note.
+ * Used in: PUT /api/ski-specs/{specId}/notes/{noteId}
+ *
+ * Same structure as CreateNoteCommand as only content can be modified.
  */
 export type UpdateNoteCommand = CreateNoteCommand;
 
-// =============================================================================
-// PAGINATION TYPES
-// =============================================================================
+// ============================================================================
+// Pagination Types
+// ============================================================================
 
 /**
- * Generic pagination query parameters
- */
-export interface PaginationParams {
-  page?: number;
-  limit?: number;
-}
-
-/**
- * Pagination metadata included in paginated responses
+ * Pagination metadata included in list responses.
+ * Used in all paginated list endpoints.
  */
 export interface PaginationMeta {
   page: number;
@@ -208,7 +124,8 @@ export interface PaginationMeta {
 }
 
 /**
- * Generic paginated response wrapper
+ * Generic paginated response wrapper.
+ * Used to wrap any list of items with pagination metadata.
  */
 export interface PaginatedResponse<T> {
   data: T[];
@@ -216,69 +133,132 @@ export interface PaginatedResponse<T> {
 }
 
 /**
- * Paginated list of ski specifications
+ * Paginated list of ski specifications.
+ * Used in: GET /api/ski-specs
  */
-export type PaginatedSkiSpecsResponse = PaginatedResponse<SkiSpecDTO>;
+export type SkiSpecListResponse = PaginatedResponse<SkiSpecDTO>;
 
 /**
- * Paginated list of notes
+ * Paginated list of notes.
+ * Used in: GET /api/ski-specs/{specId}/notes
  */
-export type PaginatedNotesResponse = PaginatedResponse<NoteDTO>;
+export type NoteListResponse = PaginatedResponse<NoteDTO>;
 
-// =============================================================================
-// COMPARISON RESPONSE TYPES
-// =============================================================================
+// ============================================================================
+// Query Parameter Types
+// ============================================================================
 
 /**
- * Response for ski specification comparison endpoint
+ * Query parameters for listing ski specifications.
+ * Used in: GET /api/ski-specs
  */
-export interface SkiSpecCompareResponse {
-  specifications: SkiSpecCompareDTO[];
+export interface ListSkiSpecsQuery {
+  page?: number;
+  limit?: number;
+  sort_by?: "name" | "length" | "surface_area" | "relative_weight" | "created_at";
+  sort_order?: "asc" | "desc";
+  search?: string;
 }
 
-// =============================================================================
-// ERROR RESPONSE TYPES
-// =============================================================================
+/**
+ * Query parameters for listing notes.
+ * Used in: GET /api/ski-specs/{specId}/notes
+ */
+export interface ListNotesQuery {
+  page?: number;
+  limit?: number;
+}
 
 /**
- * Field-specific validation error
+ * Query parameters for comparing ski specifications.
+ * Used in: GET /api/ski-specs/compare
  */
-export interface ValidationError {
+export interface CompareSkiSpecsQuery {
+  ids: string; // Comma-separated UUIDs (2-4 items)
+}
+
+/**
+ * Response for ski specification comparison.
+ * Used in: GET /api/ski-specs/compare
+ */
+export interface CompareSkiSpecsResponse {
+  specifications: SkiSpecComparisonDTO[];
+}
+
+// ============================================================================
+// Import/Export Types
+// ============================================================================
+
+/**
+ * Summary of import operation results.
+ * Used in: POST /api/ski-specs/import
+ */
+export interface ImportSummary {
+  total_rows: number;
+  successful: number;
+  failed: number;
+  skipped: number;
+}
+
+/**
+ * Details of a successfully imported ski specification.
+ * Used in: POST /api/ski-specs/import
+ */
+export interface ImportedItem {
+  row: number;
+  name: string;
+  id: string;
+}
+
+/**
+ * Field-level validation error in import.
+ * Used in: POST /api/ski-specs/import
+ */
+export interface ImportErrorDetail {
   field: string;
   message: string;
 }
 
 /**
- * Error codes used throughout the API
+ * Details of a failed import row.
+ * Used in: POST /api/ski-specs/import
  */
-export type ErrorCode =
-  | "VALIDATION_ERROR"
-  | "NOT_FOUND"
-  | "UNAUTHORIZED"
-  | "FORBIDDEN"
-  | "CONFLICT"
-  | "RATE_LIMIT_EXCEEDED"
-  | "INTERNAL_ERROR";
-
-/**
- * Standard error response format
- */
-export interface ErrorResponse {
-  error: string;
-  code: ErrorCode;
-  details?: ValidationError[];
-  timestamp: string;
+export interface ImportError {
+  row: number;
+  name: string;
+  errors: ImportErrorDetail[];
 }
 
-// =============================================================================
-// HEALTH CHECK TYPES
-// =============================================================================
+/**
+ * Complete response for import operation.
+ * Used in: POST /api/ski-specs/import
+ */
+export interface ImportResponse {
+  summary: ImportSummary;
+  imported: ImportedItem[];
+  errors: ImportError[];
+}
+
+// ============================================================================
+// Error Response Types
+// ============================================================================
 
 /**
- * Health check response
+ * Field-level validation error detail.
+ * Used in validation error responses.
  */
-export interface HealthResponse {
-  status: "healthy" | "unhealthy";
-  timestamp: string;
-  version: string;
+export interface ValidationErrorDetail {
+  field: string;
+  message: string;
+}
+
+/**
+ * Standard API error response format.
+ * Used for all error responses across the API.
+ */
+export interface ApiErrorResponse {
+  error: string;
+  code?: string;
+  details?: ValidationErrorDetail[];
+  timestamp?: string;
 }
