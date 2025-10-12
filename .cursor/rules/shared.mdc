@@ -3,9 +3,9 @@ description:
 globs: 
 alwaysApply: true
 ---
-# AI Rules for {app-name}
+# AI Rules for Ski Surface Spec Extension
 
-{project-description}
+Ski Surface Spec Extension is a web application created for advanced ski touring and freeride skiers, which supplements standard ski specifications with two key parameters: ski surface area and relative weight. The application enables users to input technical ski data, automatically calculate missing parameters, and compare different ski models on uniform principles.
 
 ## Tech Stack
 
