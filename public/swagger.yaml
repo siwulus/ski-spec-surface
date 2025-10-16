@@ -1,0 +1,1296 @@
+openapi: 3.0.3
+info:
+  title: Ski Surface Spec Extension API
+  description: |
+    REST API for the Ski Surface Spec Extension application. This API enables advanced ski touring 
+    and freeride skiers to manage ski specifications with automatic calculation of surface area 
+    and relative weight metrics.
+    
+    ## Features
+    - Create, read, update, and delete ski specifications
+    - Automatic calculation of surface area and relative weight
+    - Compare multiple ski specifications
+    - Add notes to ski specifications
+    - Import/export ski data in CSV format
+    
+    ## Authentication
+    All endpoints (except health check) require Bearer token authentication using Supabase JWT tokens.
+  version: 1.0.0
+  contact:
+    name: API Support
+    email: support@skispec.example.com
+
+servers:
+  - url: http://localhost:3000
+    description: Local development server
+  - url: https://api.skispec.example.com
+    description: Production server
+
+tags:
+  - name: Ski Specifications
+    description: Operations for managing ski specifications
+  - name: Notes
+    description: Operations for managing notes on ski specifications
+  - name: Health
+    description: API health and status endpoints
+
+security:
+  - BearerAuth: []
+
+paths:
+  /api/health:
+    get:
+      tags:
+        - Health
+      summary: Health check
+      description: Returns API health status. No authentication required.
+      operationId: getHealth
+      security: []
+      responses:
+        '200':
+          description: API is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: healthy
+                  timestamp:
+                    type: string
+                    format: date-time
+                    example: '2025-01-20T10:30:00Z'
+                  version:
+                    type: string
+                    example: '1.0.0'
+
+  /api/ski-specs:
+    get:
+      tags:
+        - Ski Specifications
+      summary: List ski specifications
+      description: Lists all ski specifications for the authenticated user with pagination and optional filtering.
+      operationId: listSkiSpecs
+      parameters:
+        - name: page
+          in: query
+          description: Page number (1-indexed)
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: limit
+          in: query
+          description: Items per page
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: sort_by
+          in: query
+          description: Field to sort by
+          schema:
+            type: string
+            enum:
+              - name
+              - length
+              - surface_area
+              - relative_weight
+              - created_at
+            default: created_at
+        - name: sort_order
+          in: query
+          description: Sort order
+          schema:
+            type: string
+            enum:
+              - asc
+              - desc
+            default: desc
+        - name: search
+          in: query
+          description: Search in name and description fields
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SkiSpecListResponse'
+        '400':
+          description: Invalid query parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+    post:
+      tags:
+        - Ski Specifications
+      summary: Create ski specification
+      description: |
+        Creates a new ski specification. The system automatically calculates surface_area 
+        and relative_weight based on provided dimensions.
+      operationId: createSkiSpec
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateSkiSpecCommand'
+            example:
+              name: Atomic Backland 107
+              description: All-mountain freeride ski for powder and mixed conditions
+              length: 181
+              tip: 142
+              waist: 107
+              tail: 123
+              radius: 18
+              weight: 1580
+      responses:
+        '201':
+          description: Ski specification created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SkiSpecDTO'
+        '400':
+          description: Validation errors
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+              example:
+                error: Validation failed
+                code: VALIDATION_ERROR
+                details:
+                  - field: tip
+                    message: Tip width must be between 50 and 250 mm
+                  - field: waist
+                    message: Waist must be less than or equal to tip and tail
+                timestamp: '2025-01-15T10:30:00Z'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '409':
+          description: Specification name already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+              example:
+                error: A specification with this name already exists
+                code: CONFLICT
+        '422':
+          description: Business rule violations
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+
+  /api/ski-specs/{id}:
+    get:
+      tags:
+        - Ski Specifications
+      summary: Get ski specification details
+      description: Retrieves detailed information about a specific ski specification including notes count.
+      operationId: getSkiSpec
+      parameters:
+        - $ref: '#/components/parameters/SkiSpecId'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SkiSpecDTO'
+        '400':
+          description: Invalid UUID format
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          description: Ski specification not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+
+    put:
+      tags:
+        - Ski Specifications
+      summary: Update ski specification
+      description: |
+        Updates an existing ski specification. Recalculates surface_area and relative_weight 
+        if dimensional values change.
+      operationId: updateSkiSpec
+      parameters:
+        - $ref: '#/components/parameters/SkiSpecId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateSkiSpecCommand'
+            example:
+              name: Atomic Backland 107 (181cm)
+              description: Updated description with test notes
+              length: 181
+              tip: 142
+              waist: 107
+              tail: 123
+              radius: 18
+              weight: 1580
+      responses:
+        '200':
+          description: Ski specification updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SkiSpecDTO'
+        '400':
+          description: Validation errors
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          description: Ski specification not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+        '409':
+          description: New name already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+        '422':
+          description: Business rule violations
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+
+    delete:
+      tags:
+        - Ski Specifications
+      summary: Delete ski specification
+      description: Deletes a ski specification and all associated notes (cascade delete).
+      operationId: deleteSkiSpec
+      parameters:
+        - $ref: '#/components/parameters/SkiSpecId'
+      responses:
+        '204':
+          description: Ski specification deleted successfully
+        '400':
+          description: Invalid UUID format
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          description: Ski specification not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+
+  /api/ski-specs/compare:
+    get:
+      tags:
+        - Ski Specifications
+      summary: Compare ski specifications
+      description: |
+        Compares 2-4 ski specifications owned by the authenticated user. 
+        Returns full specifications with calculated differences.
+      operationId: compareSkiSpecs
+      parameters:
+        - name: ids
+          in: query
+          required: true
+          description: Comma-separated UUIDs (2-4 items)
+          schema:
+            type: string
+          example: '550e8400-e29b-41d4-a716-446655440000,6ba7b810-9dad-11d1-80b4-00c04fd430c8'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompareSkiSpecsResponse'
+        '400':
+          description: Invalid query parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+              example:
+                error: Comparison requires between 2 and 4 specifications
+                code: VALIDATION_ERROR
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          description: One or more specifications not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+
+  /api/ski-specs/export:
+    get:
+      tags:
+        - Ski Specifications
+      summary: Export ski specifications
+      description: Exports all ski specifications for the authenticated user to CSV format.
+      operationId: exportSkiSpecs
+      parameters:
+        - name: format
+          in: query
+          description: Export format
+          schema:
+            type: string
+            enum:
+              - csv
+            default: csv
+      responses:
+        '200':
+          description: CSV file with ski specifications
+          content:
+            text/csv:
+              schema:
+                type: string
+                format: binary
+              example: |
+                name,description,length_cm,tip_mm,waist_mm,tail_mm,radius_m,weight_g,surface_area_cm2,relative_weight_g_cm2
+                "Atomic Backland 107","All-mountain freeride ski for powder",181,142,107,123,18,1580,2340.50,0.675
+          headers:
+            Content-Disposition:
+              schema:
+                type: string
+              description: Attachment filename
+              example: 'attachment; filename="ski-specs-2025-01-20.csv"'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  /api/ski-specs/import:
+    post:
+      tags:
+        - Ski Specifications
+      summary: Import ski specifications
+      description: |
+        Imports ski specifications from CSV file. Validates all entries and provides 
+        detailed import summary. Supports partial success - valid rows are imported 
+        even if some rows fail.
+      operationId: importSkiSpecs
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - file
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: CSV file with ski specifications
+            encoding:
+              file:
+                contentType: text/csv, application/vnd.ms-excel
+      responses:
+        '200':
+          description: Import completed with summary
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImportResponse'
+        '400':
+          description: Invalid file format or missing file
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '413':
+          description: File size exceeds limit
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+        '415':
+          description: File is not CSV
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+
+  /api/ski-specs/{specId}/notes:
+    get:
+      tags:
+        - Notes
+      summary: List notes for specification
+      description: Lists all notes for a specific ski specification, sorted chronologically (newest first).
+      operationId: listNotes
+      parameters:
+        - $ref: '#/components/parameters/SpecId'
+        - name: page
+          in: query
+          description: Page number (1-indexed)
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: limit
+          in: query
+          description: Items per page
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 50
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NoteListResponse'
+        '400':
+          description: Invalid UUID format or query parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          description: Ski specification not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+
+    post:
+      tags:
+        - Notes
+      summary: Create note
+      description: Creates a new note for a ski specification.
+      operationId: createNote
+      parameters:
+        - $ref: '#/components/parameters/SpecId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateNoteCommand'
+            example:
+              content: Tested in deep powder at Chamonix. Excellent float and maneuverability.
+      responses:
+        '201':
+          description: Note created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NoteDTO'
+        '400':
+          description: Validation errors
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          description: Ski specification not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+
+  /api/ski-specs/{specId}/notes/{noteId}:
+    get:
+      tags:
+        - Notes
+      summary: Get note details
+      description: Retrieves a specific note.
+      operationId: getNote
+      parameters:
+        - $ref: '#/components/parameters/SpecId'
+        - $ref: '#/components/parameters/NoteId'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NoteDTO'
+        '400':
+          description: Invalid UUID format
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          description: Note or specification not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+
+    put:
+      tags:
+        - Notes
+      summary: Update note
+      description: Updates an existing note. Automatically updates the updated_at timestamp.
+      operationId: updateNote
+      parameters:
+        - $ref: '#/components/parameters/SpecId'
+        - $ref: '#/components/parameters/NoteId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateNoteCommand'
+            example:
+              content: Updated content with additional observations from the test session.
+      responses:
+        '200':
+          description: Note updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NoteDTO'
+        '400':
+          description: Validation errors
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          description: Note or specification not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+
+    delete:
+      tags:
+        - Notes
+      summary: Delete note
+      description: Deletes a note.
+      operationId: deleteNote
+      parameters:
+        - $ref: '#/components/parameters/SpecId'
+        - $ref: '#/components/parameters/NoteId'
+      responses:
+        '204':
+          description: Note deleted successfully
+        '400':
+          description: Invalid UUID format
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          description: Note or specification not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Supabase JWT authentication token
+
+  parameters:
+    SkiSpecId:
+      name: id
+      in: path
+      required: true
+      description: UUID of the ski specification
+      schema:
+        type: string
+        format: uuid
+      example: '550e8400-e29b-41d4-a716-446655440000'
+
+    SpecId:
+      name: specId
+      in: path
+      required: true
+      description: UUID of the ski specification
+      schema:
+        type: string
+        format: uuid
+      example: '550e8400-e29b-41d4-a716-446655440000'
+
+    NoteId:
+      name: noteId
+      in: path
+      required: true
+      description: UUID of the note
+      schema:
+        type: string
+        format: uuid
+      example: '6ba7b810-9dad-11d1-80b4-00c04fd430c8'
+
+  responses:
+    UnauthorizedError:
+      description: Missing or invalid authentication token
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiErrorResponse'
+          example:
+            error: Authentication required
+            code: UNAUTHORIZED
+            timestamp: '2025-01-15T10:30:00Z'
+
+  schemas:
+    SkiSpecDTO:
+      type: object
+      description: Complete ski specification with calculated metrics and notes count
+      required:
+        - id
+        - user_id
+        - name
+        - length
+        - tip
+        - waist
+        - tail
+        - radius
+        - weight
+        - surface_area
+        - relative_weight
+        - algorithm_version
+        - notes_count
+        - created_at
+        - updated_at
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique identifier
+        user_id:
+          type: string
+          format: uuid
+          description: Owner's user ID
+        name:
+          type: string
+          minLength: 1
+          maxLength: 255
+          description: Ski model name
+          example: Atomic Backland 107
+        description:
+          type: string
+          maxLength: 2000
+          nullable: true
+          description: Optional description
+          example: All-mountain freeride ski for powder and mixed conditions
+        length:
+          type: integer
+          minimum: 100
+          maximum: 250
+          description: Ski length in centimeters
+          example: 181
+        tip:
+          type: integer
+          minimum: 50
+          maximum: 250
+          description: Tip width in millimeters
+          example: 142
+        waist:
+          type: integer
+          minimum: 50
+          maximum: 250
+          description: Waist width in millimeters
+          example: 107
+        tail:
+          type: integer
+          minimum: 50
+          maximum: 250
+          description: Tail width in millimeters
+          example: 123
+        radius:
+          type: integer
+          minimum: 1
+          maximum: 30
+          description: Turn radius in meters
+          example: 18
+        weight:
+          type: integer
+          minimum: 500
+          maximum: 3000
+          description: Weight in grams (per ski)
+          example: 1580
+        surface_area:
+          type: number
+          format: double
+          minimum: 0
+          exclusiveMinimum: true
+          description: Calculated surface area in cm²
+          example: 2340.50
+        relative_weight:
+          type: number
+          format: double
+          minimum: 0
+          exclusiveMinimum: true
+          description: Calculated relative weight (g/cm²)
+          example: 0.675
+        algorithm_version:
+          type: string
+          minLength: 1
+          description: Version of calculation algorithm used
+          example: '1.0.0'
+        notes_count:
+          type: integer
+          minimum: 0
+          description: Number of notes attached to this specification
+          example: 3
+        created_at:
+          type: string
+          format: date-time
+          description: Creation timestamp
+          example: '2025-01-15T10:30:00Z'
+        updated_at:
+          type: string
+          format: date-time
+          description: Last update timestamp
+          example: '2025-01-15T10:30:00Z'
+
+    CreateSkiSpecCommand:
+      type: object
+      description: Data required to create a new ski specification
+      required:
+        - name
+        - length
+        - tip
+        - waist
+        - tail
+        - radius
+        - weight
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 255
+          description: Ski model name (must be unique per user)
+          example: Atomic Backland 107
+        description:
+          type: string
+          maxLength: 2000
+          nullable: true
+          description: Optional description
+          example: All-mountain freeride ski for powder and mixed conditions
+        length:
+          type: integer
+          minimum: 100
+          maximum: 250
+          description: Ski length in centimeters
+          example: 181
+        tip:
+          type: integer
+          minimum: 50
+          maximum: 250
+          description: Tip width in millimeters (must be >= waist)
+          example: 142
+        waist:
+          type: integer
+          minimum: 50
+          maximum: 250
+          description: Waist width in millimeters (must be <= tip and tail)
+          example: 107
+        tail:
+          type: integer
+          minimum: 50
+          maximum: 250
+          description: Tail width in millimeters (must be >= waist)
+          example: 123
+        radius:
+          type: integer
+          minimum: 1
+          maximum: 30
+          description: Turn radius in meters
+          example: 18
+        weight:
+          type: integer
+          minimum: 500
+          maximum: 3000
+          description: Weight in grams (per ski)
+          example: 1580
+
+    UpdateSkiSpecCommand:
+      type: object
+      description: Data required to update an existing ski specification
+      required:
+        - name
+        - length
+        - tip
+        - waist
+        - tail
+        - radius
+        - weight
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 255
+          description: Ski model name (must be unique per user)
+          example: Atomic Backland 107 (181cm)
+        description:
+          type: string
+          maxLength: 2000
+          nullable: true
+          description: Optional description
+          example: Updated description with test notes
+        length:
+          type: integer
+          minimum: 100
+          maximum: 250
+          description: Ski length in centimeters
+          example: 181
+        tip:
+          type: integer
+          minimum: 50
+          maximum: 250
+          description: Tip width in millimeters (must be >= waist)
+          example: 142
+        waist:
+          type: integer
+          minimum: 50
+          maximum: 250
+          description: Waist width in millimeters (must be <= tip and tail)
+          example: 107
+        tail:
+          type: integer
+          minimum: 50
+          maximum: 250
+          description: Tail width in millimeters (must be >= waist)
+          example: 123
+        radius:
+          type: integer
+          minimum: 1
+          maximum: 30
+          description: Turn radius in meters
+          example: 18
+        weight:
+          type: integer
+          minimum: 500
+          maximum: 3000
+          description: Weight in grams (per ski)
+          example: 1580
+
+    SkiSpecComparisonDTO:
+      type: object
+      description: Simplified ski specification for comparison view
+      required:
+        - id
+        - name
+        - length
+        - tip
+        - waist
+        - tail
+        - radius
+        - weight
+        - surface_area
+        - relative_weight
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique identifier
+        name:
+          type: string
+          minLength: 1
+          maxLength: 255
+          description: Ski model name
+          example: Atomic Backland 107
+        description:
+          type: string
+          maxLength: 2000
+          nullable: true
+          description: Optional description
+          example: All-mountain freeride ski
+        length:
+          type: integer
+          minimum: 100
+          maximum: 250
+          description: Ski length in centimeters
+          example: 181
+        tip:
+          type: integer
+          minimum: 50
+          maximum: 250
+          description: Tip width in millimeters
+          example: 142
+        waist:
+          type: integer
+          minimum: 50
+          maximum: 250
+          description: Waist width in millimeters
+          example: 107
+        tail:
+          type: integer
+          minimum: 50
+          maximum: 250
+          description: Tail width in millimeters
+          example: 123
+        radius:
+          type: integer
+          minimum: 1
+          maximum: 30
+          description: Turn radius in meters
+          example: 18
+        weight:
+          type: integer
+          minimum: 500
+          maximum: 3000
+          description: Weight in grams (per ski)
+          example: 1580
+        surface_area:
+          type: number
+          format: double
+          minimum: 0
+          exclusiveMinimum: true
+          description: Calculated surface area in cm²
+          example: 2340.50
+        relative_weight:
+          type: number
+          format: double
+          minimum: 0
+          exclusiveMinimum: true
+          description: Calculated relative weight (g/cm²)
+          example: 0.675
+
+    NoteDTO:
+      type: object
+      description: Complete note data
+      required:
+        - id
+        - ski_spec_id
+        - content
+        - created_at
+        - updated_at
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique identifier
+        ski_spec_id:
+          type: string
+          format: uuid
+          description: ID of the parent ski specification
+        content:
+          type: string
+          minLength: 1
+          maxLength: 2000
+          description: Note content
+          example: Tested in deep powder at Chamonix. Excellent float and maneuverability.
+        created_at:
+          type: string
+          format: date-time
+          description: Creation timestamp
+          example: '2025-01-20T14:30:00Z'
+        updated_at:
+          type: string
+          format: date-time
+          description: Last update timestamp
+          example: '2025-01-20T14:30:00Z'
+
+    CreateNoteCommand:
+      type: object
+      description: Data required to create a new note
+      required:
+        - content
+      properties:
+        content:
+          type: string
+          minLength: 1
+          maxLength: 2000
+          description: Note content
+          example: Tested in deep powder at Chamonix. Excellent float and maneuverability.
+
+    UpdateNoteCommand:
+      type: object
+      description: Data required to update an existing note
+      required:
+        - content
+      properties:
+        content:
+          type: string
+          minLength: 1
+          maxLength: 2000
+          description: Note content
+          example: Updated content with additional observations from the test session.
+
+    PaginationMeta:
+      type: object
+      description: Pagination metadata
+      required:
+        - page
+        - limit
+        - total
+        - total_pages
+      properties:
+        page:
+          type: integer
+          minimum: 1
+          description: Current page number (1-indexed)
+          example: 1
+        limit:
+          type: integer
+          minimum: 1
+          maximum: 100
+          description: Items per page
+          example: 20
+        total:
+          type: integer
+          minimum: 0
+          description: Total number of items
+          example: 45
+        total_pages:
+          type: integer
+          minimum: 0
+          description: Total number of pages
+          example: 3
+
+    SkiSpecListResponse:
+      type: object
+      description: Paginated list of ski specifications
+      required:
+        - data
+        - pagination
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/SkiSpecDTO'
+        pagination:
+          $ref: '#/components/schemas/PaginationMeta'
+
+    NoteListResponse:
+      type: object
+      description: Paginated list of notes
+      required:
+        - data
+        - pagination
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/NoteDTO'
+        pagination:
+          $ref: '#/components/schemas/PaginationMeta'
+
+    CompareSkiSpecsResponse:
+      type: object
+      description: Response containing 2-4 ski specifications for comparison
+      required:
+        - specifications
+      properties:
+        specifications:
+          type: array
+          minItems: 2
+          maxItems: 4
+          items:
+            $ref: '#/components/schemas/SkiSpecComparisonDTO'
+          description: Array of ski specifications to compare
+
+    ImportSummary:
+      type: object
+      description: Summary of import operation results
+      required:
+        - total_rows
+        - successful
+        - failed
+        - skipped
+      properties:
+        total_rows:
+          type: integer
+          minimum: 0
+          description: Total number of rows in the CSV file
+          example: 10
+        successful:
+          type: integer
+          minimum: 0
+          description: Number of successfully imported rows
+          example: 8
+        failed:
+          type: integer
+          minimum: 0
+          description: Number of failed rows
+          example: 2
+        skipped:
+          type: integer
+          minimum: 0
+          description: Number of skipped rows
+          example: 0
+
+    ImportedItem:
+      type: object
+      description: Details of a successfully imported ski specification
+      required:
+        - row
+        - name
+        - id
+      properties:
+        row:
+          type: integer
+          minimum: 1
+          description: Row number in the CSV file
+          example: 2
+        name:
+          type: string
+          minLength: 1
+          maxLength: 255
+          description: Name of the imported ski specification
+          example: Atomic Backland 107
+        id:
+          type: string
+          format: uuid
+          description: ID of the newly created specification
+
+    ImportErrorDetail:
+      type: object
+      description: Field-level validation error in import
+      required:
+        - field
+        - message
+      properties:
+        field:
+          type: string
+          minLength: 1
+          description: Name of the field with error
+          example: waist
+        message:
+          type: string
+          minLength: 1
+          description: Error message
+          example: Waist must be less than or equal to tip and tail
+
+    ImportError:
+      type: object
+      description: Details of a failed import row
+      required:
+        - row
+        - name
+        - errors
+      properties:
+        row:
+          type: integer
+          minimum: 1
+          description: Row number in the CSV file
+          example: 5
+        name:
+          type: string
+          minLength: 1
+          description: Name from the failed row
+          example: Invalid Ski
+        errors:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/ImportErrorDetail'
+          description: List of validation errors for this row
+
+    ImportResponse:
+      type: object
+      description: Complete response for import operation
+      required:
+        - summary
+        - imported
+        - errors
+      properties:
+        summary:
+          $ref: '#/components/schemas/ImportSummary'
+        imported:
+          type: array
+          items:
+            $ref: '#/components/schemas/ImportedItem'
+          description: List of successfully imported items
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/ImportError'
+          description: List of failed rows with detailed errors
+
+    ValidationErrorDetail:
+      type: object
+      description: Field-level validation error detail
+      required:
+        - field
+        - message
+      properties:
+        field:
+          type: string
+          minLength: 1
+          description: Name of the field with error
+          example: tip
+        message:
+          type: string
+          minLength: 1
+          description: Error message
+          example: Tip width must be between 50 and 250 mm
+
+    ApiErrorResponse:
+      type: object
+      description: Standard API error response format
+      required:
+        - error
+      properties:
+        error:
+          type: string
+          minLength: 1
+          description: Human-readable error message
+          example: Validation failed
+        code:
+          type: string
+          description: Machine-readable error code
+          example: VALIDATION_ERROR
+          enum:
+            - VALIDATION_ERROR
+            - NOT_FOUND
+            - UNAUTHORIZED
+            - FORBIDDEN
+            - CONFLICT
+            - RATE_LIMIT_EXCEEDED
+            - INTERNAL_ERROR
+        details:
+          type: array
+          items:
+            $ref: '#/components/schemas/ValidationErrorDetail'
+          description: Field-level error details (for validation errors)
+        timestamp:
+          type: string
+          format: date-time
+          description: Timestamp when the error occurred
+          example: '2025-01-20T10:30:00Z'
+

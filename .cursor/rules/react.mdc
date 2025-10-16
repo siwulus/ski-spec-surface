@@ -15,3 +15,4 @@ alwaysApply: false
 - Implement useId() for generating unique IDs for accessibility attributes
 - Consider using the new useOptimistic hook for optimistic UI updates in forms
 - Use useTransition for non-urgent state updates to keep the UI responsive
+- Implement components as `const ComponentName: React.FC<Props> = (props) => {}` arrow functions for consistency and improved type safety
