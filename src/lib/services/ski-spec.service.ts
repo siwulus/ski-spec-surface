@@ -1,6 +1,13 @@
 import type { SupabaseClient } from "@/db/supabase.client";
 import type { Database } from "@/db/database.types";
-import type { CreateSkiSpecCommand, SkiSpecDTO, ListSkiSpecsQuery, UpdateSkiSpecCommand } from "@/types";
+import type {
+  CreateSkiSpecCommand,
+  SkiSpecDTO,
+  ListSkiSpecsQuery,
+  UpdateSkiSpecCommand,
+  CreateNoteCommand,
+  NoteDTO,
+} from "@/types";
 
 /**
  * Calculates the surface area of a ski based on its dimensions.
@@ -416,4 +423,69 @@ export async function updateSkiSpec(
     ...data,
     notes_count: count ?? 0,
   };
+}
+
+/**
+ * Creates a new note for a ski specification.
+ *
+ * This function:
+ * 1. Verifies the ski specification exists and user owns it
+ * 2. Inserts the note into the database
+ * 3. Returns the created note as a DTO
+ *
+ * Security: Verifies specification ownership before creation to prevent IDOR attacks.
+ * Returns "Specification not found" for both non-existent specs and unauthorized access
+ * to prevent information disclosure.
+ *
+ * @param supabase - Supabase client instance
+ * @param userId - ID of the authenticated user
+ * @param specId - UUID of the ski specification
+ * @param command - Validated note creation data
+ * @returns Created note with all fields populated
+ * @throws Error with "Specification not found" if spec doesn't exist or user doesn't own it
+ * @throws Error for database errors
+ */
+export async function createNote(
+  supabase: SupabaseClient,
+  userId: string,
+  specId: string,
+  command: CreateNoteCommand
+): Promise<NoteDTO> {
+  // Step 1: Verify specification exists and user owns it
+  const { data: spec, error: specError } = await supabase
+    .from("ski_specs")
+    .select("id")
+    .eq("id", specId)
+    .eq("user_id", userId)
+    .single();
+
+  // Handle not found (PGRST116) or other fetch errors
+  if (specError?.code === "PGRST116" || !spec) {
+    throw new Error("Specification not found");
+  }
+
+  if (specError) {
+    throw specError;
+  }
+
+  // Step 2: Prepare note data for insertion
+  const noteData = {
+    ski_spec_id: specId,
+    content: command.content.trim(),
+  };
+
+  // Step 3: Insert note into database
+  const { data, error } = await supabase.from("ski_spec_notes").insert(noteData).select().single();
+
+  // Step 4: Handle errors
+  if (error) {
+    throw error;
+  }
+
+  if (!data) {
+    throw new Error("Failed to create note");
+  }
+
+  // Step 5: Return created note as DTO
+  return data as NoteDTO;
 }

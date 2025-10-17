@@ -508,6 +508,27 @@ export const ImportResponseSchema = z.object({
 export type ImportResponse = z.infer<typeof ImportResponseSchema>;
 
 // ============================================================================
+// Health Check Types
+// ============================================================================
+
+/**
+ * Health check response type.
+ * Used in: GET /api/health
+
+/**
+ * Zod schema for HealthCheckResponse.
+ * Validates health check response data.
+ */
+export const HealthCheckResponseSchema = z.object({
+  status: z.enum(["healthy", "unhealthy"]),
+  timestamp: z.string().datetime(),
+  version: z.string(),
+  error: z.string().optional(),
+});
+
+export type HealthCheckResponse = z.infer<typeof HealthCheckResponseSchema>;
+
+// ============================================================================
 // Error Response Types
 // ============================================================================
 
