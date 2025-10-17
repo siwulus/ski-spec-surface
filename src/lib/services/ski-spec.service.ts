@@ -489,3 +489,71 @@ export async function createNote(
   // Step 5: Return created note as DTO
   return data as NoteDTO;
 }
+
+/**
+ * Deletes a note from a ski specification.
+ *
+ * This function:
+ * 1. Verifies the ski specification exists and user owns it
+ * 2. Verifies the note exists and belongs to the specification
+ * 3. Deletes the note from the database
+ *
+ * Security: Two-level verification prevents unauthorized access:
+ * - First checks specification ownership (prevents access to other users' specs)
+ * - Then checks note association (prevents cross-spec note deletion)
+ * Returns generic "not found" error for all failure cases to prevent information disclosure.
+ *
+ * @param supabase - Supabase client instance
+ * @param userId - ID of the authenticated user
+ * @param specId - UUID of the ski specification that owns the note
+ * @param noteId - UUID of the note to delete
+ * @throws Error with "Note not found" if spec/note not found or not owned by user
+ * @throws Error For database errors
+ */
+export async function deleteNote(
+  supabase: SupabaseClient,
+  userId: string,
+  specId: string,
+  noteId: string
+): Promise<void> {
+  // Step 1: Verify ski specification exists and user owns it
+  const { data: spec, error: specError } = await supabase
+    .from("ski_specs")
+    .select("id")
+    .eq("id", specId)
+    .eq("user_id", userId)
+    .single();
+
+  // Handle not found (PGRST116) or ownership failure
+  if (specError?.code === "PGRST116" || !spec) {
+    throw new Error("Note not found");
+  }
+
+  if (specError) {
+    throw specError;
+  }
+
+  // Step 2: Verify note exists and belongs to the specification
+  const { data: note, error: noteError } = await supabase
+    .from("ski_spec_notes")
+    .select("id")
+    .eq("id", noteId)
+    .eq("ski_spec_id", specId)
+    .single();
+
+  // Handle not found (PGRST116) or association failure
+  if (noteError?.code === "PGRST116" || !note) {
+    throw new Error("Note not found");
+  }
+
+  if (noteError) {
+    throw noteError;
+  }
+
+  // Step 3: Delete the note (RLS policies provide additional security layer)
+  const { error: deleteError } = await supabase.from("ski_spec_notes").delete().eq("id", noteId);
+
+  if (deleteError) {
+    throw new Error(`Failed to delete note: ${deleteError.message}`);
+  }
+}
