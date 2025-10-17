@@ -1,8 +1,8 @@
 import type { APIRoute } from "astro";
 import { z } from "zod";
 import { getNoteById, updateNote, deleteNote } from "@/lib/services/ski-spec.service";
-import { UpdateNoteCommandSchema } from "@/types";
-import type { ApiErrorResponse } from "@/types";
+import { UpdateNoteCommandSchema } from "@/types/api.types";
+import type { ApiErrorResponse } from "@/types/api.types";
 
 export const prerender = false;
 

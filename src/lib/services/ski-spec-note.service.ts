@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@/db/supabase.client";
-import type { NoteDTO, ListNotesQuery } from "@/types";
+import type { NoteDTO, ListNotesQuery } from "@/types/api.types";
 
 /**
  * Retrieves a paginated list of notes for a specific ski specification.

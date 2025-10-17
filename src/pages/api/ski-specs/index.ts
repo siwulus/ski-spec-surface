@@ -5,7 +5,7 @@ import {
   type ApiErrorResponse,
   type SkiSpecListResponse,
   type PaginationMeta,
-} from "@/types";
+} from "@/types/api.types";
 import { createSkiSpec, listSkiSpecs } from "@/lib/services/ski-spec.service";
 
 export const prerender = false;

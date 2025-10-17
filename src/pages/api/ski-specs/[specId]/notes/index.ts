@@ -8,7 +8,7 @@ import {
   type ApiErrorResponse,
   type NoteListResponse,
   type PaginationMeta,
-} from "@/types";
+} from "@/types/api.types";
 
 export const prerender = false;
 

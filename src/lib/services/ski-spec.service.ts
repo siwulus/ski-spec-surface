@@ -8,7 +8,7 @@ import type {
   CreateNoteCommand,
   UpdateNoteCommand,
   NoteDTO,
-} from "@/types";
+} from "@/types/api.types";
 
 /**
  * Calculates the surface area of a ski based on its dimensions.

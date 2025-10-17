@@ -1,5 +1,5 @@
 import type { APIRoute } from "astro";
-import type { HealthCheckResponse } from "@/types";
+import type { HealthCheckResponse } from "@/types/api.types";
 
 export const prerender = false;
 

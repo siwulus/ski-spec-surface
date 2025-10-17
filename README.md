@@ -85,6 +85,28 @@ pnpm preview
 
 ---
 
+## Project Structure
+Key directories and files:
+
+```
+src/
+├── components/        # Astro (static) and React (dynamic) components
+│   └── ui/           # Shadcn/ui components
+├── db/               # Supabase clients and database types
+├── layouts/          # Astro layouts
+├── lib/              # Services and helpers
+│   └── services/     # Business logic services
+├── middleware/       # Astro middleware
+├── pages/            # Astro pages and API routes
+│   └── api/          # API endpoints
+├── styles/           # Global CSS
+└── types/            # TypeScript type definitions
+    ├── db.types.ts   # Database entities (from Supabase)
+    └── api.types.ts  # DTOs, schemas, commands, queries, responses
+```
+
+---
+
 ## Project Scope
 ### MVP (v1.0)
 * Full CRUD of ski specifications

@@ -3,33 +3,16 @@
  *
  * This file contains all Data Transfer Object (DTO) types and Command Models
  * used throughout the application's API layer. All types are derived from the
- * database entity definitions in database.types.ts to ensure type safety and
- * consistency between the database layer and API layer.
+ * database entity definitions to ensure type safety and consistency between
+ * the database layer and API layer.
  *
  * Each type is accompanied by a Zod schema for runtime validation and a
  * compile-time type check using expectTypeOf to ensure schema and type consistency.
  */
 
-import type { Tables, TablesInsert, TablesUpdate } from "@/db/database.types";
+import type { SkiSpecEntity, SkiSpecNoteEntity } from "@/types/db.types";
 import { z } from "zod";
 import { expectTypeOf } from "expect-type";
-
-// ============================================================================
-// Base Entity Types (derived from database)
-// ============================================================================
-
-/**
- * Base ski specification entity from database
- */
-export type SkiSpecEntity = Tables<"ski_specs">;
-export type SkiSpecInsert = TablesInsert<"ski_specs">;
-export type SkiSpecUpdate = TablesUpdate<"ski_specs">;
-/**
- * Base ski spec note entity from database
- */
-export type SkiSpecNoteEntity = Tables<"ski_spec_notes">;
-export type SkiSpecNoteInsert = TablesInsert<"ski_spec_notes">;
-export type SkiSpecNoteUpdate = TablesUpdate<"ski_spec_notes">;
 
 // ============================================================================
 // Ski Specification DTOs
