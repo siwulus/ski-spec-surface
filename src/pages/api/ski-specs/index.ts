@@ -6,7 +6,6 @@ import {
   type SkiSpecListResponse,
   type PaginationMeta,
 } from "@/types/api.types";
-import { createSkiSpec, listSkiSpecs } from "@/lib/services/ski-spec.service";
 
 export const prerender = false;
 
@@ -22,7 +21,7 @@ export const prerender = false;
 export const GET: APIRoute = async ({ url, locals }) => {
   try {
     // Step 1: Get authenticated user ID from middleware
-    const { supabase, userId } = locals;
+    const { userId, skiSpecService } = locals;
 
     // Step 2: Extract query parameters from URL
     const rawQuery = {
@@ -65,7 +64,7 @@ export const GET: APIRoute = async ({ url, locals }) => {
     const validatedQuery = validation.data;
 
     // Step 5: Call service layer to retrieve ski specifications
-    const { data, total } = await listSkiSpecs(supabase, userId, validatedQuery);
+    const { data, total } = await skiSpecService.listSkiSpecs(userId, validatedQuery);
 
     // Step 6: Calculate pagination metadata
     const totalPages = Math.ceil(total / validatedQuery.limit);
@@ -118,7 +117,7 @@ export const GET: APIRoute = async ({ url, locals }) => {
 export const POST: APIRoute = async ({ request, locals }) => {
   try {
     // Step 1: Get authenticated user ID from middleware
-    const { supabase, userId } = locals;
+    const { userId, skiSpecService } = locals;
 
     // Step 2: Parse request body
     let body: unknown;
@@ -159,7 +158,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
 
     // Step 4: Create ski specification via service
     try {
-      const skiSpec = await createSkiSpec(supabase, userId, command);
+      const skiSpec = await skiSpecService.createSkiSpec(userId, command);
 
       // Step 5: Return success response
       return new Response(JSON.stringify(skiSpec), {

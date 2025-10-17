@@ -14,11 +14,12 @@ export const GET: APIRoute = async ({ locals }) => {
   const timestamp = new Date().toISOString();
   const version = "1.0.0";
 
+  const { skiSpecService } = locals;
   try {
-    // Test database connectivity with a simple query
-    const { error } = await locals.supabase.from("ski_specs").select("id").limit(1);
+    // Test database connectivity via service
+    const isHealthy = await skiSpecService.checkDatabaseConnection();
 
-    if (error) {
+    if (!isHealthy) {
       const response: HealthCheckResponse = {
         status: "unhealthy",
         timestamp,

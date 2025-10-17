@@ -1,11 +1,11 @@
 /// <reference types="astro/client" />
 
-import type { supabaseClient } from "@/db/supabase.client.ts";
+import type { SkiSpecService } from "@/lib/services/SkiSpecService";
 
 declare global {
   namespace App {
     interface Locals {
-      supabase: typeof supabaseClient;
+      skiSpecService: SkiSpecService;
       userId: string;
     }
   }

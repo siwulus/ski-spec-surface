@@ -1,6 +1,5 @@
 import type { APIRoute } from "astro";
 import { z } from "zod";
-import { getNoteById, updateNote, deleteNote } from "@/lib/services/ski-spec.service";
 import { UpdateNoteCommandSchema } from "@/types/api.types";
 import type { ApiErrorResponse } from "@/types/api.types";
 
@@ -33,7 +32,7 @@ const UuidParamsSchema = z.object({
 export const GET: APIRoute = async ({ params, locals }) => {
   try {
     // Step 2: Extract and validate authentication
-    const { userId } = locals;
+    const { userId, skiSpecService } = locals;
 
     if (!userId) {
       return new Response(
@@ -68,8 +67,7 @@ export const GET: APIRoute = async ({ params, locals }) => {
 
     // Step 4-6: Call service method and handle errors
     try {
-      const { supabase } = locals;
-      const note = await getNoteById(supabase, userId, specId, noteId);
+      const note = await skiSpecService.getNoteById(userId, specId, noteId);
 
       // Step 7: Return success response (200 OK)
       return new Response(JSON.stringify(note), {
@@ -157,7 +155,7 @@ export const GET: APIRoute = async ({ params, locals }) => {
 export const PUT: APIRoute = async ({ params, request, locals }) => {
   try {
     // Step 1: Get authenticated user ID and Supabase client from middleware
-    const { supabase, userId } = locals;
+    const { userId, skiSpecService } = locals;
 
     // Step 2: Check authentication
     if (!userId) {
@@ -232,7 +230,7 @@ export const PUT: APIRoute = async ({ params, request, locals }) => {
 
     // Step 5: Update note via service
     try {
-      const updatedNote = await updateNote(supabase, userId, specId, noteId, updateData);
+      const updatedNote = await skiSpecService.updateNote(userId, specId, noteId, updateData);
 
       // Step 6: Return success response (200 OK)
       return new Response(JSON.stringify(updatedNote), {
@@ -319,7 +317,7 @@ export const PUT: APIRoute = async ({ params, request, locals }) => {
 export const DELETE: APIRoute = async ({ params, locals }) => {
   try {
     // Step 1: Get authenticated user ID and Supabase client from middleware
-    const { supabase, userId } = locals;
+    const { userId, skiSpecService } = locals;
 
     // Step 2: Check authentication
     if (!userId) {
@@ -357,7 +355,7 @@ export const DELETE: APIRoute = async ({ params, locals }) => {
 
     // Step 4: Delete note via service
     try {
-      await deleteNote(supabase, userId, specId, noteId);
+      await skiSpecService.deleteNote(userId, specId, noteId);
 
       // Step 5: Return 204 No Content on successful deletion
       return new Response(null, { status: 204 });

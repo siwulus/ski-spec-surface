@@ -1,6 +1,5 @@
 import type { APIRoute } from "astro";
 import { z } from "zod";
-import { deleteSkiSpec, getSkiSpec, updateSkiSpec } from "@/lib/services/ski-spec.service";
 import { UpdateSkiSpecCommandSchema, type ApiErrorResponse } from "@/types/api.types";
 
 export const prerender = false;
@@ -44,7 +43,7 @@ export const GET: APIRoute = async ({ params, locals }) => {
   }
 
   // Step 2: Check authentication
-  const { userId, supabase } = locals;
+  const { userId, skiSpecService } = locals;
 
   if (!userId) {
     return new Response(
@@ -63,7 +62,7 @@ export const GET: APIRoute = async ({ params, locals }) => {
   // Step 3: Retrieve ski specification
   try {
     const specId = validationResult.data.id;
-    const skiSpec = await getSkiSpec(supabase, userId, specId);
+    const skiSpec = await skiSpecService.getSkiSpec(userId, specId);
 
     // Step 4: Handle not found
     if (!skiSpec) {
@@ -133,7 +132,7 @@ export const GET: APIRoute = async ({ params, locals }) => {
 export const PUT: APIRoute = async ({ params, request, locals }) => {
   try {
     // Step 1: Get authenticated user ID and Supabase client from middleware
-    const { supabase, userId } = locals;
+    const { userId, skiSpecService } = locals;
 
     // Step 2: Validate path parameter (UUID format)
     const validationResult = UuidParamSchema.safeParse({ id: params.id });
@@ -188,7 +187,7 @@ export const PUT: APIRoute = async ({ params, request, locals }) => {
 
     // Step 5: Update ski specification via service
     try {
-      const updatedSpec = await updateSkiSpec(supabase, userId, id, commandValidation.data);
+      const updatedSpec = await skiSpecService.updateSkiSpec(userId, id, commandValidation.data);
 
       // Step 6: Return success response
       return new Response(JSON.stringify(updatedSpec), {
@@ -269,7 +268,7 @@ export const PUT: APIRoute = async ({ params, request, locals }) => {
 export const DELETE: APIRoute = async ({ params, locals }) => {
   try {
     // Step 1: Get authenticated user ID and Supabase client from middleware
-    const { supabase, userId } = locals;
+    const { userId, skiSpecService } = locals;
 
     // Step 2: Extract and validate path parameter
     const validationResult = UuidParamSchema.safeParse({ id: params.id });
@@ -289,7 +288,7 @@ export const DELETE: APIRoute = async ({ params, locals }) => {
 
     // Step 3: Delete via service (includes ownership verification)
     try {
-      await deleteSkiSpec(supabase, userId, id);
+      await skiSpecService.deleteSkiSpec(userId, id);
 
       // Step 4: Return success response (204 No Content)
       return new Response(null, { status: 204 });

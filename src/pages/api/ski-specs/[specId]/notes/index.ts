@@ -1,7 +1,5 @@
 import type { APIRoute } from "astro";
 import { z } from "zod";
-import { createNote } from "@/lib/services/ski-spec.service";
-import { listNotes } from "@/lib/services/ski-spec-note.service";
 import {
   CreateNoteCommandSchema,
   ListNotesQuerySchema,
@@ -41,7 +39,7 @@ const UuidParamSchema = z.object({
 export const GET: APIRoute = async ({ params, url, locals }) => {
   try {
     // Step 1: Get authenticated user ID and Supabase client from middleware
-    const { supabase, userId } = locals;
+    const { userId, skiSpecService } = locals;
 
     // Step 2: Extract specId from path parameters
     const { specId } = params;
@@ -106,7 +104,7 @@ export const GET: APIRoute = async ({ params, url, locals }) => {
     const validatedQuery = validation.data;
 
     // Step 7: Call service layer to retrieve notes
-    const result = await listNotes(supabase, userId, specId, validatedQuery);
+    const result = await skiSpecService.listNotes(userId, specId, validatedQuery);
 
     // Step 8: Handle not found or unauthorized
     if (result === null) {
@@ -143,6 +141,7 @@ export const GET: APIRoute = async ({ params, url, locals }) => {
     });
   } catch (error) {
     // Step 11: Handle unexpected errors
+    // eslint-disable-next-line no-console
     console.error("Error in GET /api/ski-specs/{specId}/notes:", {
       error: error instanceof Error ? error.message : "Unknown error",
       stack: error instanceof Error ? error.stack : undefined,
@@ -184,7 +183,7 @@ export const GET: APIRoute = async ({ params, url, locals }) => {
 export const POST: APIRoute = async ({ params, request, locals }) => {
   try {
     // Step 1: Get authenticated user ID and Supabase client from middleware
-    const { supabase, userId } = locals;
+    const { userId, skiSpecService } = locals;
 
     // Step 2: Check authentication
     if (!userId) {
@@ -251,7 +250,7 @@ export const POST: APIRoute = async ({ params, request, locals }) => {
 
     // Step 6: Create note via service
     try {
-      const createdNote = await createNote(supabase, userId, specId, commandValidation.data);
+      const createdNote = await skiSpecService.createNote(userId, specId, commandValidation.data);
 
       // Step 7: Return success response (201 Created)
       return new Response(JSON.stringify(createdNote), {
