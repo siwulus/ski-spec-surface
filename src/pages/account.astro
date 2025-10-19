@@ -4,14 +4,17 @@ import Layout from "../layouts/Layout.astro";
 
 <Layout title="Account">
   <div class="space-y-6">
-    <div>
-      <h1 class="text-3xl font-bold text-gray-900">Account</h1>
-      <p class="mt-2 text-gray-600">Manage your account settings and preferences.</p>
-    </div>
+    <header>
+      <h1 class="text-3xl font-bold text-foreground">Account</h1>
+      <p class="mt-2 text-muted-foreground">Manage your account settings and preferences.</p>
+    </header>
 
-    <div class="bg-white shadow rounded-lg p-6">
-      <h2 class="text-lg font-medium text-gray-900 mb-4">Account Information</h2>
-      <p class="text-gray-600">Account management features will be implemented here.</p>
-    </div>
+    <section
+      aria-labelledby="account-info-heading"
+      class="bg-card text-card-foreground shadow-sm rounded-lg border border-border p-6"
+    >
+      <h2 id="account-info-heading" class="text-lg font-medium text-foreground mb-4">Account Information</h2>
+      <p class="text-muted-foreground">Account management features will be implemented here.</p>
+    </section>
   </div>
 </Layout>

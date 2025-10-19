@@ -1,6 +1,7 @@
 import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
 
-export default function ToastTest() {
+const ToastTest: React.FC = () => {
   const handleSuccess = () => {
     toast.success("Success!", { description: "This is a success message" });
   };
@@ -18,19 +19,21 @@ export default function ToastTest() {
   };
 
   return (
-    <div className="space-x-4">
-      <button onClick={handleSuccess} className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">
+    <div className="flex flex-wrap gap-4" role="region" aria-label="Toast notification test controls">
+      <Button onClick={handleSuccess} variant="default" type="button">
         Test Success Toast
-      </button>
-      <button onClick={handleError} className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700">
+      </Button>
+      <Button onClick={handleError} variant="destructive" type="button">
         Test Error Toast
-      </button>
-      <button onClick={handleInfo} className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+      </Button>
+      <Button onClick={handleInfo} variant="secondary" type="button">
         Test Info Toast
-      </button>
-      <button onClick={handleWarning} className="px-4 py-2 bg-yellow-600 text-white rounded hover:bg-yellow-700">
+      </Button>
+      <Button onClick={handleWarning} variant="outline" type="button">
         Test Warning Toast
-      </button>
+      </Button>
     </div>
   );
-}
+};
+
+export default ToastTest;

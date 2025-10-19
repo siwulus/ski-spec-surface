@@ -7,25 +7,25 @@ import Layout from "../layouts/Layout.astro";
 
 <Layout title="Ski Surface Spec Extension - Advanced Ski Specifications">
   <!-- Hero Section -->
-  <section class="relative overflow-hidden bg-gradient-to-br from-slate-50 to-blue-50 py-20 sm:py-32">
+  <section aria-labelledby="hero-heading" class="relative overflow-hidden bg-secondary py-20 sm:py-32">
     <div class="mx-auto max-w-7xl px-6 lg:px-8">
       <div class="mx-auto max-w-4xl text-center">
         <Badge variant="secondary" className="mb-8 text-sm font-medium">
           For Advanced Ski Touring & Freeride Skiers
         </Badge>
-        <h1 class="text-4xl font-bold tracking-tight text-gray-900 sm:text-6xl lg:text-7xl">
+        <h1 id="hero-heading" class="text-4xl font-bold tracking-tight text-foreground sm:text-6xl lg:text-7xl">
           Ski Surface Spec Extension
         </h1>
-        <p class="mt-6 text-lg leading-8 text-gray-600 sm:text-xl lg:text-2xl">
+        <p class="mt-6 text-lg leading-8 text-muted-foreground sm:text-xl lg:text-2xl">
           The missing piece in ski specifications. Get precise surface area and relative weight calculations to make
           informed decisions about your ski equipment.
         </p>
-        <div class="mt-10 flex items-center justify-center gap-x-6">
+        <div class="mt-10 flex items-center justify-center gap-6">
           <Button size="lg" asChild>
-            <a href="/ski-specs">Get Started</a>
+            <a href="/ski-specs" aria-label="Get started with ski specifications">Get Started</a>
           </Button>
           <Button variant="outline" size="lg" asChild>
-            <a href="/api-docs">View API Docs</a>
+            <a href="/api-docs" aria-label="View API documentation">View API Docs</a>
           </Button>
         </div>
       </div>
@@ -33,34 +33,36 @@ import Layout from "../layouts/Layout.astro";
   </section>
 
   <!-- Problem Section -->
-  <section class="py-20 sm:py-32">
+  <section aria-labelledby="problem-heading" class="py-20 sm:py-32">
     <div class="mx-auto max-w-7xl px-6 lg:px-8">
       <div class="mx-auto max-w-2xl text-center">
-        <h2 class="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">The Problem with Standard Ski Specs</h2>
-        <p class="mt-6 text-lg leading-8 text-gray-600">
+        <h2 id="problem-heading" class="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
+          The Problem with Standard Ski Specs
+        </h2>
+        <p class="mt-6 text-lg leading-8 text-muted-foreground">
           Traditional ski specifications miss two critical parameters that advanced skiers need for optimal equipment
           selection.
         </p>
       </div>
       <div class="mx-auto mt-16 max-w-5xl">
         <div class="grid grid-cols-1 gap-8 sm:grid-cols-2">
-          <Card className="border-red-200 bg-red-50/50">
+          <Card className="border-destructive bg-accent">
             <CardHeader>
-              <CardTitle className="text-red-900">Missing Surface Area</CardTitle>
+              <CardTitle className="text-accent-foreground">Missing Surface Area</CardTitle>
             </CardHeader>
             <CardContent>
-              <p class="text-red-800">
+              <p class="text-accent-foreground">
                 Without knowing the actual surface area, you can't accurately assess floatation in different snow
                 conditions or compare skis objectively across different dimensions.
               </p>
             </CardContent>
           </Card>
-          <Card className="border-orange-200 bg-orange-50/50">
+          <Card className="border-primary bg-accent">
             <CardHeader>
-              <CardTitle className="text-orange-900">No Relative Weight Metric</CardTitle>
+              <CardTitle className="text-accent-foreground">No Relative Weight Metric</CardTitle>
             </CardHeader>
             <CardContent>
-              <p class="text-orange-800">
+              <p class="text-accent-foreground">
                 Raw weight numbers don't tell you about construction efficiency. You need weight per square centimeter
                 to find the optimal balance between downhill performance and uphill efficiency.
               </p>
@@ -72,41 +74,43 @@ import Layout from "../layouts/Layout.astro";
   </section>
 
   <!-- Solution Section -->
-  <section class="bg-gray-50 py-20 sm:py-32">
+  <section aria-labelledby="solution-heading" class="bg-muted py-20 sm:py-32">
     <div class="mx-auto max-w-7xl px-6 lg:px-8">
       <div class="mx-auto max-w-2xl text-center">
-        <h2 class="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">Complete Ski Specifications</h2>
-        <p class="mt-6 text-lg leading-8 text-gray-600">
+        <h2 id="solution-heading" class="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
+          Complete Ski Specifications
+        </h2>
+        <p class="mt-6 text-lg leading-8 text-muted-foreground">
           Our extension adds the missing parameters to standard ski specs, giving you the complete picture.
         </p>
       </div>
       <div class="mx-auto mt-16 max-w-5xl">
         <div class="grid grid-cols-1 gap-8 lg:grid-cols-2">
-          <Card className="border-green-200 bg-green-50/50">
+          <Card className="border-primary bg-accent">
             <CardHeader>
-              <CardTitle className="text-green-900">Automatic Surface Area Calculation</CardTitle>
+              <CardTitle className="text-accent-foreground">Automatic Surface Area Calculation</CardTitle>
             </CardHeader>
             <CardContent>
-              <p class="text-green-800 mb-4">
+              <p class="text-accent-foreground mb-4">
                 Our advanced algorithm calculates precise surface area (cm²) based on ski dimensions, accounting for the
                 ski's curve profile.
               </p>
-              <div class="text-sm text-green-700">
+              <div class="text-sm text-muted-foreground">
                 <strong>Input:</strong> Length, tip width, waist width, tail width<br />
                 <strong>Output:</strong> Surface area in cm²
               </div>
             </CardContent>
           </Card>
-          <Card className="border-blue-200 bg-blue-50/50">
+          <Card className="border-primary bg-accent">
             <CardHeader>
-              <CardTitle className="text-blue-900">Relative Weight Analysis</CardTitle>
+              <CardTitle className="text-accent-foreground">Relative Weight Analysis</CardTitle>
             </CardHeader>
             <CardContent>
-              <p class="text-blue-800 mb-4">
+              <p class="text-accent-foreground mb-4">
                 Get weight per square centimeter (g/cm²) to compare construction efficiency across different ski sizes
                 and models.
               </p>
-              <div class="text-sm text-blue-700">
+              <div class="text-sm text-muted-foreground">
                 <strong>Formula:</strong> Weight ÷ Surface Area<br />
                 <strong>Output:</strong> Relative weight in g/cm²
               </div>
@@ -118,11 +122,13 @@ import Layout from "../layouts/Layout.astro";
   </section>
 
   <!-- Features Section -->
-  <section class="py-20 sm:py-32">
+  <section class="py-20 sm:py-32" aria-labelledby="features-heading">
     <div class="mx-auto max-w-7xl px-6 lg:px-8">
       <div class="mx-auto max-w-2xl text-center">
-        <h2 class="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">Everything You Need</h2>
-        <p class="mt-6 text-lg leading-8 text-gray-600">
+        <h2 id="features-heading" class="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
+          Everything You Need
+        </h2>
+        <p class="mt-6 text-lg leading-8 text-muted-foreground">
           Comprehensive tools for managing, comparing, and analyzing ski specifications.
         </p>
       </div>
@@ -134,7 +140,7 @@ import Layout from "../layouts/Layout.astro";
               <CardDescription>Complete CRUD operations for ski specifications</CardDescription>
             </CardHeader>
             <CardContent>
-              <ul class="space-y-2 text-sm text-gray-600">
+              <ul class="space-y-2 text-sm text-muted-foreground">
                 <li>• Add new ski specifications</li>
                 <li>• Edit existing entries</li>
                 <li>• Delete unwanted specs</li>
@@ -148,7 +154,7 @@ import Layout from "../layouts/Layout.astro";
               <CardDescription>Compare up to 4 ski models side-by-side</CardDescription>
             </CardHeader>
             <CardContent>
-              <ul class="space-y-2 text-sm text-gray-600">
+              <ul class="space-y-2 text-sm text-muted-foreground">
                 <li>• Visual comparison table</li>
                 <li>• Percentage differences</li>
                 <li>• Sortable parameters</li>
@@ -162,7 +168,7 @@ import Layout from "../layouts/Layout.astro";
               <CardDescription>Keep detailed notes for each ski model</CardDescription>
             </CardHeader>
             <CardContent>
-              <ul class="space-y-2 text-sm text-gray-600">
+              <ul class="space-y-2 text-sm text-muted-foreground">
                 <li>• Multiple notes per ski</li>
                 <li>• Timestamp tracking</li>
                 <li>• Edit and delete notes</li>
@@ -176,7 +182,7 @@ import Layout from "../layouts/Layout.astro";
               <CardDescription>CSV import and export functionality</CardDescription>
             </CardHeader>
             <CardContent>
-              <ul class="space-y-2 text-sm text-gray-600">
+              <ul class="space-y-2 text-sm text-muted-foreground">
                 <li>• Bulk import from CSV</li>
                 <li>• Export all specifications</li>
                 <li>• Data validation</li>
@@ -190,7 +196,7 @@ import Layout from "../layouts/Layout.astro";
               <CardDescription>Comprehensive data validation rules</CardDescription>
             </CardHeader>
             <CardContent>
-              <ul class="space-y-2 text-sm text-gray-600">
+              <ul class="space-y-2 text-sm text-muted-foreground">
                 <li>• Dimension relationships</li>
                 <li>• Range validation</li>
                 <li>• Real-time feedback</li>
@@ -204,7 +210,7 @@ import Layout from "../layouts/Layout.astro";
               <CardDescription>Secure user accounts and data privacy</CardDescription>
             </CardHeader>
             <CardContent>
-              <ul class="space-y-2 text-sm text-gray-600">
+              <ul class="space-y-2 text-sm text-muted-foreground">
                 <li>• User registration</li>
                 <li>• Secure login</li>
                 <li>• Private data storage</li>
@@ -218,19 +224,23 @@ import Layout from "../layouts/Layout.astro";
   </section>
 
   <!-- Benefits Section -->
-  <section class="bg-gray-50 py-20 sm:py-32">
+  <section aria-labelledby="benefits-heading" class="bg-muted py-20 sm:py-32">
     <div class="mx-auto max-w-7xl px-6 lg:px-8">
       <div class="mx-auto max-w-2xl text-center">
-        <h2 class="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">Why This Matters</h2>
-        <p class="mt-6 text-lg leading-8 text-gray-600">Make better decisions with complete ski specifications.</p>
+        <h2 id="benefits-heading" class="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
+          Why This Matters
+        </h2>
+        <p class="mt-6 text-lg leading-8 text-muted-foreground">
+          Make better decisions with complete ski specifications.
+        </p>
       </div>
       <div class="mx-auto mt-16 max-w-4xl">
         <div class="grid grid-cols-1 gap-8 lg:grid-cols-2">
           <div class="space-y-6">
-            <div class="flex items-start space-x-4">
-              <div class="flex-shrink-0">
-                <div class="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100">
-                  <svg class="h-5 w-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+            <div class="flex items-start gap-4">
+              <div class="shrink-0">
+                <div class="flex size-8 items-center justify-center rounded-full bg-primary/10">
+                  <svg class="size-5 text-primary" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
                     <path
                       fill-rule="evenodd"
                       d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
@@ -239,14 +249,16 @@ import Layout from "../layouts/Layout.astro";
                 </div>
               </div>
               <div>
-                <h3 class="text-lg font-semibold text-gray-900">Objective Comparisons</h3>
-                <p class="text-gray-600">Compare skis across different manufacturers using standardized metrics.</p>
+                <h3 class="text-lg font-semibold text-foreground">Objective Comparisons</h3>
+                <p class="text-muted-foreground">
+                  Compare skis across different manufacturers using standardized metrics.
+                </p>
               </div>
             </div>
-            <div class="flex items-start space-x-4">
-              <div class="flex-shrink-0">
-                <div class="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100">
-                  <svg class="h-5 w-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+            <div class="flex items-start gap-4">
+              <div class="shrink-0">
+                <div class="flex size-8 items-center justify-center rounded-full bg-primary/10">
+                  <svg class="size-5 text-primary" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
                     <path
                       fill-rule="evenodd"
                       d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
@@ -255,14 +267,14 @@ import Layout from "../layouts/Layout.astro";
                 </div>
               </div>
               <div>
-                <h3 class="text-lg font-semibold text-gray-900">Optimal Length Selection</h3>
-                <p class="text-gray-600">Find the right ski length compensated by width for your terrain.</p>
+                <h3 class="text-lg font-semibold text-foreground">Optimal Length Selection</h3>
+                <p class="text-muted-foreground">Find the right ski length compensated by width for your terrain.</p>
               </div>
             </div>
-            <div class="flex items-start space-x-4">
-              <div class="flex-shrink-0">
-                <div class="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100">
-                  <svg class="h-5 w-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+            <div class="flex items-start gap-4">
+              <div class="shrink-0">
+                <div class="flex size-8 items-center justify-center rounded-full bg-primary/10">
+                  <svg class="size-5 text-primary" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
                     <path
                       fill-rule="evenodd"
                       d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
@@ -271,16 +283,16 @@ import Layout from "../layouts/Layout.astro";
                 </div>
               </div>
               <div>
-                <h3 class="text-lg font-semibold text-gray-900">Snow Condition Assessment</h3>
-                <p class="text-gray-600">Evaluate real floatation performance in deep snow conditions.</p>
+                <h3 class="text-lg font-semibold text-foreground">Snow Condition Assessment</h3>
+                <p class="text-muted-foreground">Evaluate real floatation performance in deep snow conditions.</p>
               </div>
             </div>
           </div>
           <div class="space-y-6">
-            <div class="flex items-start space-x-4">
-              <div class="flex-shrink-0">
-                <div class="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100">
-                  <svg class="h-5 w-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+            <div class="flex items-start gap-4">
+              <div class="shrink-0">
+                <div class="flex size-8 items-center justify-center rounded-full bg-primary/10">
+                  <svg class="size-5 text-primary" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
                     <path
                       fill-rule="evenodd"
                       d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
@@ -289,16 +301,16 @@ import Layout from "../layouts/Layout.astro";
                 </div>
               </div>
               <div>
-                <h3 class="text-lg font-semibold text-gray-900">Weight-Performance Balance</h3>
-                <p class="text-gray-600">
+                <h3 class="text-lg font-semibold text-foreground">Weight-Performance Balance</h3>
+                <p class="text-muted-foreground">
                   Find the optimal compromise between downhill performance and uphill efficiency.
                 </p>
               </div>
             </div>
-            <div class="flex items-start space-x-4">
-              <div class="flex-shrink-0">
-                <div class="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100">
-                  <svg class="h-5 w-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+            <div class="flex items-start gap-4">
+              <div class="shrink-0">
+                <div class="flex size-8 items-center justify-center rounded-full bg-primary/10">
+                  <svg class="size-5 text-primary" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
                     <path
                       fill-rule="evenodd"
                       d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
@@ -307,14 +319,14 @@ import Layout from "../layouts/Layout.astro";
                 </div>
               </div>
               <div>
-                <h3 class="text-lg font-semibold text-gray-900">Informed Decisions</h3>
-                <p class="text-gray-600">Stop relying on subjective opinions and make data-driven choices.</p>
+                <h3 class="text-lg font-semibold text-foreground">Informed Decisions</h3>
+                <p class="text-muted-foreground">Stop relying on subjective opinions and make data-driven choices.</p>
               </div>
             </div>
-            <div class="flex items-start space-x-4">
-              <div class="flex-shrink-0">
-                <div class="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100">
-                  <svg class="h-5 w-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+            <div class="flex items-start gap-4">
+              <div class="shrink-0">
+                <div class="flex size-8 items-center justify-center rounded-full bg-primary/10">
+                  <svg class="size-5 text-primary" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
                     <path
                       fill-rule="evenodd"
                       d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
@@ -323,8 +335,8 @@ import Layout from "../layouts/Layout.astro";
                 </div>
               </div>
               <div>
-                <h3 class="text-lg font-semibold text-gray-900">Long Tour Optimization</h3>
-                <p class="text-gray-600">Perfect for multi-day ski touring where every gram matters.</p>
+                <h3 class="text-lg font-semibold text-foreground">Long Tour Optimization</h3>
+                <p class="text-muted-foreground">Perfect for multi-day ski touring where every gram matters.</p>
               </div>
             </div>
           </div>
@@ -334,22 +346,22 @@ import Layout from "../layouts/Layout.astro";
   </section>
 
   <!-- CTA Section -->
-  <section class="py-20 sm:py-32">
+  <section aria-labelledby="cta-heading" class="py-20 sm:py-32">
     <div class="mx-auto max-w-7xl px-6 lg:px-8">
       <div class="mx-auto max-w-2xl text-center">
-        <h2 class="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
+        <h2 id="cta-heading" class="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
           Ready to Optimize Your Ski Selection?
         </h2>
-        <p class="mt-6 text-lg leading-8 text-gray-600">
+        <p class="mt-6 text-lg leading-8 text-muted-foreground">
           Join advanced skiers who make data-driven decisions about their equipment. Get started with your first ski
           specification today.
         </p>
-        <div class="mt-10 flex items-center justify-center gap-x-6">
+        <div class="mt-10 flex items-center justify-center gap-6">
           <Button size="lg" asChild>
-            <a href="/ski-specs">Start Adding Specs</a>
+            <a href="/ski-specs" aria-label="Start adding ski specifications">Start Adding Specs</a>
           </Button>
           <Button variant="outline" size="lg" asChild>
-            <a href="/account">Create Account</a>
+            <a href="/account" aria-label="Create a new account">Create Account</a>
           </Button>
         </div>
       </div>

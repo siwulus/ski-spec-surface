@@ -1,0 +1,38 @@
+---
+globs: *.astro,*.tsx
+alwaysApply: false
+---
+# Styling with Tailwind (theme-aligned)
+
+This rule enforces consistent, theme-aligned styling of visual components using Tailwind. Use the design tokens exposed via CSS variables and Tailwind utilities defined in `src/styles/global.css`.
+
+## Principles
+
+- Always style with tokens, not raw values.
+  - Colors: use `bg-background`, `text-foreground`, `border-border`, `ring-ring`, `bg-primary text-primary-foreground`, `bg-secondary`, `bg-accent`, `bg-destructive`, etc.
+  - Spacing: use Tailwind spacing scale (`p-2`, `px-4`, `gap-3`, `space-y-2`).
+  - Radius: use `rounded-sm|md|lg|xl` (mapped to `--radius-*`).
+  - Shadows: use `shadow-xs|sm|md|lg|xl`.
+  - Borders: use `border`, `border-border`, `divide-border`.
+- Avoid exact values and inline styles.
+  - Don’t use hex, rgb, oklch, pixel sizes, or arbitrary utilities unless absolutely necessary.
+  - If you must use an arbitrary value, prefer a CSS variable: `w-[var(--size-panel)]` and define the token centrally.
+- Dark mode and states should use tokens.
+  - Prefer `dark:` variants and tokenized classes that adapt automatically.
+  - For states, use `hover:bg-accent`, `focus-visible:ring-ring/50`, `aria-invalid:ring-destructive/20`, `data-[state=open]:bg-accent`.
+- Compose components via variants.
+  - Use `cva` + `cn` for variants and sizes to keep class sets small and consistent.
+
+### Component patterns
+
+- Use slot-based styling for customization points: set `data-slot` on root elements.
+- Encode variants with `cva` and expose `variant`/`size` props.
+- Co-locate one-off CSS in `@layer components` and prefer `@apply` with tokens.
+- For layout, prefer flex/grid utilities + spacing tokens; avoid magic numbers.
+
+### Handling exceptions
+
+- If a precise value is truly required:
+  1) Introduce a semantic CSS variable in `:root` (and `.dark` if needed) and map it via `@theme inline` when applicable.
+  2) Use the variable through an arbitrary utility: e.g. `w-[var(--panel-width)]`.
+  3) Add a short comment where the variable is defined explaining its purpose.

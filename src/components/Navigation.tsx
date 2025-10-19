@@ -31,7 +31,7 @@ export default function Navigation({ currentPath }: NavigationProps) {
 
   // Don't render until mounted to avoid hydration mismatch
   if (!mounted) {
-    return <div className="h-10 w-48" aria-hidden="true" />;
+    return <div className="h-9 w-full max-w-xs" aria-hidden="true" />;
   }
 
   return (

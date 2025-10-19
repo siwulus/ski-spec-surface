@@ -1,26 +1,8 @@
 ---
-// API Documentation page using Scalar React component
+import Layout from "../layouts/Layout.astro";
 import ScalarApiDocs from "../components/ApiDocs";
-
-export const prerender = false;
 ---
 
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Ski Surface Spec API Documentation</title>
-    <style>
-      body {
-        margin: 0;
-        padding: 0;
-        height: 100vh;
-        overflow: hidden;
-      }
-    </style>
-  </head>
-  <body>
-    <ScalarApiDocs client:only="react" />
-  </body>
-</html>
+<Layout title="Ski Surface Spec API Documentation">
+  <ScalarApiDocs client:only="react" />
+</Layout>

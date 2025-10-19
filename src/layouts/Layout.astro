@@ -22,7 +22,7 @@ const currentPath = Astro.url.pathname;
   </head>
   <body class="relative w-full mx-auto min-h-screen flex flex-col">
     <Header currentPath={currentPath} />
-    <main class="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <main id="main-content" class="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <slot />
     </main>
     <Toaster client:only="react" />
