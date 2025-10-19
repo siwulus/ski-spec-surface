@@ -1,8 +1,358 @@
 ---
-import Welcome from "../components/Welcome.astro";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import Layout from "../layouts/Layout.astro";
 ---
 
-<Layout>
-  <Welcome />
+<Layout title="Ski Surface Spec Extension - Advanced Ski Specifications">
+  <!-- Hero Section -->
+  <section class="relative overflow-hidden bg-gradient-to-br from-slate-50 to-blue-50 py-20 sm:py-32">
+    <div class="mx-auto max-w-7xl px-6 lg:px-8">
+      <div class="mx-auto max-w-4xl text-center">
+        <Badge variant="secondary" className="mb-8 text-sm font-medium">
+          For Advanced Ski Touring & Freeride Skiers
+        </Badge>
+        <h1 class="text-4xl font-bold tracking-tight text-gray-900 sm:text-6xl lg:text-7xl">
+          Ski Surface Spec Extension
+        </h1>
+        <p class="mt-6 text-lg leading-8 text-gray-600 sm:text-xl lg:text-2xl">
+          The missing piece in ski specifications. Get precise surface area and relative weight calculations to make
+          informed decisions about your ski equipment.
+        </p>
+        <div class="mt-10 flex items-center justify-center gap-x-6">
+          <Button size="lg" asChild>
+            <a href="/ski-specs">Get Started</a>
+          </Button>
+          <Button variant="outline" size="lg" asChild>
+            <a href="/api-docs">View API Docs</a>
+          </Button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Problem Section -->
+  <section class="py-20 sm:py-32">
+    <div class="mx-auto max-w-7xl px-6 lg:px-8">
+      <div class="mx-auto max-w-2xl text-center">
+        <h2 class="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">The Problem with Standard Ski Specs</h2>
+        <p class="mt-6 text-lg leading-8 text-gray-600">
+          Traditional ski specifications miss two critical parameters that advanced skiers need for optimal equipment
+          selection.
+        </p>
+      </div>
+      <div class="mx-auto mt-16 max-w-5xl">
+        <div class="grid grid-cols-1 gap-8 sm:grid-cols-2">
+          <Card className="border-red-200 bg-red-50/50">
+            <CardHeader>
+              <CardTitle className="text-red-900">Missing Surface Area</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p class="text-red-800">
+                Without knowing the actual surface area, you can't accurately assess floatation in different snow
+                conditions or compare skis objectively across different dimensions.
+              </p>
+            </CardContent>
+          </Card>
+          <Card className="border-orange-200 bg-orange-50/50">
+            <CardHeader>
+              <CardTitle className="text-orange-900">No Relative Weight Metric</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p class="text-orange-800">
+                Raw weight numbers don't tell you about construction efficiency. You need weight per square centimeter
+                to find the optimal balance between downhill performance and uphill efficiency.
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Solution Section -->
+  <section class="bg-gray-50 py-20 sm:py-32">
+    <div class="mx-auto max-w-7xl px-6 lg:px-8">
+      <div class="mx-auto max-w-2xl text-center">
+        <h2 class="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">Complete Ski Specifications</h2>
+        <p class="mt-6 text-lg leading-8 text-gray-600">
+          Our extension adds the missing parameters to standard ski specs, giving you the complete picture.
+        </p>
+      </div>
+      <div class="mx-auto mt-16 max-w-5xl">
+        <div class="grid grid-cols-1 gap-8 lg:grid-cols-2">
+          <Card className="border-green-200 bg-green-50/50">
+            <CardHeader>
+              <CardTitle className="text-green-900">Automatic Surface Area Calculation</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p class="text-green-800 mb-4">
+                Our advanced algorithm calculates precise surface area (cm²) based on ski dimensions, accounting for the
+                ski's curve profile.
+              </p>
+              <div class="text-sm text-green-700">
+                <strong>Input:</strong> Length, tip width, waist width, tail width<br />
+                <strong>Output:</strong> Surface area in cm²
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="border-blue-200 bg-blue-50/50">
+            <CardHeader>
+              <CardTitle className="text-blue-900">Relative Weight Analysis</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p class="text-blue-800 mb-4">
+                Get weight per square centimeter (g/cm²) to compare construction efficiency across different ski sizes
+                and models.
+              </p>
+              <div class="text-sm text-blue-700">
+                <strong>Formula:</strong> Weight ÷ Surface Area<br />
+                <strong>Output:</strong> Relative weight in g/cm²
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features Section -->
+  <section class="py-20 sm:py-32">
+    <div class="mx-auto max-w-7xl px-6 lg:px-8">
+      <div class="mx-auto max-w-2xl text-center">
+        <h2 class="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">Everything You Need</h2>
+        <p class="mt-6 text-lg leading-8 text-gray-600">
+          Comprehensive tools for managing, comparing, and analyzing ski specifications.
+        </p>
+      </div>
+      <div class="mx-auto mt-16 max-w-6xl">
+        <div class="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
+          <Card>
+            <CardHeader>
+              <CardTitle>Specification Management</CardTitle>
+              <CardDescription>Complete CRUD operations for ski specifications</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ul class="space-y-2 text-sm text-gray-600">
+                <li>• Add new ski specifications</li>
+                <li>• Edit existing entries</li>
+                <li>• Delete unwanted specs</li>
+                <li>• Optional descriptions</li>
+              </ul>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle>Smart Comparison</CardTitle>
+              <CardDescription>Compare up to 4 ski models side-by-side</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ul class="space-y-2 text-sm text-gray-600">
+                <li>• Visual comparison table</li>
+                <li>• Percentage differences</li>
+                <li>• Sortable parameters</li>
+                <li>• Highlighted key metrics</li>
+              </ul>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle>Notes & Documentation</CardTitle>
+              <CardDescription>Keep detailed notes for each ski model</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ul class="space-y-2 text-sm text-gray-600">
+                <li>• Multiple notes per ski</li>
+                <li>• Timestamp tracking</li>
+                <li>• Edit and delete notes</li>
+                <li>• Chronological sorting</li>
+              </ul>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle>Data Import/Export</CardTitle>
+              <CardDescription>CSV import and export functionality</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ul class="space-y-2 text-sm text-gray-600">
+                <li>• Bulk import from CSV</li>
+                <li>• Export all specifications</li>
+                <li>• Data validation</li>
+                <li>• Error reporting</li>
+              </ul>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle>Advanced Validation</CardTitle>
+              <CardDescription>Comprehensive data validation rules</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ul class="space-y-2 text-sm text-gray-600">
+                <li>• Dimension relationships</li>
+                <li>• Range validation</li>
+                <li>• Real-time feedback</li>
+                <li>• Clear error messages</li>
+              </ul>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle>User Authentication</CardTitle>
+              <CardDescription>Secure user accounts and data privacy</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ul class="space-y-2 text-sm text-gray-600">
+                <li>• User registration</li>
+                <li>• Secure login</li>
+                <li>• Private data storage</li>
+                <li>• Account management</li>
+              </ul>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Benefits Section -->
+  <section class="bg-gray-50 py-20 sm:py-32">
+    <div class="mx-auto max-w-7xl px-6 lg:px-8">
+      <div class="mx-auto max-w-2xl text-center">
+        <h2 class="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">Why This Matters</h2>
+        <p class="mt-6 text-lg leading-8 text-gray-600">Make better decisions with complete ski specifications.</p>
+      </div>
+      <div class="mx-auto mt-16 max-w-4xl">
+        <div class="grid grid-cols-1 gap-8 lg:grid-cols-2">
+          <div class="space-y-6">
+            <div class="flex items-start space-x-4">
+              <div class="flex-shrink-0">
+                <div class="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100">
+                  <svg class="h-5 w-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                    <path
+                      fill-rule="evenodd"
+                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                      clip-rule="evenodd"></path>
+                  </svg>
+                </div>
+              </div>
+              <div>
+                <h3 class="text-lg font-semibold text-gray-900">Objective Comparisons</h3>
+                <p class="text-gray-600">Compare skis across different manufacturers using standardized metrics.</p>
+              </div>
+            </div>
+            <div class="flex items-start space-x-4">
+              <div class="flex-shrink-0">
+                <div class="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100">
+                  <svg class="h-5 w-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                    <path
+                      fill-rule="evenodd"
+                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                      clip-rule="evenodd"></path>
+                  </svg>
+                </div>
+              </div>
+              <div>
+                <h3 class="text-lg font-semibold text-gray-900">Optimal Length Selection</h3>
+                <p class="text-gray-600">Find the right ski length compensated by width for your terrain.</p>
+              </div>
+            </div>
+            <div class="flex items-start space-x-4">
+              <div class="flex-shrink-0">
+                <div class="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100">
+                  <svg class="h-5 w-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                    <path
+                      fill-rule="evenodd"
+                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                      clip-rule="evenodd"></path>
+                  </svg>
+                </div>
+              </div>
+              <div>
+                <h3 class="text-lg font-semibold text-gray-900">Snow Condition Assessment</h3>
+                <p class="text-gray-600">Evaluate real floatation performance in deep snow conditions.</p>
+              </div>
+            </div>
+          </div>
+          <div class="space-y-6">
+            <div class="flex items-start space-x-4">
+              <div class="flex-shrink-0">
+                <div class="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100">
+                  <svg class="h-5 w-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                    <path
+                      fill-rule="evenodd"
+                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                      clip-rule="evenodd"></path>
+                  </svg>
+                </div>
+              </div>
+              <div>
+                <h3 class="text-lg font-semibold text-gray-900">Weight-Performance Balance</h3>
+                <p class="text-gray-600">
+                  Find the optimal compromise between downhill performance and uphill efficiency.
+                </p>
+              </div>
+            </div>
+            <div class="flex items-start space-x-4">
+              <div class="flex-shrink-0">
+                <div class="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100">
+                  <svg class="h-5 w-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                    <path
+                      fill-rule="evenodd"
+                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                      clip-rule="evenodd"></path>
+                  </svg>
+                </div>
+              </div>
+              <div>
+                <h3 class="text-lg font-semibold text-gray-900">Informed Decisions</h3>
+                <p class="text-gray-600">Stop relying on subjective opinions and make data-driven choices.</p>
+              </div>
+            </div>
+            <div class="flex items-start space-x-4">
+              <div class="flex-shrink-0">
+                <div class="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100">
+                  <svg class="h-5 w-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                    <path
+                      fill-rule="evenodd"
+                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                      clip-rule="evenodd"></path>
+                  </svg>
+                </div>
+              </div>
+              <div>
+                <h3 class="text-lg font-semibold text-gray-900">Long Tour Optimization</h3>
+                <p class="text-gray-600">Perfect for multi-day ski touring where every gram matters.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA Section -->
+  <section class="py-20 sm:py-32">
+    <div class="mx-auto max-w-7xl px-6 lg:px-8">
+      <div class="mx-auto max-w-2xl text-center">
+        <h2 class="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
+          Ready to Optimize Your Ski Selection?
+        </h2>
+        <p class="mt-6 text-lg leading-8 text-gray-600">
+          Join advanced skiers who make data-driven decisions about their equipment. Get started with your first ski
+          specification today.
+        </p>
+        <div class="mt-10 flex items-center justify-center gap-x-6">
+          <Button size="lg" asChild>
+            <a href="/ski-specs">Start Adding Specs</a>
+          </Button>
+          <Button variant="outline" size="lg" asChild>
+            <a href="/account">Create Account</a>
+          </Button>
+        </div>
+      </div>
+    </div>
+  </section>
 </Layout>

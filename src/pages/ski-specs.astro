@@ -1,0 +1,18 @@
+---
+import Layout from "../layouts/Layout.astro";
+import ToastTest from "../components/ToastTest";
+---
+
+<Layout title="Ski Specifications">
+  <div class="space-y-6">
+    <div>
+      <h1 class="text-3xl font-bold text-gray-900">Ski Specifications</h1>
+      <p class="mt-2 text-gray-600">Manage your ski specifications and compare different models.</p>
+    </div>
+
+    <div class="bg-white shadow rounded-lg p-6">
+      <h2 class="text-lg font-medium text-gray-900 mb-4">Test Toast Notifications</h2>
+      <ToastTest client:load />
+    </div>
+  </div>
+</Layout>

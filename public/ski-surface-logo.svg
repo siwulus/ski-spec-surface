@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 580 140">
+  
+<style>
+  .ink { fill: #0E2836; } /* deep navy */
+  .ink-gray { fill: #555555; } /* grayscale variant */
+  .word { font-family: Inter, sans-serif; fill: #0E2836; }
+</style>
+
+  <text x="0" y="70" class="word" font-size="88" font-weight="800">SKI SURFACE</text>
+  <text x="4" y="130" class="word" font-size="44" font-weight="700" letter-spacing="8">SPEC EXTENSION</text>
+</svg>

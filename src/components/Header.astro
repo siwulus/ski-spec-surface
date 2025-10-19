@@ -1,0 +1,22 @@
+---
+import Navigation from "@/components/Navigation";
+
+interface Props {
+  currentPath: string;
+}
+
+const { currentPath } = Astro.props;
+---
+
+<header
+  class="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
+>
+  <div class="container flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+    <div class="flex items-center gap-6">
+      <a href="/" class="flex items-center space-x-2" aria-label="Home">
+        <img src="/ski-surface-logo.svg" alt="Ski Surface Spec" class="h-8 w-auto" />
+      </a>
+      <Navigation currentPath={currentPath} client:load />
+    </div>
+  </div>
+</header>

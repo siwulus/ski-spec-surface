@@ -1,6 +1,5 @@
 ---
-description: 
-globs: *.tsx,*.astro
+globs: *.tsx,*.astro,src/components/**/*.ts
 alwaysApply: false
 ---
 ## Frontend

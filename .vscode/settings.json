@@ -31,5 +31,6 @@
     "typescript",
     "typescriptreact",
     "astro"
-  ]
+  ],
+  "svg.preview.background": "transparent"
 }

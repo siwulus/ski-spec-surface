@@ -1,6 +1,5 @@
 ---
-description: 
-globs: 
+globs: *.tsx,*.astro,src/components/**/*.ts
 alwaysApply: false
 ---
 # Shadcn UI Components
