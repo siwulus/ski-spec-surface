@@ -45,8 +45,8 @@ export const SkiSpecDTOSchema = z.object({
   surface_area: z.number().positive("Surface area must be positive"),
   relative_weight: z.number().positive("Relative weight must be positive"),
   algorithm_version: z.string().min(1, "Algorithm version is required"),
-  created_at: z.string().datetime("Created at must be a valid ISO datetime"),
-  updated_at: z.string().datetime("Updated at must be a valid ISO datetime"),
+  created_at: z.iso.datetime({ offset: true, message: "Created at must be a valid ISO datetime" }),
+  updated_at: z.iso.datetime({ offset: true, message: "Updated at must be a valid ISO datetime" }),
   notes_count: z.number().int().min(0, "Notes count must be non-negative"),
 });
 
@@ -193,8 +193,8 @@ export const NoteDTOSchema = z.object({
   id: z.string().uuid("ID must be a valid UUID"),
   ski_spec_id: z.string().uuid("Ski spec ID must be a valid UUID"),
   content: z.string().min(1, "Content is required").max(2000, "Content must be between 1 and 2000 characters"),
-  created_at: z.string().datetime("Created at must be a valid ISO datetime"),
-  updated_at: z.string().datetime("Updated at must be a valid ISO datetime"),
+  created_at: z.iso.datetime({ offset: true, message: "Created at must be a valid ISO datetime" }),
+  updated_at: z.iso.datetime({ offset: true, message: "Updated at must be a valid ISO datetime" }),
 });
 
 // Compile-time type check to ensure schema matches type
@@ -504,7 +504,7 @@ export type ImportResponse = z.infer<typeof ImportResponseSchema>;
  */
 export const HealthCheckResponseSchema = z.object({
   status: z.enum(["healthy", "unhealthy"]),
-  timestamp: z.string().datetime(),
+  timestamp: z.iso.datetime({ offset: true }),
   version: z.string(),
   error: z.string().optional(),
 });
@@ -538,7 +538,7 @@ export const ApiErrorResponseSchema = z.object({
   error: z.string().min(1, "Error message is required"),
   code: z.string().optional(),
   details: z.array(ValidationErrorDetailSchema).optional(),
-  timestamp: z.string().datetime("Timestamp must be a valid ISO datetime").optional(),
+  timestamp: z.iso.datetime({ offset: true, message: "Timestamp must be a valid ISO datetime" }).optional(),
 });
 
 /**

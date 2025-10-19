@@ -14,6 +14,7 @@ Ski Surface Spec Extension is a web application created for advanced ski touring
 - React 19
 - Tailwind 4
 - Shadcn/ui
+- pnpm as package manager
 
 ## Project Structure
 
@@ -47,3 +48,4 @@ When modifying the directory structure, always update this section.
 - Use guard clauses to handle preconditions and invalid states early.
 - Implement proper error logging and user-friendly error messages.
 - Consider using custom error types or error factories for consistent error handling.
+- Use arrow function notation where it is possible

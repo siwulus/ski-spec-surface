@@ -1,6 +1,6 @@
 ---
-import Layout from "../layouts/Layout.astro";
-import ToastTest from "../components/ToastTest";
+import Layout from "@/layouts/Layout.astro";
+import { SkiSpecGrid } from "@/components/SkiSpecGrid";
 ---
 
 <Layout title="Ski Specifications">
@@ -10,9 +10,6 @@ import ToastTest from "../components/ToastTest";
       <p class="mt-2 text-muted-foreground">Manage your ski specifications and compare different models.</p>
     </header>
 
-    <section aria-labelledby="toast-test-heading" class="bg-card border border-border shadow-sm rounded-lg p-6">
-      <h2 id="toast-test-heading" class="text-lg font-medium text-card-foreground mb-4">Test Toast Notifications</h2>
-      <ToastTest client:load />
-    </section>
+    <SkiSpecGrid client:load />
   </div>
 </Layout>

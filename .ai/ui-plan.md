@@ -41,7 +41,7 @@ Aplikacja jest zbudowana w oparciu o Astro 5 (strony `.astro`) z wyspami React 1
 - **Kluczowe informacje do wyświetlenia**: nazwa, długość, tip/waist/tail, radius, weight, surface_area, relative_weight, liczba notatek.
 - **Kluczowe komponenty widoku**:
   - Toolbar (React island): `search` (debounce 300 ms), `sort_by`, `sort_order`, `page`, `limit` zsynchronizowane z URL; przyciski „Dodaj”, „Import”, „Eksport CSV”, „Porównaj”.
-  - Lista (karty lub tabela responsywna) z checkboxami wyboru do porównania (max 4), akcje: szczegóły, edycja, usuń.
+  - Lista (kartyna gridzie) z checkboxami wyboru do porównania (max 4), akcje: szczegóły, edycja, usuń.
   - Modal Create/Edit sterowany URL-em: `?modal=create|edit&id=`; potwierdzenie porzucenia zmian; toasty.
   - Modal Import (duży): upload CSV, podsumowanie (summary), zakładki „Zaimportowane”/„Błędy”.
 - **UX, dostępność i bezpieczeństwo**:

@@ -1,0 +1,1 @@
+Your task is to implement a frontend view fragment based on the provided implementation plan and implementation rules. Your goal is to create a detailed and accurate implementation that conforms to the provided plan, correctly represents the component structure, integrates with the API, and handles all specified user interactions.
