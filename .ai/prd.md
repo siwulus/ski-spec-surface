@@ -9,7 +9,9 @@ Aplikacja jest skierowana do doświadczonych narciarzy, którzy potrzebują prec
 Kluczowe założenia:
 
 - Aplikacja webowa dostępna przez przeglądarkę
-- Dostęp tylko dla zalogowanych użytkowników
+- Landing page dostępny publicznie bez logowania, opisuje cel i funkcjonalność aplikacji
+- Dostęp do funkcjonalności aplikacji tylko dla zalogowanych użytkowników
+- Po zalogowaniu użytkownik przekierowany do listy specyfikacji
 - Każdy rozmiar narty traktowany jako oddzielny model
 - Wszystkie pola specyfikacji technicznych (wymiary, waga) są obowiązkowe, opis specyfikacji jest opcjonalny
 - Algorytm obliczania powierzchni realizuje zdefiniowany interfejs i może być podmieniany od najprostszego wymaganego w PoC po bardziej zaawansowany oparty na krzywych w wersji MVP
@@ -84,6 +86,7 @@ Obecnie narciarze muszą samodzielnie szacować te parametry lub polegać na sub
 
 ### 3.6 System uwierzytelniania
 
+- Landing page z opisem aplikacji dostępny publicznie bez uwierzytelniania
 - Rejestracja nowych użytkowników
 - Logowanie i wylogowanie
 - Zarządzanie kontem użytkownika
@@ -117,10 +120,27 @@ Obecnie narciarze muszą samodzielnie szacować te parametry lub polegać na sub
 - Wyświetlanie licznika notatek przy każdej specyfikacji na liście
 - Walidacja długości treści notatki (minimum 1 znak, maksimum 2000 znaków)
 
+### 3.9 Landing Page
+
+- Strona główna aplikacji (root `/`) dostępna publicznie bez logowania
+- Prezentacja problemu użytkownika: brak danych o powierzchni narty i wadze względnej w specyfikacjach producentów
+- Lista kluczowych korzyści aplikacji:
+  - Automatyczne obliczanie powierzchni narty na podstawie wymiarów
+  - Kalkulacja wagi względnej (g/cm²) dla obiektywnego porównania modeli
+  - Porównywanie do 4 modeli nart jednocześnie
+  - Prywatna przestrzeń do zarządzania własnymi specyfikacjami
+  - Import/eksport danych w formacie CSV
+  - System notatek do dokumentowania testów i obserwacji
+- Wyraźny przycisk Call-to-Action (CTA) do rejestracji/logowania
+- Responsywny design dostosowany do urządzeń mobilnych i desktopowych
+- Prosty, czytelny layout skupiony na przekazaniu wartości aplikacji
+- Brak demonstracji interaktywnej ani trybu demo (opcja poza zakresem MVP)
+
 ## 4. Granice produktu
 
 ### 4.1 Funkcjonalności wchodzące w zakres MVP
 
+- Landing page z opisem aplikacji i funkcjonalności (dostępny publicznie)
 - Pełny CRUD specyfikacji nart
 - Widok szczegółów specyfikacji
 - Pełny CRUD notatek powiązanych ze specyfikacjami
@@ -143,8 +163,8 @@ Obecnie narciarze muszą samodzielnie szacować te parametry lub polegać na sub
 - Porównywanie więcej niż 4 specyfikacji jednocześnie
 - Współdzielenie i publiczne udostępnianie specyfikacji wraz z notatkami
 - Wizualizacja konturu narty
-- Onboarding i tryb demo
-- Tryb gościa (bez logowania)
+- Interaktywny tryb demo na landing page (prezentacja funkcjonalności bez rejestracji)
+- Tryb gościa z ograniczonymi funkcjonalnościami (bez logowania)
 - Integracja z zewnętrznymi bazami danych producentów
 - Aplikacja mobilna
 
@@ -168,16 +188,35 @@ Obecnie narciarze muszą samodzielnie szacować te parametry lub polegać na sub
 
 ### 5.1 Uwierzytelnianie i zarządzanie kontem
 
+#### US-000: Wyświetlanie landing page dla niezalogowanych użytkowników
+
+- ID: US-000
+- Tytuł: Przeglądanie landing page bez logowania
+- Opis: Jako potencjalny użytkownik chcę zobaczyć informacje o aplikacji przed rejestracją, aby zrozumieć jej wartość i funkcjonalność
+- Kryteria akceptacji:
+  - Landing page jest stroną główną aplikacji (root `/`)
+  - Strona jest dostępna bez logowania
+  - Wyświetlana jest sekcja opisująca problem użytkownika: brak danych o powierzchni i wadze względnej w specyfikacjach producentów
+  - Prezentowana jest lista kluczowych korzyści aplikacji w czytelnej formie (punkty lub ikony z opisami)
+  - Wyraźny przycisk Call-to-Action (CTA) "Zarejestruj się" lub "Rozpocznij" jest widoczny w górnej części strony
+  - Dodatkowy link do logowania dla istniejących użytkowników jest dostępny
+  - Strona jest responsywna i poprawnie wyświetla się na urządzeniach mobilnych i desktopowych
+  - Layout jest prosty i skupiony na przekazaniu wartości aplikacji
+  - Po kliknięciu przycisku CTA użytkownik jest przekierowany do formularza rejestracji
+  - Po kliknięciu linku logowania użytkownik jest przekierowany do formularza logowania
+
 #### US-001: Rejestracja nowego użytkownika
 
 - ID: US-001
 - Tytuł: Rejestracja nowego użytkownika
 - Opis: Jako nowy użytkownik chcę się zarejestrować w aplikacji, aby móc korzystać z jej funkcjonalności
 - Kryteria akceptacji:
+  - Formularz rejestracji dostępny z landing page (przycisk CTA) oraz bezpośrednio pod adresem `/signup` lub `/register`
   - Formularz rejestracji zawiera wymagane pola (email, hasło)
   - System waliduje poprawność adresu email
   - System wymusza minimalne wymagania bezpieczeństwa hasła
   - Po pomyślnej rejestracji użytkownik jest automatycznie zalogowany
+  - Po zalogowaniu użytkownik jest przekierowany do listy specyfikacji (która początkowo jest pusta)
   - System wyświetla komunikat potwierdzający rejestrację
 
 #### US-002: Logowanie użytkownika
@@ -186,11 +225,13 @@ Obecnie narciarze muszą samodzielnie szacować te parametry lub polegać na sub
 - Tytuł: Logowanie do aplikacji
 - Opis: Jako zarejestrowany użytkownik chcę się zalogować do aplikacji, aby uzyskać dostęp do moich danych
 - Kryteria akceptacji:
+  - Formularz logowania dostępny z landing page (link "Zaloguj się") oraz bezpośrednio pod adresem `/login`
   - Formularz logowania zawiera pola email i hasło
   - System weryfikuje poprawność danych logowania
   - Po pomyślnym logowaniu użytkownik jest przekierowany do listy specyfikacji
   - Przy błędnych danych wyświetlany jest komunikat o błędzie
   - System blokuje możliwość logowania po przekroczeniu limitu nieudanych prób
+  - Zalogowany użytkownik próbujący wejść na landing page (root `/`) jest automatycznie przekierowywany do listy specyfikacji
 
 #### US-003: Wylogowanie użytkownika
 
@@ -474,6 +515,13 @@ Obecnie narciarze muszą samodzielnie szacować te parametry lub polegać na sub
 ## 6. Metryki sukcesu
 
 ### 6.1 Kluczowe wskaźniki wydajności (KPI)
+
+#### Konwersja z landing page
+
+- Cel: ≥15% odwiedzających landing page dokonuje rejestracji
+- Pomiar: liczba rejestracji / liczba unikalnych odwiedzin landing page
+- Okres pomiaru: miesięczny
+- Uwaga: Wyłączając użytkowników którzy weszli bezpośrednio na strony rejestracji lub logowania
 
 #### Zaangażowanie użytkowników
 

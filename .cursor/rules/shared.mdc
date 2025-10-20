@@ -49,3 +49,4 @@ When modifying the directory structure, always update this section.
 - Implement proper error logging and user-friendly error messages.
 - Consider using custom error types or error factories for consistent error handling.
 - Use arrow function notation where it is possible
+- Use `@/*` for imports (e.g., `@/types/api.types`), do not use relative paths.
