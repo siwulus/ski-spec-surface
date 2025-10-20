@@ -3,29 +3,29 @@ Jesteś doświadczonym architektem oprogramowania, którego zadaniem jest stworz
 Zanim zaczniemy, zapoznaj się z poniższymi informacjami:
 
 1. Route API specification:
-<route_api_specification>
-{{route-api-specification}} <- przekopiuj opis endpointa z api-plan.md
-</route_api_specification>
+   <route_api_specification>
+   {{route-api-specification}} <- przekopiuj opis endpointa z api-plan.md
+   </route_api_specification>
 
 2. Related database resources:
-<related_db_resources>
-{{db-resources}} <- przekopiuj z tabele i relacje z db-plan.md
-</related_db_resources>
+   <related_db_resources>
+   {{db-resources}} <- przekopiuj z tabele i relacje z db-plan.md
+   </related_db_resources>
 
 3. Definicje typów:
-<type_definitions>
-{{types}} <- zamień na referencje do definicji typów (np. @types)
-</type_definitions>
+   <type_definitions>
+   {{types}} <- zamień na referencje do definicji typów (np. @types)
+   </type_definitions>
 
-3. Tech stack:
-<tech_stack>
-{{tech-stack}} <- zamień na referencje do @tech-stack.md
-</tech_stack>
+4. Tech stack:
+   <tech_stack>
+   {{tech-stack}} <- zamień na referencje do @tech-stack.md
+   </tech_stack>
 
-4. Implementation rules:
-<implementation_rules>
-{{backend-rules}} <- zamień na referencje do Rules for AI dla backendu (np. @shared.mdc, @backend.mdc, @astro.mdc)
-</implementation_rules>
+5. Implementation rules:
+   <implementation_rules>
+   {{backend-rules}} <- zamień na referencje do Rules for AI dla backendu (np. @shared.mdc, @backend.mdc, @astro.mdc)
+   </implementation_rules>
 
 Twoim zadaniem jest stworzenie kompleksowego planu wdrożenia endpointu interfejsu API REST. Przed dostarczeniem ostatecznego planu użyj znaczników <analysis>, aby przeanalizować informacje i nakreślić swoje podejście. W tej analizie upewnij się, że:
 
@@ -50,6 +50,7 @@ Po przeprowadzeniu analizy utwórz szczegółowy plan wdrożenia w formacie mark
 8. Kroki implementacji
 
 W całym planie upewnij się, że
+
 - Używać prawidłowych kodów stanu API:
   - 200 dla pomyślnego odczytu
   - 201 dla pomyślnego utworzenia
@@ -63,12 +64,15 @@ W całym planie upewnij się, że
 Końcowym wynikiem powinien być dobrze zorganizowany plan wdrożenia w formacie markdown. Oto przykład tego, jak powinny wyglądać dane wyjściowe:
 
 ``markdown
+
 # API Endpoint Implementation Plan: [Nazwa punktu końcowego]
 
 ## 1. Przegląd punktu końcowego
+
 [Krótki opis celu i funkcjonalności punktu końcowego]
 
 ## 2. Szczegóły żądania
+
 - Metoda HTTP: [GET/POST/PUT/DELETE]
 - Struktura URL: [wzorzec URL]
 - Parametry:
@@ -77,30 +81,39 @@ Końcowym wynikiem powinien być dobrze zorganizowany plan wdrożenia w formacie
 - Request Body: [Struktura treści żądania, jeśli dotyczy]
 
 ## 3. Wykorzystywane typy
+
 [DTOs i Command Modele niezbędne do implementacji]
 
 ## 3. Szczegóły odpowiedzi
+
 [Oczekiwana struktura odpowiedzi i kody statusu]
 
 ## 4. Przepływ danych
+
 [Opis przepływu danych, w tym interakcji z zewnętrznymi usługami lub bazami danych]
 
 ## 5. Względy bezpieczeństwa
+
 [Szczegóły uwierzytelniania, autoryzacji i walidacji danych]
 
 ## 6. Obsługa błędów
+
 [Lista potencjalnych błędów i sposób ich obsługi]
 
 ## 7. Rozważania dotyczące wydajności
+
 [Potencjalne wąskie gardła i strategie optymalizacji]
 
 ## 8. Etapy wdrożenia
+
 1. [Krok 1]
 2. [Krok 2]
 3. [Krok 3]
-...
+   ...
+
 ```
 
 Końcowe wyniki powinny składać się wyłącznie z planu wdrożenia w formacie markdown i nie powinny powielać ani powtarzać żadnej pracy wykonanej w sekcji analizy.
 
 Pamiętaj, aby zapisać swój plan wdrożenia jako .ai/view-implementation-plan.md. Upewnij się, że plan jest szczegółowy, przejrzysty i zapewnia kompleksowe wskazówki dla zespołu programistów.
+```

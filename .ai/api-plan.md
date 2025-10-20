@@ -4,10 +4,10 @@
 
 ### 1.1 Core Resources
 
-| Resource | Database Table | Description |
-|----------|---------------|-------------|
-| `ski-specs` | `ski_specs` | Ski specifications with technical parameters and calculated metrics |
-| `notes` | `ski_spec_notes` | Notes associated with ski specifications |
+| Resource    | Database Table   | Description                                                         |
+| ----------- | ---------------- | ------------------------------------------------------------------- |
+| `ski-specs` | `ski_specs`      | Ski specifications with technical parameters and calculated metrics |
+| `notes`     | `ski_spec_notes` | Notes associated with ski specifications                            |
 
 ### 1.2 Resource Relationships
 
@@ -29,6 +29,7 @@ Lists all ski specifications for the authenticated user with pagination and opti
 **Authentication:** Required (Bearer token)
 
 **Query Parameters:**
+
 ```typescript
 {
   page?: number;           // Page number (default: 1)
@@ -40,6 +41,7 @@ Lists all ski specifications for the authenticated user with pagination and opti
 ```
 
 **Response (200 OK):**
+
 ```json
 {
   "data": [
@@ -54,7 +56,7 @@ Lists all ski specifications for the authenticated user with pagination and opti
       "tail": 123,
       "radius": 18,
       "weight": 1580,
-      "surface_area": 2340.50,
+      "surface_area": 2340.5,
       "relative_weight": 0.675,
       "algorithm_version": "1.0.0",
       "notes_count": 3,
@@ -72,6 +74,7 @@ Lists all ski specifications for the authenticated user with pagination and opti
 ```
 
 **Error Responses:**
+
 - `401 Unauthorized` - Missing or invalid authentication token
 - `400 Bad Request` - Invalid query parameters
 
@@ -86,9 +89,11 @@ Retrieves detailed information about a specific ski specification including asso
 **Authentication:** Required (Bearer token)
 
 **Path Parameters:**
+
 - `id` - UUID of the ski specification
 
 **Response (200 OK):**
+
 ```json
 {
   "id": "uuid",
@@ -101,7 +106,7 @@ Retrieves detailed information about a specific ski specification including asso
   "tail": 123,
   "radius": 18,
   "weight": 1580,
-  "surface_area": 2340.50,
+  "surface_area": 2340.5,
   "relative_weight": 0.675,
   "algorithm_version": "1.0.0",
   "notes_count": 3,
@@ -111,6 +116,7 @@ Retrieves detailed information about a specific ski specification including asso
 ```
 
 **Error Responses:**
+
 - `401 Unauthorized` - Missing or invalid authentication token
 - `404 Not Found` - Ski specification not found or not owned by user
 - `400 Bad Request` - Invalid UUID format
@@ -126,6 +132,7 @@ Creates a new ski specification. The system automatically calculates `surface_ar
 **Authentication:** Required (Bearer token)
 
 **Request Body:**
+
 ```json
 {
   "name": "Atomic Backland 107",
@@ -152,10 +159,12 @@ Creates a new ski specification. The system automatically calculates `surface_ar
 | `weight` | integer | Yes | 500-3000 (g) |
 
 **Business Rules:**
+
 - `tip >= waist <= tail` (tip must be >= waist, tail must be >= waist)
 - Name must be unique per user
 
 **Response (201 Created):**
+
 ```json
 {
   "id": "uuid",
@@ -168,7 +177,7 @@ Creates a new ski specification. The system automatically calculates `surface_ar
   "tail": 123,
   "radius": 18,
   "weight": 1580,
-  "surface_area": 2340.50,
+  "surface_area": 2340.5,
   "relative_weight": 0.675,
   "algorithm_version": "1.0.0",
   "notes_count": 0,
@@ -178,12 +187,14 @@ Creates a new ski specification. The system automatically calculates `surface_ar
 ```
 
 **Error Responses:**
+
 - `401 Unauthorized` - Missing or invalid authentication token
 - `400 Bad Request` - Validation errors (with detailed field-level error messages)
 - `409 Conflict` - Specification name already exists for this user
 - `422 Unprocessable Entity` - Business rule violations (e.g., tip/waist/tail relationship)
 
 **Example Error Response (400):**
+
 ```json
 {
   "error": "Validation failed",
@@ -211,9 +222,11 @@ Updates an existing ski specification. Recalculates `surface_area` and `relative
 **Authentication:** Required (Bearer token)
 
 **Path Parameters:**
+
 - `id` - UUID of the ski specification
 
 **Request Body:**
+
 ```json
 {
   "name": "Atomic Backland 107 (181cm)",
@@ -230,6 +243,7 @@ Updates an existing ski specification. Recalculates `surface_area` and `relative
 **Field Specifications:** Same as Create endpoint
 
 **Response (200 OK):**
+
 ```json
 {
   "id": "uuid",
@@ -242,7 +256,7 @@ Updates an existing ski specification. Recalculates `surface_area` and `relative
   "tail": 123,
   "radius": 18,
   "weight": 1580,
-  "surface_area": 2340.50,
+  "surface_area": 2340.5,
   "relative_weight": 0.675,
   "algorithm_version": "1.0.0",
   "notes_count": 3,
@@ -252,6 +266,7 @@ Updates an existing ski specification. Recalculates `surface_area` and `relative
 ```
 
 **Error Responses:**
+
 - `401 Unauthorized` - Missing or invalid authentication token
 - `404 Not Found` - Ski specification not found or not owned by user
 - `400 Bad Request` - Validation errors
@@ -269,12 +284,14 @@ Deletes a ski specification and all associated notes (cascade delete).
 **Authentication:** Required (Bearer token)
 
 **Path Parameters:**
+
 - `id` - UUID of the ski specification
 
 **Response (204 No Content):**
 No response body
 
 **Error Responses:**
+
 - `401 Unauthorized` - Missing or invalid authentication token
 - `404 Not Found` - Ski specification not found or not owned by user
 - `400 Bad Request` - Invalid UUID format
@@ -290,13 +307,15 @@ Compares 2-4 ski specifications owned by the authenticated user. Returns full sp
 **Authentication:** Required (Bearer token)
 
 **Query Parameters:**
+
 ```typescript
 {
-  ids: string;  // Comma-separated UUIDs (2-4 items, e.g., "uuid1,uuid2,uuid3")
+  ids: string; // Comma-separated UUIDs (2-4 items, e.g., "uuid1,uuid2,uuid3")
 }
 ```
 
 **Response (200 OK):**
+
 ```json
 {
   "specifications": [
@@ -310,7 +329,7 @@ Compares 2-4 ski specifications owned by the authenticated user. Returns full sp
       "tail": 123,
       "radius": 18,
       "weight": 1580,
-      "surface_area": 2340.50,
+      "surface_area": 2340.5,
       "relative_weight": 0.675
     },
     {
@@ -331,6 +350,7 @@ Compares 2-4 ski specifications owned by the authenticated user. Returns full sp
 ```
 
 **Error Responses:**
+
 - `401 Unauthorized` - Missing or invalid authentication token
 - `400 Bad Request` - Invalid query parameters (wrong number of IDs, invalid UUIDs)
 - `404 Not Found` - One or more specifications not found or not owned by user
@@ -346,6 +366,7 @@ Exports all ski specifications for the authenticated user to CSV format.
 **Authentication:** Required (Bearer token)
 
 **Query Parameters:**
+
 ```typescript
 {
   format?: string;  // Export format: csv (default: csv, future: json, xlsx)
@@ -353,22 +374,26 @@ Exports all ski specifications for the authenticated user to CSV format.
 ```
 
 **Response (200 OK):**
+
 - Content-Type: `text/csv; charset=utf-8`
 - Content-Disposition: `attachment; filename="ski-specs-YYYY-MM-DD.csv"`
 
 **CSV Structure:**
+
 ```csv
 name,description,length_cm,tip_mm,waist_mm,tail_mm,radius_m,weight_g,surface_area_cm2,relative_weight_g_cm2
 "Atomic Backland 107","All-mountain freeride ski for powder",181,142,107,123,18,1580,2340.50,0.675
 ```
 
 **Notes on CSV Format:**
+
 - Descriptions with commas, quotes, or newlines are properly escaped
 - Empty descriptions are represented as empty fields
 - All numeric values use dot (.) as decimal separator
 - UTF-8 encoding for special characters
 
 **Error Responses:**
+
 - `401 Unauthorized` - Missing or invalid authentication token
 
 ---
@@ -382,10 +407,12 @@ Imports ski specifications from CSV file. Validates all entries and provides det
 **Authentication:** Required (Bearer token)
 
 **Request:**
+
 - Content-Type: `multipart/form-data`
 - Body: Form data with file field named `file`
 
 **CSV Requirements:**
+
 - Must include header row with expected column names
 - Required columns: name, length_cm, tip_mm, waist_mm, tail_mm, radius_m, weight_g
 - Optional columns: description
@@ -393,6 +420,7 @@ Imports ski specifications from CSV file. Validates all entries and provides det
 - Supports both dot (`.`) and comma (`,`) as decimal separators
 
 **Response (200 OK):**
+
 ```json
 {
   "summary": {
@@ -434,6 +462,7 @@ Imports ski specifications from CSV file. Validates all entries and provides det
 ```
 
 **Error Responses:**
+
 - `401 Unauthorized` - Missing or invalid authentication token
 - `400 Bad Request` - Invalid file format, missing file, or corrupted CSV
 - `413 Payload Too Large` - File size exceeds limit (e.g., 5MB)
@@ -452,9 +481,11 @@ Lists all notes for a specific ski specification, sorted chronologically (newest
 **Authentication:** Required (Bearer token)
 
 **Path Parameters:**
+
 - `specId` - UUID of the ski specification
 
 **Query Parameters:**
+
 ```typescript
 {
   page?: number;      // Page number (default: 1)
@@ -463,6 +494,7 @@ Lists all notes for a specific ski specification, sorted chronologically (newest
 ```
 
 **Response (200 OK):**
+
 ```json
 {
   "data": [
@@ -491,6 +523,7 @@ Lists all notes for a specific ski specification, sorted chronologically (newest
 ```
 
 **Error Responses:**
+
 - `401 Unauthorized` - Missing or invalid authentication token
 - `404 Not Found` - Ski specification not found or not owned by user
 - `400 Bad Request` - Invalid UUID format or query parameters
@@ -506,10 +539,12 @@ Retrieves a specific note.
 **Authentication:** Required (Bearer token)
 
 **Path Parameters:**
+
 - `specId` - UUID of the ski specification
 - `noteId` - UUID of the note
 
 **Response (200 OK):**
+
 ```json
 {
   "id": "uuid",
@@ -521,6 +556,7 @@ Retrieves a specific note.
 ```
 
 **Error Responses:**
+
 - `401 Unauthorized` - Missing or invalid authentication token
 - `404 Not Found` - Note or specification not found or not owned by user
 - `400 Bad Request` - Invalid UUID format
@@ -536,9 +572,11 @@ Creates a new note for a ski specification.
 **Authentication:** Required (Bearer token)
 
 **Path Parameters:**
+
 - `specId` - UUID of the ski specification
 
 **Request Body:**
+
 ```json
 {
   "content": "Tested in deep powder at Chamonix. Excellent float and maneuverability."
@@ -551,6 +589,7 @@ Creates a new note for a ski specification.
 | `content` | string | Yes | 1-2000 characters |
 
 **Response (201 Created):**
+
 ```json
 {
   "id": "uuid",
@@ -562,6 +601,7 @@ Creates a new note for a ski specification.
 ```
 
 **Error Responses:**
+
 - `401 Unauthorized` - Missing or invalid authentication token
 - `404 Not Found` - Ski specification not found or not owned by user
 - `400 Bad Request` - Validation errors (content length)
@@ -577,10 +617,12 @@ Updates an existing note. Automatically updates the `updated_at` timestamp.
 **Authentication:** Required (Bearer token)
 
 **Path Parameters:**
+
 - `specId` - UUID of the ski specification
 - `noteId` - UUID of the note
 
 **Request Body:**
+
 ```json
 {
   "content": "Updated content with additional observations from the test session."
@@ -590,6 +632,7 @@ Updates an existing note. Automatically updates the `updated_at` timestamp.
 **Field Specifications:** Same as Create endpoint
 
 **Response (200 OK):**
+
 ```json
 {
   "id": "uuid",
@@ -601,6 +644,7 @@ Updates an existing note. Automatically updates the `updated_at` timestamp.
 ```
 
 **Error Responses:**
+
 - `401 Unauthorized` - Missing or invalid authentication token
 - `404 Not Found` - Note or specification not found or not owned by user
 - `400 Bad Request` - Validation errors
@@ -616,6 +660,7 @@ Deletes a note.
 **Authentication:** Required (Bearer token)
 
 **Path Parameters:**
+
 - `specId` - UUID of the ski specification
 - `noteId` - UUID of the note
 
@@ -623,6 +668,7 @@ Deletes a note.
 No response body
 
 **Error Responses:**
+
 - `401 Unauthorized` - Missing or invalid authentication token
 - `404 Not Found` - Note or specification not found or not owned by user
 - `400 Bad Request` - Invalid UUID format
@@ -638,6 +684,7 @@ No response body
 Returns API health status. No authentication required.
 
 **Response (200 OK):**
+
 ```json
 {
   "status": "healthy",
@@ -652,16 +699,16 @@ Returns API health status. No authentication required.
 
 #### Field-Level Validation:
 
-| Field | Validation Rules | Error Messages |
-|-------|-----------------|----------------|
-| `name` | Required, max 255 chars, unique per user | "Name is required", "Name must not exceed 255 characters", "Specification name already exists" |
-| `description` | Optional, max 2000 chars | "Description must not exceed 2000 characters" |
-| `length` | Required, integer, 100-250 | "Length is required", "Length must be between 100 and 250 cm" |
-| `tip` | Required, integer, 50-250 | "Tip width is required", "Tip width must be between 50 and 250 mm" |
-| `waist` | Required, integer, 50-250 | "Waist width is required", "Waist width must be between 50 and 250 mm" |
-| `tail` | Required, integer, 50-250 | "Tail width is required", "Tail width must be between 50 and 250 mm" |
-| `radius` | Required, integer, 1-30 | "Radius is required", "Radius must be between 1 and 30 m" |
-| `weight` | Required, integer, 500-3000 | "Weight is required", "Weight must be between 500 and 3000 g" |
+| Field         | Validation Rules                         | Error Messages                                                                                 |
+| ------------- | ---------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| `name`        | Required, max 255 chars, unique per user | "Name is required", "Name must not exceed 255 characters", "Specification name already exists" |
+| `description` | Optional, max 2000 chars                 | "Description must not exceed 2000 characters"                                                  |
+| `length`      | Required, integer, 100-250               | "Length is required", "Length must be between 100 and 250 cm"                                  |
+| `tip`         | Required, integer, 50-250                | "Tip width is required", "Tip width must be between 50 and 250 mm"                             |
+| `waist`       | Required, integer, 50-250                | "Waist width is required", "Waist width must be between 50 and 250 mm"                         |
+| `tail`        | Required, integer, 50-250                | "Tail width is required", "Tail width must be between 50 and 250 mm"                           |
+| `radius`      | Required, integer, 1-30                  | "Radius is required", "Radius must be between 1 and 30 m"                                      |
+| `weight`      | Required, integer, 500-3000              | "Weight is required", "Weight must be between 500 and 3000 g"                                  |
 
 #### Business Rule Validation:
 
@@ -689,10 +736,10 @@ Returns API health status. No authentication required.
 
 #### Field-Level Validation:
 
-| Field | Validation Rules | Error Messages |
-|-------|-----------------|----------------|
-| `content` | Required, 1-2000 chars | "Content is required", "Content must be between 1 and 2000 characters" |
-| `ski_spec_id` | Must reference existing spec owned by user | "Ski specification not found" |
+| Field         | Validation Rules                           | Error Messages                                                         |
+| ------------- | ------------------------------------------ | ---------------------------------------------------------------------- |
+| `content`     | Required, 1-2000 chars                     | "Content is required", "Content must be between 1 and 2000 characters" |
+| `ski_spec_id` | Must reference existing spec owned by user | "Ski specification not found"                                          |
 
 ### 4.3 Import/Export Validation
 

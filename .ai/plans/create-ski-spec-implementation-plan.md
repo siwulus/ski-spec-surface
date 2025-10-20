@@ -7,6 +7,7 @@
 **Purpose**: Creates a new ski specification for the authenticated user. The endpoint accepts basic ski dimensions and automatically calculates derived metrics (surface area and relative weight) using a standardized algorithm. Each specification is scoped to the user and must have a unique name within that user's collection.
 
 **Key Features**:
+
 - Automatic calculation of `surface_area` and `relative_weight`
 - User-scoped specification management
 - Comprehensive input validation with field-level error reporting
@@ -15,18 +16,23 @@
 ## 2. Request Details
 
 ### HTTP Method
+
 `POST`
 
 ### URL Structure
+
 `/api/ski-specs`
 
 ### Authentication
+
 **Required**: Bearer token (Supabase Auth)
+
 - Token must be provided in Authorization header
 - User session must be active
 - User ID extracted from authenticated session
 
 ### Request Headers
+
 ```
 Content-Type: application/json
 Authorization: Bearer <supabase_access_token>
@@ -50,22 +56,25 @@ Authorization: Bearer <supabase_access_token>
 ### Parameters
 
 #### Required Parameters
-| Field | Type | Constraints | Description |
-|-------|------|-------------|-------------|
-| `name` | string | 1-255 chars, unique per user | Ski specification name |
-| `length` | integer | 100-250 | Ski length in cm |
-| `tip` | integer | 50-250 | Tip width in mm |
-| `waist` | integer | 50-250 | Waist width in mm |
-| `tail` | integer | 50-250 | Tail width in mm |
-| `radius` | integer | 1-30 | Turning radius in m |
-| `weight` | integer | 500-3000 | Weight of one ski in g |
+
+| Field    | Type    | Constraints                  | Description            |
+| -------- | ------- | ---------------------------- | ---------------------- |
+| `name`   | string  | 1-255 chars, unique per user | Ski specification name |
+| `length` | integer | 100-250                      | Ski length in cm       |
+| `tip`    | integer | 50-250                       | Tip width in mm        |
+| `waist`  | integer | 50-250                       | Waist width in mm      |
+| `tail`   | integer | 50-250                       | Tail width in mm       |
+| `radius` | integer | 1-30                         | Turning radius in m    |
+| `weight` | integer | 500-3000                     | Weight of one ski in g |
 
 #### Optional Parameters
-| Field | Type | Constraints | Description |
-|-------|------|-------------|-------------|
+
+| Field         | Type   | Constraints              | Description              |
+| ------------- | ------ | ------------------------ | ------------------------ |
 | `description` | string | max 2000 chars, nullable | Optional ski description |
 
 #### Business Rules
+
 - `tip >= waist` - Tip width must be greater than or equal to waist width
 - `tail >= waist` - Tail width must be greater than or equal to waist width
 - Name must be unique per user (enforced by database UNIQUE constraint)
@@ -73,10 +82,12 @@ Authorization: Bearer <supabase_access_token>
 ## 3. Used Types
 
 ### Request Types
+
 - **CreateSkiSpecCommand** - Type for validated input data
 - **CreateSkiSpecCommandSchema** - Zod schema for request validation
 
 ### Response Types
+
 - **SkiSpecDTO** - Type for successful response
 - **SkiSpecDTOSchema** - Zod schema for response validation
 - **ApiErrorResponse** - Type for error responses
@@ -100,7 +111,7 @@ All types are defined in `src/types.ts`.
   "tail": 123,
   "radius": 18,
   "weight": 1580,
-  "surface_area": 2340.50,
+  "surface_area": 2340.5,
   "relative_weight": 0.675,
   "algorithm_version": "1.0.0",
   "notes_count": 0,
@@ -110,6 +121,7 @@ All types are defined in `src/types.ts`.
 ```
 
 **Response Structure**:
+
 - All input fields are returned
 - Calculated fields: `surface_area`, `relative_weight`, `algorithm_version`
 - System fields: `id`, `user_id`, `created_at`, `updated_at`
@@ -118,6 +130,7 @@ All types are defined in `src/types.ts`.
 ### Error Responses
 
 #### 401 Unauthorized
+
 **Scenario**: Missing or invalid authentication token
 
 ```json
@@ -129,6 +142,7 @@ All types are defined in `src/types.ts`.
 ```
 
 #### 400 Bad Request
+
 **Scenario**: Invalid input data (validation errors)
 
 ```json
@@ -150,6 +164,7 @@ All types are defined in `src/types.ts`.
 ```
 
 #### 422 Unprocessable Entity
+
 **Scenario**: Business rule violation
 
 ```json
@@ -167,6 +182,7 @@ All types are defined in `src/types.ts`.
 ```
 
 #### 409 Conflict
+
 **Scenario**: Specification name already exists for user
 
 ```json
@@ -178,6 +194,7 @@ All types are defined in `src/types.ts`.
 ```
 
 #### 500 Internal Server Error
+
 **Scenario**: Unexpected server error
 
 ```json
@@ -228,6 +245,7 @@ All types are defined in `src/types.ts`.
 **Operation**: INSERT
 
 **Fields Set**:
+
 - User-provided: `name`, `description`, `length`, `tip`, `waist`, `tail`, `radius`, `weight`
 - Calculated: `surface_area`, `relative_weight`, `algorithm_version`
 - Auto-generated: `id` (UUID), `user_id` (from session), `created_at`, `updated_at` (timestamps)
@@ -237,6 +255,7 @@ All types are defined in `src/types.ts`.
 **Service**: `SkiSpecService` (`src/lib/services/ski-spec.service.ts`)
 
 **Methods**:
+
 1. `calculateSurfaceArea(dimensions: { length, tip, waist, tail, radius }): number`
    - Implements surface area calculation algorithm
    - Returns area in cm²
@@ -254,7 +273,7 @@ All types are defined in `src/types.ts`.
    - Performs database insert
    - Handles errors and transforms database response
 
-5. Build `SkiSpecDTO` based on  `SkiSpecEntity` `notes_count` are in this case always `0`
+5. Build `SkiSpecDTO` based on `SkiSpecEntity` `notes_count` are in this case always `0`
 
 ## 6. Security Considerations
 
@@ -315,28 +334,24 @@ All types are defined in `src/types.ts`.
 
 ### Error Scenarios
 
-| Scenario | HTTP Status | Error Code | Details |
-|----------|-------------|------------|---------|
-| No session/invalid token | 401 | AUTH_REQUIRED | "Unauthorized" |
-| Invalid JSON body | 400 | INVALID_JSON | "Invalid request body" |
-| Missing required field | 400 | VALIDATION_ERROR | Field-level error details |
-| Invalid data type | 400 | VALIDATION_ERROR | Field-level error details |
-| Value out of range | 400 | VALIDATION_ERROR | Field-level error details |
-| String too long | 400 | VALIDATION_ERROR | Field-level error details |
-| Business rule violation | 422 | BUSINESS_RULE_VIOLATION | "Waist must be less than or equal to both tip and tail widths" |
-| Duplicate name | 409 | DUPLICATE_NAME | "Specification with this name already exists" |
-| Database error | 500 | DATABASE_ERROR | "Failed to create specification" |
-| Calculation error | 500 | CALCULATION_ERROR | "Failed to calculate derived fields" |
-| Unknown error | 500 | INTERNAL_ERROR | "Internal server error" |
+| Scenario                 | HTTP Status | Error Code              | Details                                                        |
+| ------------------------ | ----------- | ----------------------- | -------------------------------------------------------------- |
+| No session/invalid token | 401         | AUTH_REQUIRED           | "Unauthorized"                                                 |
+| Invalid JSON body        | 400         | INVALID_JSON            | "Invalid request body"                                         |
+| Missing required field   | 400         | VALIDATION_ERROR        | Field-level error details                                      |
+| Invalid data type        | 400         | VALIDATION_ERROR        | Field-level error details                                      |
+| Value out of range       | 400         | VALIDATION_ERROR        | Field-level error details                                      |
+| String too long          | 400         | VALIDATION_ERROR        | Field-level error details                                      |
+| Business rule violation  | 422         | BUSINESS_RULE_VIOLATION | "Waist must be less than or equal to both tip and tail widths" |
+| Duplicate name           | 409         | DUPLICATE_NAME          | "Specification with this name already exists"                  |
+| Database error           | 500         | DATABASE_ERROR          | "Failed to create specification"                               |
+| Calculation error        | 500         | CALCULATION_ERROR       | "Failed to calculate derived fields"                           |
+| Unknown error            | 500         | INTERNAL_ERROR          | "Internal server error"                                        |
 
 ### Error Response Construction
 
 ```typescript
-function createErrorResponse(
-  error: string,
-  code: string,
-  details?: ValidationErrorDetail[]
-): ApiErrorResponse {
+function createErrorResponse(error: string, code: string, details?: ValidationErrorDetail[]): ApiErrorResponse {
   return {
     error,
     code,
@@ -352,10 +367,10 @@ function createErrorResponse(
 // Transform Zod errors to ValidationErrorDetail[]
 if (error instanceof z.ZodError) {
   const details: ValidationErrorDetail[] = error.errors.map((err) => ({
-    field: err.path.join('.'),
+    field: err.path.join("."),
     message: err.message,
   }));
-  return createErrorResponse('Validation failed', 'VALIDATION_ERROR', details);
+  return createErrorResponse("Validation failed", "VALIDATION_ERROR", details);
 }
 ```
 
@@ -363,11 +378,9 @@ if (error instanceof z.ZodError) {
 
 ```typescript
 // Handle Supabase/PostgreSQL errors
-if (error.code === '23505') { // UNIQUE constraint violation
-  return createErrorResponse(
-    'Specification with this name already exists',
-    'DUPLICATE_NAME'
-  );
+if (error.code === "23505") {
+  // UNIQUE constraint violation
+  return createErrorResponse("Specification with this name already exists", "DUPLICATE_NAME");
 }
 ```
 
@@ -380,13 +393,13 @@ if (error.code === '23505') { // UNIQUE constraint violation
 **Implementation**:
 
 ```typescript
-import type { SupabaseClient } from '@supabase/supabase-js';
-import type { Database } from '@/db/database.types';
-import type { CreateSkiSpecCommand, SkiSpecDTO } from '@/types';
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Database } from "@/db/database.types";
+import type { CreateSkiSpecCommand, SkiSpecDTO } from "@/types";
 
 /**
  * Calculates the surface area of a ski based on its dimensions.
- * 
+ *
  * @param dimensions - Ski dimensions
  * @returns Surface area in cm²
  */
@@ -406,7 +419,7 @@ export function calculateSurfaceArea(dimensions: {
 
 /**
  * Calculates the relative weight (weight per unit area).
- * 
+ *
  * @param weight - Ski weight in grams
  * @param surfaceArea - Ski surface area in cm²
  * @returns Relative weight in g/cm²
@@ -418,16 +431,16 @@ export function calculateRelativeWeight(weight: number, surfaceArea: number): nu
 
 /**
  * Returns the current version of the calculation algorithm.
- * 
+ *
  * @returns Algorithm version string (semantic versioning)
  */
 export function getCurrentAlgorithmVersion(): string {
-  return '1.0.0';
+  return "1.0.0";
 }
 
 /**
  * Creates a new ski specification in the database.
- * 
+ *
  * @param supabase - Supabase client instance
  * @param userId - ID of the authenticated user
  * @param command - Validated ski specification data
@@ -468,18 +481,14 @@ export async function createSkiSpec(
   };
 
   // Insert into database
-  const { data, error } = await supabase
-    .from('ski_specs')
-    .insert(insertData)
-    .select()
-    .single();
+  const { data, error } = await supabase.from("ski_specs").insert(insertData).select().single();
 
   if (error) {
     throw error;
   }
 
   if (!data) {
-    throw new Error('Failed to create ski specification');
+    throw new Error("Failed to create ski specification");
   }
 
   // Return DTO with notes_count
@@ -497,10 +506,10 @@ export async function createSkiSpec(
 **Implementation**:
 
 ```typescript
-import type { APIRoute } from 'astro';
-import { z } from 'zod';
-import { CreateSkiSpecCommandSchema, type ApiErrorResponse } from '@/types';
-import { createSkiSpec } from '@/lib/services/ski-spec.service';
+import type { APIRoute } from "astro";
+import { z } from "zod";
+import { CreateSkiSpecCommandSchema, type ApiErrorResponse } from "@/types";
+import { createSkiSpec } from "@/lib/services/ski-spec.service";
 
 export const prerender = false;
 
@@ -512,16 +521,19 @@ export const POST: APIRoute = async ({ request, locals }) => {
   try {
     // Step 1: Authentication check
     const supabase = locals.supabase;
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    const {
+      data: { session },
+      error: sessionError,
+    } = await supabase.auth.getSession();
 
     if (sessionError || !session?.user) {
       return new Response(
         JSON.stringify({
-          error: 'Unauthorized',
-          code: 'AUTH_REQUIRED',
+          error: "Unauthorized",
+          code: "AUTH_REQUIRED",
           timestamp: new Date().toISOString(),
         } satisfies ApiErrorResponse),
-        { status: 401, headers: { 'Content-Type': 'application/json' } }
+        { status: 401, headers: { "Content-Type": "application/json" } }
       );
     }
 
@@ -534,11 +546,11 @@ export const POST: APIRoute = async ({ request, locals }) => {
     } catch (error) {
       return new Response(
         JSON.stringify({
-          error: 'Invalid request body',
-          code: 'INVALID_JSON',
+          error: "Invalid request body",
+          code: "INVALID_JSON",
           timestamp: new Date().toISOString(),
         } satisfies ApiErrorResponse),
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
+        { status: 400, headers: { "Content-Type": "application/json" } }
       );
     }
 
@@ -547,18 +559,18 @@ export const POST: APIRoute = async ({ request, locals }) => {
 
     if (!validationResult.success) {
       const details = validationResult.error.errors.map((err) => ({
-        field: err.path.join('.'),
+        field: err.path.join("."),
         message: err.message,
       }));
 
       return new Response(
         JSON.stringify({
-          error: 'Validation failed',
-          code: 'VALIDATION_ERROR',
+          error: "Validation failed",
+          code: "VALIDATION_ERROR",
           details,
           timestamp: new Date().toISOString(),
         } satisfies ApiErrorResponse),
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
+        { status: 400, headers: { "Content-Type": "application/json" } }
       );
     }
 
@@ -571,46 +583,46 @@ export const POST: APIRoute = async ({ request, locals }) => {
       // Step 5: Return success response
       return new Response(JSON.stringify(skiSpec), {
         status: 201,
-        headers: { 'Content-Type': 'application/json' },
+        headers: { "Content-Type": "application/json" },
       });
     } catch (error: any) {
       // Handle database errors
-      if (error?.code === '23505') {
+      if (error?.code === "23505") {
         // UNIQUE constraint violation
         return new Response(
           JSON.stringify({
-            error: 'Specification with this name already exists',
-            code: 'DUPLICATE_NAME',
+            error: "Specification with this name already exists",
+            code: "DUPLICATE_NAME",
             timestamp: new Date().toISOString(),
           } satisfies ApiErrorResponse),
-          { status: 409, headers: { 'Content-Type': 'application/json' } }
+          { status: 409, headers: { "Content-Type": "application/json" } }
         );
       }
 
       // Log error for debugging
-      console.error('Error creating ski specification:', error);
+      console.error("Error creating ski specification:", error);
 
       // Generic database error
       return new Response(
         JSON.stringify({
-          error: 'Failed to create specification',
-          code: 'DATABASE_ERROR',
+          error: "Failed to create specification",
+          code: "DATABASE_ERROR",
           timestamp: new Date().toISOString(),
         } satisfies ApiErrorResponse),
-        { status: 500, headers: { 'Content-Type': 'application/json' } }
+        { status: 500, headers: { "Content-Type": "application/json" } }
       );
     }
   } catch (error) {
     // Catch-all for unexpected errors
-    console.error('Unexpected error in POST /api/ski-specs:', error);
+    console.error("Unexpected error in POST /api/ski-specs:", error);
 
     return new Response(
       JSON.stringify({
-        error: 'Internal server error',
-        code: 'INTERNAL_ERROR',
+        error: "Internal server error",
+        code: "INTERNAL_ERROR",
         timestamp: new Date().toISOString(),
       } satisfies ApiErrorResponse),
-      { status: 500, headers: { 'Content-Type': 'application/json' } }
+      { status: 500, headers: { "Content-Type": "application/json" } }
     );
   }
 };
@@ -722,4 +734,3 @@ export const POST: APIRoute = async ({ request, locals }) => {
 2. **Update README** with endpoint usage examples
 3. **Add JSDoc comments** to service functions (done in Step 1)
 4. **Document algorithm version** and calculation formulas
-

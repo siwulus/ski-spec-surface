@@ -13,6 +13,7 @@ Here are the TypeScript type definitions with zod validations:
 Your task is to generate a complete OpenAPI 3.0 specification based on these inputs. Follow these requirements and best practices:
 
 **OpenAPI Specification Requirements:**
+
 - Use OpenAPI 3.0.x format
 - Include proper info section with title, description, and version
 - Define all endpoints mentioned in the API plan with correct HTTP methods
@@ -23,6 +24,7 @@ Your task is to generate a complete OpenAPI 3.0 specification based on these inp
 - Add authentication/security schemes if mentioned in the plan
 
 **Best Practices to Follow:**
+
 - Use consistent naming conventions (camelCase for properties, kebab-case for paths)
 - Include meaningful descriptions for all endpoints, parameters, and schemas
 - Define reusable components in the components section
@@ -35,6 +37,7 @@ Your task is to generate a complete OpenAPI 3.0 specification based on these inp
 - Follow RESTful conventions where applicable
 
 **Schema Mapping Guidelines:**
+
 - Convert TypeScript interfaces to OpenAPI schema objects
 - Map TypeScript union types to oneOf/anyOf constructs
 - Handle optional properties correctly with required arrays

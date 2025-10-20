@@ -5,6 +5,7 @@
 This endpoint retrieves detailed information about a specific ski specification, including all technical parameters and an aggregated count of associated notes. The endpoint is authenticated and ensures users can only access their own ski specifications.
 
 **Key Features:**
+
 - Returns complete ski specification data with calculated metrics (surface area, relative weight)
 - Includes count of associated notes without loading full note data
 - Enforces user ownership validation
@@ -19,12 +20,15 @@ This endpoint retrieves detailed information about a specific ski specification,
 ### Parameters
 
 **Path Parameters (Required):**
+
 - `id` (string, UUID format): Unique identifier of the ski specification to retrieve
 
 **Query Parameters:**
+
 - None
 
 **Request Body:**
+
 - None (GET request)
 
 ### Request Examples
@@ -39,6 +43,7 @@ Authorization: Bearer <supabase-jwt-token>
 ### DTOs (from `src/types.ts`)
 
 **Response Type:**
+
 ```typescript
 type SkiSpecDTO = SkiSpecEntity & {
   notes_count: number;
@@ -46,23 +51,27 @@ type SkiSpecDTO = SkiSpecEntity & {
 ```
 
 The `SkiSpecDTO` extends `SkiSpecEntity` with an additional aggregated field:
+
 - All fields from `ski_specs` table
 - `notes_count`: Number of associated notes (integer, minimum 0)
 
 **Validation Schema:**
+
 ```typescript
-SkiSpecDTOSchema // Already defined in types.ts (lines 51-68)
+SkiSpecDTOSchema; // Already defined in types.ts (lines 51-68)
 ```
 
 ### Database Types (from `src/db/database.types.ts`)
+
 - `SkiSpecEntity`: Base type from `Tables<"ski_specs">`
 - `Database`: Supabase database type definition
 
 ### Input Validation Type
+
 ```typescript
 // Path parameter validation schema
 const PathParamsSchema = z.object({
-  id: z.string().uuid("Invalid specification ID format")
+  id: z.string().uuid("Invalid specification ID format"),
 });
 ```
 
@@ -73,6 +82,7 @@ const PathParamsSchema = z.object({
 **Content-Type**: `application/json`
 
 **Body Structure:**
+
 ```json
 {
   "id": "550e8400-e29b-41d4-a716-446655440000",
@@ -85,7 +95,7 @@ const PathParamsSchema = z.object({
   "tail": 123,
   "radius": 18,
   "weight": 1580,
-  "surface_area": 2340.50,
+  "surface_area": 2340.5,
   "relative_weight": 0.675,
   "algorithm_version": "1.0.0",
   "notes_count": 3,
@@ -97,6 +107,7 @@ const PathParamsSchema = z.object({
 ### Error Responses
 
 #### 400 Bad Request - Invalid UUID Format
+
 ```json
 {
   "error": "Invalid specification ID format",
@@ -106,6 +117,7 @@ const PathParamsSchema = z.object({
 ```
 
 #### 401 Unauthorized - Missing or Invalid Authentication
+
 ```json
 {
   "error": "Authentication required",
@@ -115,6 +127,7 @@ const PathParamsSchema = z.object({
 ```
 
 #### 404 Not Found - Specification Not Found or Not Owned by User
+
 ```json
 {
   "error": "Ski specification not found",
@@ -124,6 +137,7 @@ const PathParamsSchema = z.object({
 ```
 
 #### 500 Internal Server Error - Database or Server Error
+
 ```json
 {
   "error": "Internal server error",
@@ -163,39 +177,44 @@ Client Response
 ### Detailed Query Strategy
 
 The service function will use a supabase clinet and axecute single efficient query:
+
 ```typescript
 // Query with count using Supabase's query builder
 const { data, error, count } = await supabase
-  .from('ski_specs')
-  .select('*, notes:ski_spec_notes(count)', { count: 'exact' })
-  .eq('id', specId)
-  .eq('user_id', userId)
+  .from("ski_specs")
+  .select("*, notes:ski_spec_notes(count)", { count: "exact" })
+  .eq("id", specId)
+  .eq("user_id", userId)
   .single();
 ```
 
 ## 6. Security Considerations
 
 ### Authentication
+
 - **Requirement**: User must be authenticated via Supabase JWT token
 - **Implementation**: Check `context.locals.userId` from middleware
 - **Error Handling**: Return 401 if `userId` is undefined or null
 - **Token Validation**: Handled by Supabase middleware (JWT verification)
 
 ### Authorization
+
 - **Requirement**: Users can only access their own ski specifications
 - **Implementation**: Database query includes `user_id` filter
 - **Prevention**: Prevents unauthorized access by using composite filter (id AND user_id)
 - **Security Benefit**: Even if attacker guesses valid UUIDs, they cannot access other users' data
 
 ### Input Validation
+
 - **UUID Validation**: Validate format before database query
-- **Benefits**: 
+- **Benefits**:
   - Prevents malformed input from reaching database
   - Reduces potential SQL injection vectors
   - Provides clear error messages for invalid input
 - **Implementation**: Use Zod schema with UUID validation
 
 ### Data Sanitization
+
 - **Error Messages**: Sanitize error messages to prevent information leakage
 - **Logging**: Log detailed errors server-side, return generic messages to client
 - **User Data**: No user input in this endpoint (only UUID from path)
@@ -207,6 +226,7 @@ const { data, error, count } = await supabase
 Follow the clean code guidelines: handle errors early with guard clauses, use early returns.
 
 #### 1. Invalid UUID Format (400)
+
 ```typescript
 const result = PathParamsSchema.safeParse({ id: context.params.id });
 if (!result.success) {
@@ -222,6 +242,7 @@ if (!result.success) {
 ```
 
 #### 2. Missing Authentication (401)
+
 ```typescript
 const userId = context.locals.userId;
 if (!userId) {
@@ -237,6 +258,7 @@ if (!userId) {
 ```
 
 #### 3. Specification Not Found (404)
+
 ```typescript
 // In service layer: return null if not found
 // In route handler:
@@ -253,6 +275,7 @@ if (!skiSpec) {
 ```
 
 #### 4. Database Errors (500)
+
 ```typescript
 try {
   // ... database operations
@@ -262,7 +285,7 @@ try {
     specId,
     error: error instanceof Error ? error.message : "Unknown error",
   });
-  
+
   return new Response(
     JSON.stringify({
       error: "Internal server error",
@@ -275,18 +298,21 @@ try {
 ```
 
 ### Error Logging Best Practices
+
 - Log error context (userId, specId) for debugging
 - Use console.error for server-side logging
 - Don't expose sensitive information in client responses
 - Include timestamp for error correlation
 
 ### Database Connection Pooling
+
 - Supabase client handles connection pooling automatically
 - No additional configuration needed
 
 ## 9. Implementation Steps
 
 ### Step 1: Create Service Function
+
 **File**: `src/lib/services/ski-spec.service.ts`
 
 Add the `getSkiSpec` function:
@@ -349,6 +375,7 @@ export async function getSkiSpec(
 ```
 
 ### Step 2: Create API Route Handler
+
 **File**: `src/pages/api/ski-specs/[id].ts`
 
 Create the endpoint file:
@@ -455,11 +482,13 @@ export const GET: APIRoute = async (context) => {
 ```
 
 ### Step 3: Update Service File Exports
+
 Ensure the new `getSkiSpec` function is exported from the service file.
 
 ### Step 4: Test the Endpoint
 
 **Manual Testing Checklist:**
+
 1. ✅ Test with valid UUID and authenticated user → expect 200
 2. ✅ Test with invalid UUID format → expect 400
 3. ✅ Test without authentication token → expect 401
@@ -470,6 +499,7 @@ Ensure the new `getSkiSpec` function is exported from the service file.
 8. ✅ Verify timestamps are in ISO format
 
 **Test with cURL:**
+
 ```bash
 # Valid request
 curl -H "Authorization: Bearer <token>" \
@@ -483,6 +513,7 @@ curl http://localhost:3000/api/ski-specs/550e8400-e29b-41d4-a716-446655440000
 ```
 
 ### Step 6: Documentation
+
 1. ✅ API documented in swagger.yaml (already complete)
 2. Update any API documentation site if applicable
 3. Add code comments for maintainability
@@ -490,6 +521,7 @@ curl http://localhost:3000/api/ski-specs/550e8400-e29b-41d4-a716-446655440000
 ## 10. Additional Considerations
 
 ### Type Safety
+
 - Use TypeScript strictly throughout
 - Leverage Supabase generated types from `database.types.ts`
 - Validate response shape with Zod schema if needed

@@ -1,4 +1,5 @@
 <!-- ea817858-ce56-494b-8374-55b812f0ce84 017aaed1-ae8c-4de0-80e2-6a23e4115065 -->
+
 # Main Application Layout Implementation Plan
 
 ## Overview
@@ -100,15 +101,13 @@ interface Props {
 const { currentPath } = Astro.props;
 ---
 
-<header class="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+<header
+  class="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
+>
   <div class="container flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
     <div class="flex items-center gap-6">
       <a href="/ski-specs" class="flex items-center space-x-2" aria-label="Home">
-        <img 
-          src="/ski-surface-wordmark-only.svg" 
-          alt="Ski Surface Spec" 
-          class="h-8 w-auto"
-        />
+        <img src="/ski-surface-wordmark-only.svg" alt="Ski Surface Spec" class="h-8 w-auto" />
       </a>
       <Navigation currentPath={currentPath} client:load />
     </div>
@@ -233,8 +232,7 @@ toast.error("Failed to save", "Please check your input and try again");
 ## Accessibility Considerations
 
 1. **Semantic HTML**: Use `<header>`, `<nav>`, `<main>` elements
-2. **ARIA Labels**: 
-
+2. **ARIA Labels**:
    - Logo link has `aria-label="Home"`
    - Active nav link has `aria-current="page"`
 

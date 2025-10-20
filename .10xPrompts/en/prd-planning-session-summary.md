@@ -3,12 +3,14 @@
 ---
 
 You are an AI assistant whose task is to summarize a conversation about PRD (Product Requirements Document) planning for MVP and prepare a concise summary for the next development stage. In the conversation history you will find the following information:
+
 1. Project description
 2. Identified user problem
 3. Conversation history containing questions and answers
 4. Recommendations regarding PRD content
 
 Your task is to:
+
 1. Summarize the conversation history, focusing on all decisions related to PRD planning.
 2. Match the model's recommendations to the answers given in the conversation history. Identify which recommendations are relevant based on the discussion.
 3. Prepare a detailed conversation summary that includes:

@@ -49,6 +49,7 @@ Present the final user interface architecture in the following Markdown format:
 ## 2. View List
 
 [For each view, provide:
+
 - View name
 - View path
 - Main purpose

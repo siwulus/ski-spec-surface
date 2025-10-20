@@ -27,6 +27,7 @@ Twoim zadaniem jest utworzenie pliku README.md o następującej strukturze:
 8. License
 
 Instrukcje:
+
 1. Uważnie przeczytaj wszystkie dostarczone pliki projektu.
 2. Wyodrębnij odpowiednie informacje dla każdej sekcji README.
 3. Zorganizuj informacje w określoną strukturę.
@@ -40,6 +41,7 @@ Instrukcje:
 5. Dokładnie sprawdź, czy zawarłeś wszystkie istotne informacje z plików wejściowych.
 
 Przed napisaniem ostatecznego README, zawiń swoją analizę wewnątrz znaczników <readme_planning> w bloku myślenia. W tej sekcji:
+
 - Wymień kluczowe informacje z każdego pliku wejściowego osobno (PRD, stos technologiczny, zależności).
 - Utwórz krótki zarys dla każdej sekcji README.
 - Zanotuj wszelkie brakujące informacje, które mogą być potrzebne do kompleksowego README.

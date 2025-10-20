@@ -3,47 +3,50 @@ Jako starszy programista frontendu Twoim zadaniem jest stworzenie szczegółoweg
 Najpierw przejrzyj następujące informacje:
 
 1. Product Requirements Document (PRD):
-<prd>
-{{prd}} <- zamień na referencję do pliku @prd.md
-</prd>
+   <prd>
+   {{prd}} <- zamień na referencję do pliku @prd.md
+   </prd>
 
 2. Opis widoku:
-<view_description>
-{{view-description}} <- wklej opis implementowanego widoku z ui-plan.md
-</view_description>
+   <view_description>
+   {{view-description}} <- wklej opis implementowanego widoku z ui-plan.md
+   </view_description>
 
 3. User Stories:
-<user_stories>
-{{user-stories}} <- wklej historyjki użytkownika z @prd.md, które będą adresowane przez widok
-</user_stories>
+   <user_stories>
+   {{user-stories}} <- wklej historyjki użytkownika z @prd.md, które będą adresowane przez widok
+   </user_stories>
 
 4. Endpoint Description:
-<endpoint_description>
-{{endpoint-description}} <- wklej opisy endpointów z api-plan.md, z których będzie korzystał widok
-</endpoint_description>
+   <endpoint_description>
+   {{endpoint-description}} <- wklej opisy endpointów z api-plan.md, z których będzie korzystał widok
+   </endpoint_description>
 
 5. Endpoint Implementation:
-<endpoint_implementation>
-{{endpoint-implementation}} <- zamień na referencję do implementacji endpointów, z których będzie korzystał widok (np. @generations.ts, @flashcards.ts)
-</endpoint_implementation>
+   <endpoint_implementation>
+   {{endpoint-implementation}} <- zamień na referencję do implementacji endpointów, z których będzie korzystał widok (np. @generations.ts, @flashcards.ts)
+   </endpoint_implementation>
 
 6. Type Definitions:
-<type_definitions>
-{{types}} <- zamień na referencję do pliku z definicjami DTOsów (np. @types.ts)
-</type_definitions>
+   <type_definitions>
+   {{types}} <- zamień na referencję do pliku z definicjami DTOsów (np. @types.ts)
+   </type_definitions>
 
 7. Tech Stack:
-<tech_stack>
-{{tech-stack}} <- zamień na referencję do pliku @tech-stack.md
-</tech_stack>
+   <tech_stack>
+   {{tech-stack}} <- zamień na referencję do pliku @tech-stack.md
+   </tech_stack>
 
 Przed utworzeniem ostatecznego planu wdrożenia przeprowadź analizę i planowanie wewnątrz tagów <implementation_breakdown> w swoim bloku myślenia. Ta sekcja może być dość długa, ponieważ ważne jest, aby być dokładnym.
 
 W swoim podziale implementacji wykonaj następujące kroki:
+
 1. Dla każdej sekcji wejściowej (PRD, User Stories, Endpoint Description, Endpoint Implementation, Type Definitions, Tech Stack):
-  - Podsumuj kluczowe punkty
- - Wymień wszelkie wymagania lub ograniczenia
- - Zwróć uwagę na wszelkie potencjalne wyzwania lub ważne kwestie
+
+- Podsumuj kluczowe punkty
+- Wymień wszelkie wymagania lub ograniczenia
+- Zwróć uwagę na wszelkie potencjalne wyzwania lub ważne kwestie
+
 2. Wyodrębnienie i wypisanie kluczowych wymagań z PRD
 3. Wypisanie wszystkich potrzebnych głównych komponentów, wraz z krótkim opisem ich opisu, potrzebnych typów, obsługiwanych zdarzeń i warunków walidacji
 4. Stworzenie wysokopoziomowego diagramu drzewa komponentów
@@ -62,12 +65,14 @@ Po przeprowadzeniu analizy dostarcz plan wdrożenia w formacie Markdown z nastę
 2. Routing widoku: Określenie ścieżki, na której widok powinien być dostępny.
 3. Struktura komponentów: Zarys głównych komponentów i ich hierarchii.
 4. Szczegóły komponentu: Dla każdego komponentu należy opisać:
- - Opis komponentu, jego przeznaczenie i z czego się składa
- - Główne elementy HTML i komponenty dzieci, które budują komponent
- - Obsługiwane zdarzenia
- - Warunki walidacji (szczegółowe warunki, zgodnie z API)
- - Typy (DTO i ViewModel) wymagane przez komponent
- - Propsy, które komponent przyjmuje od rodzica (interfejs komponentu)
+
+- Opis komponentu, jego przeznaczenie i z czego się składa
+- Główne elementy HTML i komponenty dzieci, które budują komponent
+- Obsługiwane zdarzenia
+- Warunki walidacji (szczegółowe warunki, zgodnie z API)
+- Typy (DTO i ViewModel) wymagane przez komponent
+- Propsy, które komponent przyjmuje od rodzica (interfejs komponentu)
+
 5. Typy: Szczegółowy opis typów wymaganych do implementacji widoku, w tym dokładny podział wszelkich nowych typów lub modeli widoku według pól i typów.
 6. Zarządzanie stanem: Szczegółowy opis sposobu zarządzania stanem w widoku, określenie, czy wymagany jest customowy hook.
 7. Integracja API: Wyjaśnienie sposobu integracji z dostarczonym punktem końcowym. Precyzyjnie wskazuje typy żądania i odpowiedzi.
@@ -86,16 +91,21 @@ Oto przykład tego, jak powinien wyglądać plik wyjściowy (treść jest do zas
 # Plan implementacji widoku [Nazwa widoku]
 
 ## 1. Przegląd
+
 [Krótki opis widoku i jego celu]
 
 ## 2. Routing widoku
+
 [Ścieżka, na której widok powinien być dostępny]
 
 ## 3. Struktura komponentów
+
 [Zarys głównych komponentów i ich hierarchii]
 
 ## 4. Szczegóły komponentów
+
 ### [Nazwa komponentu 1]
+
 - Opis komponentu [opis]
 - Główne elementy: [opis]
 - Obsługiwane interakcje: [lista]
@@ -104,27 +114,35 @@ Oto przykład tego, jak powinien wyglądać plik wyjściowy (treść jest do zas
 - Propsy: [lista]
 
 ### [Nazwa komponentu 2]
+
 [...]
 
 ## 5. Typy
+
 [Szczegółowy opis wymaganych typów]
 
 ## 6. Zarządzanie stanem
+
 [Opis zarządzania stanem w widoku]
 
 ## 7. Integracja API
+
 [Wyjaśnienie integracji z dostarczonym endpointem, wskazanie typów żądania i odpowiedzi]
 
 ## 8. Interakcje użytkownika
+
 [Szczegółowy opis interakcji użytkownika]
 
 ## 9. Warunki i walidacja
+
 [Szczegółowy opis warunków i ich walidacji]
 
 ## 10. Obsługa błędów
+
 [Opis obsługi potencjalnych błędów]
 
 ## 11. Kroki implementacji
+
 1. [Krok 1]
 2. [Krok 2]
 3. [...]

@@ -3,47 +3,50 @@ As a senior frontend developer, your task is to create a detailed implementation
 First, review the following information:
 
 1. Product Requirements Document (PRD):
-<prd>
-{{prd}} <- replace with reference to @prd.md file
-</prd>
+   <prd>
+   {{prd}} <- replace with reference to @prd.md file
+   </prd>
 
 2. View Description:
-<view_description>
-{{view-description}} <- paste description of the view being implemented from ui-plan.md
-</view_description>
+   <view_description>
+   {{view-description}} <- paste description of the view being implemented from ui-plan.md
+   </view_description>
 
 3. User Stories:
-<user_stories>
-{{user-stories}} <- paste user stories from @prd.md that will be addressed by the view
-</user_stories>
+   <user_stories>
+   {{user-stories}} <- paste user stories from @prd.md that will be addressed by the view
+   </user_stories>
 
 4. Endpoint Description:
-<endpoint_description>
-{{endpoint-description}} <- paste endpoint descriptions from api-plan.md that the view will use
-</endpoint_description>
+   <endpoint_description>
+   {{endpoint-description}} <- paste endpoint descriptions from api-plan.md that the view will use
+   </endpoint_description>
 
 5. Endpoint Implementation:
-<endpoint_implementation>
-{{endpoint-implementation}} <- replace with reference to endpoint implementations that the view will use (e.g., @generations.ts, @flashcards.ts)
-</endpoint_implementation>
+   <endpoint_implementation>
+   {{endpoint-implementation}} <- replace with reference to endpoint implementations that the view will use (e.g., @generations.ts, @flashcards.ts)
+   </endpoint_implementation>
 
 6. Type Definitions:
-<type_definitions>
-{{types}} <- replace with reference to file with DTO definitions (e.g., @types.ts)
-</type_definitions>
+   <type_definitions>
+   {{types}} <- replace with reference to file with DTO definitions (e.g., @types.ts)
+   </type_definitions>
 
 7. Tech Stack:
-<tech_stack>
-{{tech-stack}} <- replace with reference to @tech-stack.md file
-</tech_stack>
+   <tech_stack>
+   {{tech-stack}} <- replace with reference to @tech-stack.md file
+   </tech_stack>
 
 Before creating the final implementation plan, conduct analysis and planning inside <implementation_breakdown> tags in your thinking block. This section can be quite long, as it's important to be thorough.
 
 In your implementation breakdown, execute the following steps:
+
 1. For each input section (PRD, User Stories, Endpoint Description, Endpoint Implementation, Type Definitions, Tech Stack):
-  - Summarize key points
- - List any requirements or constraints
- - Note any potential challenges or important issues
+
+- Summarize key points
+- List any requirements or constraints
+- Note any potential challenges or important issues
+
 2. Extract and list key requirements from the PRD
 3. List all needed main components, along with a brief description of their purpose, needed types, handled events, and validation conditions
 4. Create a high-level component tree diagram
@@ -62,12 +65,14 @@ After conducting the analysis, provide an implementation plan in Markdown format
 2. View Routing: Specify the path where the view should be accessible.
 3. Component Structure: Outline of main components and their hierarchy.
 4. Component Details: For each component, describe:
- - Component description, its purpose and what it consists of
- - Main HTML elements and child components that build the component
- - Handled events
- - Validation conditions (detailed conditions, according to API)
- - Types (DTO and ViewModel) required by the component
- - Props that the component accepts from parent (component interface)
+
+- Component description, its purpose and what it consists of
+- Main HTML elements and child components that build the component
+- Handled events
+- Validation conditions (detailed conditions, according to API)
+- Types (DTO and ViewModel) required by the component
+- Props that the component accepts from parent (component interface)
+
 5. Types: Detailed description of types required for view implementation, including exact breakdown of any new types or view models by fields and types.
 6. State Management: Detailed description of how state is managed in the view, specifying whether a custom hook is required.
 7. API Integration: Explanation of how to integrate with the provided endpoint. Precisely indicate request and response types.
@@ -86,16 +91,21 @@ Here's an example of what the output file should look like (content is to be rep
 # View Implementation Plan [View Name]
 
 ## 1. Overview
+
 [Brief description of the view and its purpose]
 
 ## 2. View Routing
+
 [Path where the view should be accessible]
 
 ## 3. Component Structure
+
 [Outline of main components and their hierarchy]
 
 ## 4. Component Details
+
 ### [Component Name 1]
+
 - Component description [description]
 - Main elements: [description]
 - Handled interactions: [list]
@@ -104,27 +114,35 @@ Here's an example of what the output file should look like (content is to be rep
 - Props: [list]
 
 ### [Component Name 2]
+
 [...]
 
 ## 5. Types
+
 [Detailed description of required types]
 
 ## 6. State Management
+
 [Description of state management in the view]
 
 ## 7. API Integration
+
 [Explanation of integration with provided endpoint, indication of request and response types]
 
 ## 8. User Interactions
+
 [Detailed description of user interactions]
 
 ## 9. Conditions and Validation
+
 [Detailed description of conditions and their validation]
 
 ## 10. Error Handling
+
 [Description of handling potential errors]
 
 ## 11. Implementation Steps
+
 1. [Step 1]
 2. [Step 2]
 3. [...]

@@ -5,16 +5,16 @@ Prosimy o uważne zapoznanie się z poniższymi informacjami
 
 Zaktualizowana specyfikacja projektowa:
 <product_requirements>
-@prd.md 
+@prd.md
 </product_requirements>
 
 <tech_stack>
-@tech-stack.md 
+@tech-stack.md
 </tech_stack>
 
 Aktualny plan db:
 <db-plan>
-@db-plan.md 
+@db-plan.md
 </db-plan>
 
 Przeanalizuj dostarczone informacje, koncentrując się na aspektach istotnych dla projektowania bazy danych. Rozważ następujące kwestie:
@@ -38,4 +38,4 @@ Rozważ pytania dotyczące:
 7. Kwestie skalowalności
 8. Integralność i spójność danych
 
-Finalnie po pelnej analiize zaktualizuj plik @db-plan.md 
+Finalnie po pelnej analiize zaktualizuj plik @db-plan.md

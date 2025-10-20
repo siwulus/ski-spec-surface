@@ -1,4 +1,4 @@
-<conversation_summary> 
+<conversation_summary>
 <decisions>
 
 1. Algorytm obliczeń (profil/funkcje/całkowanie) będzie osobnym podprojektem z ustalonym interfejsem – poza zakresem PRD.
@@ -30,33 +30,33 @@
 <prd_planning_summary>
 a. Główne wymagania funkcjonalne:
 
-* CRUD specyfikacji nart per rozmiar (nazwa, długość [cm], tip/waist/tail [mm], promień [m], waga jednej narty [g]).
-* Obliczenia: powierzchnia [cm²] i waga względna [g/cm²] dostarczane przez zewnętrzny moduł algorytmiczny.
-* Porównanie do 4 modeli w tabeli z wyróżnieniem powierzchni i wagi względnej; sortowanie i czytelne etykiety jednostek.
-* Import/eksport CSV (schemat do ustalenia).
-* Uwierzytelnianie wymagane (provider zewnętrzny, do wyboru później).
-* Walidacja: tip ≥ waist ≤ tail; promień > 0; zakresy min/max (konkretne wartości do ustalenia); wszystkie pola obowiązkowe.
+- CRUD specyfikacji nart per rozmiar (nazwa, długość [cm], tip/waist/tail [mm], promień [m], waga jednej narty [g]).
+- Obliczenia: powierzchnia [cm²] i waga względna [g/cm²] dostarczane przez zewnętrzny moduł algorytmiczny.
+- Porównanie do 4 modeli w tabeli z wyróżnieniem powierzchni i wagi względnej; sortowanie i czytelne etykiety jednostek.
+- Import/eksport CSV (schemat do ustalenia).
+- Uwierzytelnianie wymagane (provider zewnętrzny, do wyboru później).
+- Walidacja: tip ≥ waist ≤ tail; promień > 0; zakresy min/max (konkretne wartości do ustalenia); wszystkie pola obowiązkowe.
 
 b. Kluczowe historie użytkownika i ścieżki:
 
-* Jako zalogowany użytkownik dodaję specyfikację narty (pełen zestaw pól) i zapisuję ją po przejściu walidacji.
-* Jako użytkownik wybieram do 4 zapisanych modeli i porównuję je w tabeli, skupiając się na powierzchni i g/cm².
-* Jako użytkownik importuję listę modeli z pliku CSV (po walidacji) i/lub eksportuję moje modele do CSV.
-* Jako użytkownik chcę widzieć jednoznaczne jednostki i móc wprowadzać wartości z kropką lub przecinkiem.
+- Jako zalogowany użytkownik dodaję specyfikację narty (pełen zestaw pól) i zapisuję ją po przejściu walidacji.
+- Jako użytkownik wybieram do 4 zapisanych modeli i porównuję je w tabeli, skupiając się na powierzchni i g/cm².
+- Jako użytkownik importuję listę modeli z pliku CSV (po walidacji) i/lub eksportuję moje modele do CSV.
+- Jako użytkownik chcę widzieć jednoznaczne jednostki i móc wprowadzać wartości z kropką lub przecinkiem.
 
 c. Kryteria sukcesu i pomiar:
 
-* Podstawowe: odsetek użytkowników, którzy zapiszą ≥2 modele i wejdą w ekran porównania; średnia liczba porównań na sesję.
-* Usunięto: KPI związany z eksportem CSV.
-* Metryki i zdarzenia analityczne zostaną doprecyzowane później (np. completion rate CRUD, start/completion porównania).
+- Podstawowe: odsetek użytkowników, którzy zapiszą ≥2 modele i wejdą w ekran porównania; średnia liczba porównań na sesję.
+- Usunięto: KPI związany z eksportem CSV.
+- Metryki i zdarzenia analityczne zostaną doprecyzowane później (np. completion rate CRUD, start/completion porównania).
 
 d. Nierozwiązane kwestie/obszary do doprecyzowania:
 
-* Konkrety zakresów min/max dla walidacji pól.
-* Wybór i konfiguracja dostawcy uwierzytelniania.
-* Dokładne KPI (wartości progowe i definicje zdarzeń).
-* Specyfikacja formatu CSV (nagłówki, walidacja, wersjonowanie).
-* Polityka prywatności/RODO oraz retention danych użytkownika.
+- Konkrety zakresów min/max dla walidacji pól.
+- Wybór i konfiguracja dostawcy uwierzytelniania.
+- Dokładne KPI (wartości progowe i definicje zdarzeń).
+- Specyfikacja formatu CSV (nagłówki, walidacja, wersjonowanie).
+- Polityka prywatności/RODO oraz retention danych użytkownika.
   </prd_planning_summary>
 
 <unresolved_issues>

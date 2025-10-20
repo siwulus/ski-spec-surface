@@ -1,4 +1,5 @@
 <!-- 03a7dab3-fb13-463d-a29b-89eef02ed5b4 6eadaab6-7967-4ddc-97c5-1c5f28b8ae4e -->
+
 # Ski Specifications List View - Implementation Plan
 
 ## Overview
@@ -23,9 +24,7 @@ import SkiSpecList from "../components/SkiSpecList";
   <div class="space-y-6">
     <header>
       <h1 class="text-3xl font-bold text-foreground">Ski Specifications</h1>
-      <p class="mt-2 text-muted-foreground">
-        Manage your ski specifications and compare different models.
-      </p>
+      <p class="mt-2 text-muted-foreground">Manage your ski specifications and compare different models.</p>
     </header>
 
     <SkiSpecList client:load />
@@ -63,15 +62,19 @@ import SkiSpecList from "../components/SkiSpecList";
 **Layout Structure:**
 
 ```tsx
-{isLoading ? (
-  <SkiSpecGridSkeleton />
-) : specs && specs.length > 0 ? (
-  <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-    {specs.map(spec => <SkiSpecCard key={spec.id} spec={spec} />)}
-  </div>
-) : (
-  <EmptyState />
-)}
+{
+  isLoading ? (
+    <SkiSpecGridSkeleton />
+  ) : specs && specs.length > 0 ? (
+    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      {specs.map((spec) => (
+        <SkiSpecCard key={spec.id} spec={spec} />
+      ))}
+    </div>
+  ) : (
+    <EmptyState />
+  );
+}
 ```
 
 ### 3. Individual Spec Card Component
@@ -95,7 +98,7 @@ interface SkiSpecCardProps {
   <CardHeader>
     <CardTitle>{spec.name}</CardTitle>
   </CardHeader>
-  
+
   <CardContent className="space-y-4">
     {/* Dimensions Section */}
     <div className="space-y-2">
@@ -114,12 +117,8 @@ interface SkiSpecCardProps {
     <div className="space-y-2 border-t border-border pt-4">
       <h3 className="text-sm font-medium text-muted-foreground">Calculated Metrics</h3>
       <div className="flex flex-wrap gap-2">
-        <Badge variant="secondary">
-          Surface: {spec.surface_area.toFixed(2)} cm²
-        </Badge>
-        <Badge variant="secondary">
-          Rel. Weight: {spec.relative_weight.toFixed(2)} g/cm²
-        </Badge>
+        <Badge variant="secondary">Surface: {spec.surface_area.toFixed(2)} cm²</Badge>
+        <Badge variant="secondary">Rel. Weight: {spec.relative_weight.toFixed(2)} g/cm²</Badge>
       </div>
     </div>
   </CardContent>
@@ -127,7 +126,7 @@ interface SkiSpecCardProps {
   <CardFooter className="border-t">
     <div className="flex items-center justify-between w-full">
       <span className="text-sm text-muted-foreground">
-        {spec.notes_count} {spec.notes_count === 1 ? 'note' : 'notes'}
+        {spec.notes_count} {spec.notes_count === 1 ? "note" : "notes"}
       </span>
     </div>
   </CardFooter>
@@ -168,6 +167,7 @@ const SpecValue: React.FC<SpecValueProps> = ({ label, value, unit }) => (
 - Render 6 skeleton cards in grid layout (2 rows of 3)
 - Use `bg-muted animate-pulse` for skeleton effect
 - Match card structure dimensions
+
 ```tsx
 <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
   {Array.from({ length: 6 }).map((_, index) => (
@@ -188,7 +188,6 @@ const SpecValue: React.FC<SpecValueProps> = ({ label, value, unit }) => (
 </div>
 ```
 
-
 ### 6. Empty State Component
 
 **File:** `src/components/SkiSpecList.tsx` (inline)
@@ -200,16 +199,11 @@ const SpecValue: React.FC<SpecValueProps> = ({ label, value, unit }) => (
 ```tsx
 <div className="flex flex-col items-center justify-center py-12 px-4">
   <div className="text-center space-y-4 max-w-md">
-    <h2 className="text-2xl font-semibold text-foreground">
-      No specifications yet
-    </h2>
+    <h2 className="text-2xl font-semibold text-foreground">No specifications yet</h2>
     <p className="text-muted-foreground">
-      Get started by adding your first ski specification to compare different models
-      and analyze their characteristics.
+      Get started by adding your first ski specification to compare different models and analyze their characteristics.
     </p>
-    <div className="text-sm text-muted-foreground mt-2">
-      Add button coming in next iteration
-    </div>
+    <div className="text-sm text-muted-foreground mt-2">Add button coming in next iteration</div>
   </div>
 </div>
 ```
@@ -233,22 +227,19 @@ const SpecValue: React.FC<SpecValueProps> = ({ label, value, unit }) => (
 
 ```typescript
 const fetchSkiSpecs = async (): Promise<SkiSpecDTO[]> => {
-  const response = await fetch(
-    '/api/ski-specs?page=1&limit=100&sort_by=created_at&sort_order=desc',
-    {
-      method: 'GET',
-      credentials: 'include',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    }
-  );
+  const response = await fetch("/api/ski-specs?page=1&limit=100&sort_by=created_at&sort_order=desc", {
+    method: "GET",
+    credentials: "include",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
 
   if (!response.ok) {
     if (response.status === 401) {
-      throw new Error('Authentication required');
+      throw new Error("Authentication required");
     }
-    throw new Error('Failed to fetch ski specifications');
+    throw new Error("Failed to fetch ski specifications");
   }
 
   const data: SkiSpecListResponse = await response.json();
@@ -322,7 +313,7 @@ space-y-2 (within sections)
 ### Semantic HTML
 
 - Use `<h1>` for page title
-- Use `<h2>` for empty state heading  
+- Use `<h2>` for empty state heading
 - Use `<h3>` for card section headings
 - Maintain proper heading hierarchy
 
@@ -360,25 +351,21 @@ catch (error) {
 ### Implementation Steps
 
 1. **Create SkiSpecCard.tsx**
-
    - Implement SpecValue helper component
    - Build card layout with all sections
    - Add proper styling and spacing
 
 2. **Create SkiSpecGridSkeleton.tsx**
-
    - Implement loading skeleton
    - Match card dimensions and layout
 
 3. **Create SkiSpecList.tsx**
-
    - Set up state management (specs, loading, error)
    - Implement fetch logic with useEffect
    - Add error handling with toast
    - Implement conditional rendering (loading/data/empty)
 
 4. **Update ski-specs.astro**
-
    - Replace ToastTest with SkiSpecList
    - Add `client:load` directive
 

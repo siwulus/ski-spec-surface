@@ -1,4 +1,5 @@
 <!-- d1d709e1-6cf7-44d2-b41d-24cee3182569 8fe67edb-aad3-4a4d-a60f-4c3cba65596b -->
+
 # Integrate Scalar API Documentation Viewer
 
 ## Implementation Steps
@@ -26,37 +27,37 @@ Create `src/pages/api-docs.astro` with the Scalar API reference component:
 
 ```astro
 ---
-import ApiReference from '@scalar/astro-api-reference';
+import ApiReference from "@scalar/astro-api-reference";
 ---
 
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Ski Surface Spec API Documentation</title>
-  <style>
-    body {
-      margin: 0;
-      padding: 0;
-      height: 100vh;
-      overflow: hidden;
-    }
-  </style>
-</head>
-<body>
-  <ApiReference 
-    configuration={{
-      spec: {
-        url: '/swagger.yaml',
-      },
-      theme: 'purple',
-      layout: 'modern',
-      darkMode: true,
-      showSidebar: true,
-    }}
-  />
-</body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Ski Surface Spec API Documentation</title>
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        height: 100vh;
+        overflow: hidden;
+      }
+    </style>
+  </head>
+  <body>
+    <ApiReference
+      configuration={{
+        spec: {
+          url: "/swagger.yaml",
+        },
+        theme: "purple",
+        layout: "modern",
+        darkMode: true,
+        showSidebar: true,
+      }}
+    />
+  </body>
 </html>
 ```
 

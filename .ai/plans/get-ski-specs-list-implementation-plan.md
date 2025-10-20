@@ -11,27 +11,30 @@ This endpoint retrieves a paginated, sortable, and searchable list of ski specif
 ## 2. Request Details
 
 ### HTTP Method
+
 `GET`
 
 ### URL Structure
+
 ```
 GET /api/ski-specs
 ```
 
 ### Authentication
+
 - **Required**: Yes (Bearer token - Supabase JWT)
 - **Source**: Authorization header
 - **Validation**: Via Astro middleware (context.locals.supabase)
 
 ### Query Parameters
 
-| Parameter | Type | Required | Default | Constraints | Description |
-|-----------|------|----------|---------|-------------|-------------|
-| `page` | integer | No | 1 | min: 1 | Page number (1-indexed) |
-| `limit` | integer | No | 20 | min: 1, max: 100 | Items per page |
-| `sort_by` | string | No | "created_at" | enum: name, length, surface_area, relative_weight, created_at | Field to sort by |
-| `sort_order` | string | No | "desc" | enum: asc, desc | Sort order |
-| `search` | string | No | - | - | Search term for name and description fields |
+| Parameter    | Type    | Required | Default      | Constraints                                                   | Description                                 |
+| ------------ | ------- | -------- | ------------ | ------------------------------------------------------------- | ------------------------------------------- |
+| `page`       | integer | No       | 1            | min: 1                                                        | Page number (1-indexed)                     |
+| `limit`      | integer | No       | 20           | min: 1, max: 100                                              | Items per page                              |
+| `sort_by`    | string  | No       | "created_at" | enum: name, length, surface_area, relative_weight, created_at | Field to sort by                            |
+| `sort_order` | string  | No       | "desc"       | enum: asc, desc                                               | Sort order                                  |
+| `search`     | string  | No       | -            | -                                                             | Search term for name and description fields |
 
 ### Query Parameter Parsing
 
@@ -39,11 +42,11 @@ Query parameters arrive as strings and must be coerced to appropriate types:
 
 ```typescript
 const rawQuery = {
-  page: url.searchParams.get('page'),
-  limit: url.searchParams.get('limit'),
-  sort_by: url.searchParams.get('sort_by'),
-  sort_order: url.searchParams.get('sort_order'),
-  search: url.searchParams.get('search'),
+  page: url.searchParams.get("page"),
+  limit: url.searchParams.get("limit"),
+  sort_by: url.searchParams.get("sort_by"),
+  sort_order: url.searchParams.get("sort_order"),
+  search: url.searchParams.get("search"),
 };
 
 // Coerce to proper types
@@ -57,6 +60,7 @@ const parsedQuery = {
 ```
 
 ### Request Body
+
 None (GET request)
 
 ## 3. Used Types
@@ -64,39 +68,35 @@ None (GET request)
 ### Import Required Types from `src/types.ts`
 
 ```typescript
-import type {
-  ListSkiSpecsQuery,
-  SkiSpecDTO,
-  SkiSpecListResponse,
-  PaginationMeta,
-  ApiErrorResponse,
-} from "@/types";
+import type { ListSkiSpecsQuery, SkiSpecDTO, SkiSpecListResponse, PaginationMeta, ApiErrorResponse } from "@/types";
 
-import {
-  ListSkiSpecsQuerySchema,
-  SkiSpecDTOSchema,
-} from "@/types";
+import { ListSkiSpecsQuerySchema, SkiSpecDTOSchema } from "@/types";
 ```
 
 ### Type Descriptions
 
 **ListSkiSpecsQuery**: Query parameters type with validation schema
+
 - Used for: Validating and typing incoming query parameters
 - Schema: `ListSkiSpecsQuerySchema` (Zod schema with defaults and validation)
 
 **SkiSpecDTO**: Complete ski specification data transfer object
+
 - Includes: All ski_specs table columns + notes_count aggregate
 - Used for: Individual items in the response array
 
 **SkiSpecListResponse**: Paginated response wrapper
+
 - Structure: `{ data: SkiSpecDTO[], pagination: PaginationMeta }`
 - Used for: The endpoint's successful response
 
 **PaginationMeta**: Pagination metadata
+
 - Fields: page, limit, total, total_pages
 - Used for: Providing pagination information to clients
 
 **ApiErrorResponse**: Standard error response format
+
 - Fields: error, code (optional), details (optional), timestamp (optional)
 - Used for: All error responses (400, 401, 500)
 
@@ -107,6 +107,7 @@ import {
 **Content-Type**: `application/json`
 
 **Body Structure**:
+
 ```typescript
 {
   data: SkiSpecDTO[],
@@ -120,6 +121,7 @@ import {
 ```
 
 **Example**:
+
 ```json
 {
   "data": [
@@ -134,7 +136,7 @@ import {
       "tail": 123,
       "radius": 18,
       "weight": 1580,
-      "surface_area": 2340.50,
+      "surface_area": 2340.5,
       "relative_weight": 0.675,
       "algorithm_version": "1.0.0",
       "notes_count": 3,
@@ -154,6 +156,7 @@ import {
 ### Error Responses
 
 #### 400 Bad Request
+
 Invalid query parameters (validation failure)
 
 ```json
@@ -171,6 +174,7 @@ Invalid query parameters (validation failure)
 ```
 
 #### 401 Unauthorized
+
 Missing or invalid authentication token
 
 ```json
@@ -182,6 +186,7 @@ Missing or invalid authentication token
 ```
 
 #### 500 Internal Server Error
+
 Database or server error
 
 ```json
@@ -232,14 +237,16 @@ Database or server error
 **Query Building Steps** (in service layer):
 
 1. **Start with base query**:
+
    ```typescript
    let query = supabase
-     .from('ski_specs')
-     .select('*, notes:ski_spec_notes(count)', { count: 'exact' })
-     .eq('user_id', userId);
+     .from("ski_specs")
+     .select("*, notes:ski_spec_notes(count)", { count: "exact" })
+     .eq("user_id", userId);
    ```
 
 2. **Apply search filter** (if search parameter provided):
+
    ```typescript
    if (search) {
      query = query.or(`name.ilike.%${search}%,description.ilike.%${search}%`);
@@ -251,11 +258,13 @@ Database or server error
    - Extract count from response
 
 4. **Apply sorting**:
+
    ```typescript
-   query = query.order(sort_by, { ascending: sort_order === 'asc' });
+   query = query.order(sort_by, { ascending: sort_order === "asc" });
    ```
 
 5. **Apply pagination**:
+
    ```typescript
    const offset = (page - 1) * limit;
    query = query.range(offset, offset + limit - 1);
@@ -266,6 +275,7 @@ Database or server error
 ### Data Transformation
 
 **Database Result → SkiSpecDTO**:
+
 - Map ski_specs row to SkiSpecDTO
 - Extract notes_count from aggregated notes array
 - Ensure all numeric fields are properly typed
@@ -306,7 +316,7 @@ Database or server error
 3. **Search Input Sanitization**:
    - While Supabase handles SQL injection, consider limiting search string length
    - Trim whitespace from search input
-   - Consider escaping special ILIKE characters (%, _) if needed
+   - Consider escaping special ILIKE characters (%, \_) if needed
 
 ## 7. Performance Considerations
 
@@ -339,6 +349,7 @@ Database or server error
 ### Error Handling Strategy
 
 Follow the coding practices from implementation rules:
+
 - Handle errors at the beginning of functions
 - Use early returns for error conditions
 - Avoid deeply nested if statements
@@ -351,15 +362,16 @@ wqd### Error Scenarios
 **Trigger**: Invalid query parameters (e.g., page < 1, limit > 100, invalid sort_by)
 
 **Handling**:
+
 ```typescript
 const validation = ListSkiSpecsQuerySchema.safeParse(parsedQuery);
 
 if (!validation.success) {
-  const details = validation.error.errors.map(err => ({
-    field: err.path.join('.'),
+  const details = validation.error.errors.map((err) => ({
+    field: err.path.join("."),
     message: err.message,
   }));
-  
+
   return new Response(
     JSON.stringify({
       error: "Invalid query parameters",
@@ -379,8 +391,12 @@ if (!validation.success) {
 **Trigger**: Missing, expired, or invalid JWT token
 
 **Handling**:
+
 ```typescript
-const { data: { user }, error: authError } = await supabase.auth.getUser();
+const {
+  data: { user },
+  error: authError,
+} = await supabase.auth.getUser();
 
 if (authError || !user) {
   return new Response(
@@ -401,12 +417,13 @@ if (authError || !user) {
 **Trigger**: Supabase query failure, connection error, timeout
 
 **Handling**:
+
 ```typescript
 const { data, error, count } = await query;
 
 if (error) {
-  console.error('Database error in listSkiSpecs:', error);
-  
+  console.error("Database error in listSkiSpecs:", error);
+
   return new Response(
     JSON.stringify({
       error: "An unexpected error occurred while fetching ski specifications",
@@ -427,6 +444,7 @@ if (error) {
 **Trigger**: No ski specifications match the query
 
 **Handling**:
+
 - Not an error condition
 - Return 200 with empty data array
 - Pagination total = 0, total_pages = 0
@@ -442,10 +460,7 @@ const response: SkiSpecListResponse = {
   },
 };
 
-return new Response(
-  JSON.stringify(response),
-  { status: 200, headers: { "Content-Type": "application/json" } }
-);
+return new Response(JSON.stringify(response), { status: 200, headers: { "Content-Type": "application/json" } });
 ```
 
 **Status Code**: 200
@@ -456,26 +471,29 @@ All errors follow the `ApiErrorResponse` type:
 
 ```typescript
 interface ApiErrorResponse {
-  error: string;              // Human-readable error message
-  code?: string;              // Machine-readable error code
-  details?: Array<{           // Field-level validation errors
+  error: string; // Human-readable error message
+  code?: string; // Machine-readable error code
+  details?: Array<{
+    // Field-level validation errors
     field: string;
     message: string;
   }>;
-  timestamp?: string;         // ISO 8601 timestamp
+  timestamp?: string; // ISO 8601 timestamp
 }
 ```
 
 ### Error Logging
 
 For all server errors (500):
+
 - Log to console with `console.error()`
 - Include: error message, stack trace, user ID, query parameters
 - Consider structured logging in production
 
 Example:
+
 ```typescript
-console.error('Database error in GET /api/ski-specs:', {
+console.error("Database error in GET /api/ski-specs:", {
   error: error.message,
   userId: user.id,
   queryParams: validatedQuery,
@@ -498,22 +516,17 @@ export async function listSkiSpecs(
   query: ListSkiSpecsQuery
 ): Promise<{ data: SkiSpecDTO[]; total: number }> {
   // Build base query with notes count aggregation
-  let dbQuery = supabase
-    .from('ski_specs')
-    .select('*', { count: 'exact' })
-    .eq('user_id', userId);
+  let dbQuery = supabase.from("ski_specs").select("*", { count: "exact" }).eq("user_id", userId);
 
   // Apply search filter if provided
   if (query.search) {
     const searchTerm = query.search.trim();
-    dbQuery = dbQuery.or(
-      `name.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%`
-    );
+    dbQuery = dbQuery.or(`name.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%`);
   }
 
   // Apply sorting
-  dbQuery = dbQuery.order(query.sort_by, { 
-    ascending: query.sort_order === 'asc' 
+  dbQuery = dbQuery.order(query.sort_by, {
+    ascending: query.sort_order === "asc",
   });
 
   // Apply pagination
@@ -532,9 +545,9 @@ export async function listSkiSpecs(
   const specsWithNotes = await Promise.all(
     (data || []).map(async (spec) => {
       const { count: notesCount } = await supabase
-        .from('ski_spec_notes')
-        .select('*', { count: 'exact', head: true })
-        .eq('ski_spec_id', spec.id);
+        .from("ski_spec_notes")
+        .select("*", { count: "exact", head: true })
+        .eq("ski_spec_id", spec.id);
 
       return {
         ...spec,
@@ -551,6 +564,7 @@ export async function listSkiSpecs(
 ```
 
 **Notes**:
+
 - Handle notes_count aggregation (may need optimization)
 - Use proper error handling with try-catch
 - Consider adding JSDoc comments
@@ -564,41 +578,39 @@ export async function listSkiSpecs(
 ```typescript
 export const prerender = false;
 
-import type { APIRoute } from 'astro';
-import type {
-  ListSkiSpecsQuery,
-  SkiSpecListResponse,
-  ApiErrorResponse,
-  PaginationMeta,
-} from '@/types';
-import { ListSkiSpecsQuerySchema } from '@/types';
-import { listSkiSpecs } from '@/lib/services/ski-spec.service';
+import type { APIRoute } from "astro";
+import type { ListSkiSpecsQuery, SkiSpecListResponse, ApiErrorResponse, PaginationMeta } from "@/types";
+import { ListSkiSpecsQuerySchema } from "@/types";
+import { listSkiSpecs } from "@/lib/services/ski-spec.service";
 
 export const GET: APIRoute = async ({ url, locals }) => {
   const supabase = locals.supabase;
 
   // Step 1: Verify authentication
-  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
 
   if (authError || !user) {
     const errorResponse: ApiErrorResponse = {
-      error: 'Authentication required',
-      code: 'UNAUTHORIZED',
+      error: "Authentication required",
+      code: "UNAUTHORIZED",
       timestamp: new Date().toISOString(),
     };
     return new Response(JSON.stringify(errorResponse), {
       status: 401,
-      headers: { 'Content-Type': 'application/json' },
+      headers: { "Content-Type": "application/json" },
     });
   }
 
   // Step 2: Extract and coerce query parameters
   const rawQuery = {
-    page: url.searchParams.get('page'),
-    limit: url.searchParams.get('limit'),
-    sort_by: url.searchParams.get('sort_by'),
-    sort_order: url.searchParams.get('sort_order'),
-    search: url.searchParams.get('search'),
+    page: url.searchParams.get("page"),
+    limit: url.searchParams.get("limit"),
+    sort_by: url.searchParams.get("sort_by"),
+    sort_order: url.searchParams.get("sort_order"),
+    search: url.searchParams.get("search"),
   };
 
   const parsedQuery = {
@@ -614,20 +626,20 @@ export const GET: APIRoute = async ({ url, locals }) => {
 
   if (!validation.success) {
     const details = validation.error.errors.map((err) => ({
-      field: err.path.join('.'),
+      field: err.path.join("."),
       message: err.message,
     }));
 
     const errorResponse: ApiErrorResponse = {
-      error: 'Invalid query parameters',
-      code: 'VALIDATION_ERROR',
+      error: "Invalid query parameters",
+      code: "VALIDATION_ERROR",
       details,
       timestamp: new Date().toISOString(),
     };
 
     return new Response(JSON.stringify(errorResponse), {
       status: 400,
-      headers: { 'Content-Type': 'application/json' },
+      headers: { "Content-Type": "application/json" },
     });
   }
 
@@ -635,11 +647,7 @@ export const GET: APIRoute = async ({ url, locals }) => {
 
   // Step 4: Call service layer
   try {
-    const { data, total } = await listSkiSpecs(
-      supabase,
-      user.id,
-      validatedQuery
-    );
+    const { data, total } = await listSkiSpecs(supabase, user.id, validatedQuery);
 
     // Step 5: Build pagination metadata
     const totalPages = Math.ceil(total / validatedQuery.limit);
@@ -658,26 +666,26 @@ export const GET: APIRoute = async ({ url, locals }) => {
 
     return new Response(JSON.stringify(response), {
       status: 200,
-      headers: { 'Content-Type': 'application/json' },
+      headers: { "Content-Type": "application/json" },
     });
   } catch (error) {
     // Step 7: Handle unexpected errors
-    console.error('Error in GET /api/ski-specs:', {
-      error: error instanceof Error ? error.message : 'Unknown error',
+    console.error("Error in GET /api/ski-specs:", {
+      error: error instanceof Error ? error.message : "Unknown error",
       userId: user.id,
       queryParams: validatedQuery,
       timestamp: new Date().toISOString(),
     });
 
     const errorResponse: ApiErrorResponse = {
-      error: 'An unexpected error occurred while fetching ski specifications',
-      code: 'INTERNAL_ERROR',
+      error: "An unexpected error occurred while fetching ski specifications",
+      code: "INTERNAL_ERROR",
       timestamp: new Date().toISOString(),
     };
 
     return new Response(JSON.stringify(errorResponse), {
       status: 500,
-      headers: { 'Content-Type': 'application/json' },
+      headers: { "Content-Type": "application/json" },
     });
   }
 };
@@ -690,6 +698,7 @@ export const GET: APIRoute = async ({ url, locals }) => {
 **Task**: Ensure Supabase client is properly attached to context.locals
 
 Verify that middleware:
+
 - Creates Supabase client from request cookies
 - Attaches client to `context.locals.supabase`
 - Handles session refresh if needed
@@ -699,6 +708,7 @@ Verify that middleware:
 **Task**: Verify that query parameters are properly coerced from strings
 
 Test cases:
+
 - `?page=2&limit=50` → `{ page: 2, limit: 50 }`
 - `?sort_by=name&sort_order=asc` → `{ sort_by: 'name', sort_order: 'asc' }`
 - `?search=atomic` → `{ search: 'atomic' }`
@@ -712,13 +722,15 @@ Test cases:
 **Options**:
 
 **Option A**: Use Supabase aggregation (preferred if available)
+
 ```typescript
 .select('*, notes:ski_spec_notes(count)')
 ```
 
 **Option B**: Use raw SQL with LEFT JOIN and COUNT()
+
 ```sql
-SELECT 
+SELECT
   ski_specs.*,
   COUNT(ski_spec_notes.id) as notes_count
 FROM ski_specs

@@ -46,6 +46,7 @@ pnpm astro [command]
 ## Environment Setup
 
 Required environment variables (see `.env.example`):
+
 - `SUPABASE_URL` - Supabase project URL
 - `SUPABASE_KEY` - Supabase anon key
 - `OPENROUTER_API_KEY` - For AI integrations
@@ -78,12 +79,14 @@ src/
 #### 1. Service Layer Pattern
 
 All business logic is encapsulated in service classes (e.g., `SkiSpecService`). Services:
+
 - Handle database interactions via Supabase client
 - Perform calculations (surface area, relative weight)
 - Enforce business rules and validation
 - Are instantiated in middleware and injected via `context.locals`
 
 **Example**:
+
 ```typescript
 // Middleware injects service
 context.locals.skiSpecService = new SkiSpecService(supabaseClient);
@@ -103,12 +106,14 @@ const result = await skiSpecService.createSkiSpec(userId, command);
 #### 3. Zod Validation
 
 Every API type has a corresponding Zod schema for runtime validation:
+
 ```typescript
 export const CreateSkiSpecCommandSchema = z.object({...});
 export type CreateSkiSpecCommand = z.infer<typeof CreateSkiSpecCommandSchema>;
 ```
 
 Compile-time type checks ensure schemas match types:
+
 ```typescript
 expectTypeOf<z.infer<typeof Schema>>().toEqualTypeOf<Type>();
 ```
@@ -116,12 +121,14 @@ expectTypeOf<z.infer<typeof Schema>>().toEqualTypeOf<Type>();
 #### 4. API Route Structure
 
 All API routes follow this pattern:
+
 1. Extract data (body/query params) from request
 2. Validate with Zod schema
 3. Call service layer method
 4. Return typed response or `ApiErrorResponse`
 
 **Example** (`src/pages/api/ski-specs/index.ts`):
+
 - `GET /api/ski-specs` - List with pagination, sorting, search
 - `POST /api/ski-specs` - Create new specification
 
@@ -135,6 +142,7 @@ All API routes follow this pattern:
 #### 6. Authentication (Current State)
 
 **IMPORTANT**: Authentication is currently mocked in middleware (`userId` is hardcoded). When implementing real auth:
+
 - Replace mock with Supabase Auth session check
 - Extract user ID from session
 - Protect routes by verifying authentication before service calls
@@ -156,14 +164,16 @@ All API routes follow this pattern:
 The `SkiSpecService` implements these algorithms:
 
 1. **Surface Area** (v1.0.0):
+
    ```typescript
-   avgWidth = (tip + waist + tail) / 3
-   surfaceArea = (length * avgWidth) / 10  // cm²
+   avgWidth = (tip + waist + tail) / 3;
+   surfaceArea = (length * avgWidth) / 10; // cm²
    ```
 
 2. **Relative Weight**:
+
    ```typescript
-   relativeWeight = weight / surfaceArea  // g/cm²
+   relativeWeight = weight / surfaceArea; // g/cm²
    ```
 
 3. **Algorithm Versioning**: Each calculation is versioned (`algorithm_version` field) to enable future recalculations if algorithms change.
@@ -243,6 +253,7 @@ The `SkiSpecService` implements these algorithms:
 ### Pagination
 
 All list endpoints return:
+
 ```typescript
 {
   data: T[],

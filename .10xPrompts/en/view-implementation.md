@@ -9,7 +9,7 @@ First, review the implementation plan:
 Now review the implementation rules:
 
 <implementation_rules>
-{{frontend-rules}}  <- replace with reference to frontend rules (e.g., @shared.mdc, @frontend.mdc, @astro.mdc, @react.mdc, @ui-shadcn-helper.mdc)
+{{frontend-rules}} <- replace with reference to frontend rules (e.g., @shared.mdc, @frontend.mdc, @astro.mdc, @react.mdc, @ui-shadcn-helper.mdc)
 </implementation_rules>
 
 Review the defined types:

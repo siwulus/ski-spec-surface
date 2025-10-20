@@ -1,20 +1,20 @@
 Jesteś architektem baz danych, którego zadaniem jest stworzenie schematu bazy danych PostgreSQL na podstawie informacji dostarczonych z sesji planowania, dokumentu wymagań produktu (PRD) i stacku technologicznym. Twoim celem jest zaprojektowanie wydajnej i skalowalnej struktury bazy danych, która spełnia wymagania projektu.
 
 1. <prd>
-{{prd}} <- zamień na referencję do @prd.md
-</prd>
+   {{prd}} <- zamień na referencję do @prd.md
+   </prd>
 
 Jest to dokument wymagań produktu, który określa cechy, funkcjonalności i wymagania projektu.
 
 2. <session_notes>
-{{session-notes}} <- wklej podsumowanie sesji planistycznej
-</session_notes>
+   {{session-notes}} <- wklej podsumowanie sesji planistycznej
+   </session_notes>
 
 Są to notatki z sesji planowania schematu bazy danych. Mogą one zawierać ważne decyzje, rozważania i konkretne wymagania omówione podczas spotkania.
 
 3. <tech_stack>
-{{tech-stack}} <- zamień na referencje do tech-stack.md
-</tech_stack>
+   {{tech-stack}} <- zamień na referencje do tech-stack.md
+   </tech_stack>
 
 Opisuje stack technologiczny, który zostanie wykorzystany w projekcie, co może wpłynąć na decyzje dotyczące projektu bazy danych.
 
@@ -37,6 +37,7 @@ Wykonaj następujące kroki, aby utworzyć schemat bazy danych:
 7. Upewnij się, że schemat jest zgodny z najlepszymi praktykami projektowania baz danych, w tym normalizacji do odpowiedniego poziomu (zwykle 3NF, chyba że denormalizacja jest uzasadniona ze względu na wydajność).
 
 Ostateczny wynik powinien mieć następującą strukturę:
+
 ```markdown
 1. Lista tabel z ich kolumnami, typami danych i ograniczeniami
 2. Relacje między tabelami

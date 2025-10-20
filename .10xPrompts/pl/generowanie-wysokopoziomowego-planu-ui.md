@@ -49,6 +49,7 @@ Przedstaw ostateczną architekturę interfejsu użytkownika w następującym for
 ## 2. Lista widoków
 
 [Dla każdego widoku podaj:
+
 - Nazwa widoku
 - Ścieżka widoku
 - Główny cel

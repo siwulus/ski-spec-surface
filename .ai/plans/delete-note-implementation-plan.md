@@ -15,6 +15,7 @@ This endpoint deletes a specific note associated with a ski specification. The o
 ### Parameters
 
 #### Required Path Parameters:
+
 - **specId** (string, UUID format)
   - Description: ID of the ski specification that owns the note
   - Validation: Must be a valid UUID format
@@ -26,9 +27,11 @@ This endpoint deletes a specific note associated with a ski specification. The o
   - Example: `6ba7b810-9dad-11d1-80b4-00c04fd430c8`
 
 #### Request Body:
+
 - None
 
 #### Query Parameters:
+
 - None
 
 ## 3. Used Types
@@ -36,6 +39,7 @@ This endpoint deletes a specific note associated with a ski specification. The o
 ### From types.ts:
 
 **Error Response:**
+
 ```typescript
 ApiErrorResponse {
   error: string;
@@ -46,14 +50,16 @@ ApiErrorResponse {
 ```
 
 **Internal Types (not exposed in API):**
+
 ```typescript
-NoteDTO // Used internally to verify note existence
-SkiSpecDTO // Used internally to verify spec ownership
+NoteDTO; // Used internally to verify note existence
+SkiSpecDTO; // Used internally to verify spec ownership
 ```
 
 ## 4. Response Details
 
 ### Success Response (204 No Content)
+
 - **Status Code**: 204
 - **Response Body**: Empty (no content)
 - **Description**: Note successfully deleted
@@ -61,6 +67,7 @@ SkiSpecDTO // Used internally to verify spec ownership
 ### Error Responses
 
 #### 400 Bad Request - Invalid UUID Format
+
 ```json
 {
   "error": "Invalid UUID format",
@@ -70,10 +77,12 @@ SkiSpecDTO // Used internally to verify spec ownership
 ```
 
 Specific validation messages:
+
 - "Invalid ski specification ID format" (when specId is not a valid UUID)
 - "Invalid note ID format" (when noteId is not a valid UUID)
 
 #### 401 Unauthorized - Missing or Invalid Authentication
+
 ```json
 {
   "error": "Authentication required",
@@ -83,6 +92,7 @@ Specific validation messages:
 ```
 
 #### 404 Not Found - Resource Not Found
+
 ```json
 {
   "error": "Note not found",
@@ -92,12 +102,14 @@ Specific validation messages:
 ```
 
 Possible "not found" scenarios:
+
 - Ski specification doesn't exist
 - Ski specification exists but belongs to another user
 - Note doesn't exist
 - Note exists but belongs to different specification
 
 #### 500 Internal Server Error - Server Issues
+
 ```json
 {
   "error": "Internal server error",
@@ -131,11 +143,9 @@ Possible "not found" scenarios:
    - **Verify Ski Specification Ownership**:
      - Query `ski_specs` table for spec with `id = specId` AND `user_id = userId`
      - If not found → throw NotFoundError("Ski specification not found")
-   
    - **Verify Note Existence and Association**:
      - Query `ski_spec_notes` table for note with `id = noteId` AND `ski_spec_id = specId`
      - If not found → throw NotFoundError("Note not found")
-   
    - **Delete Note**:
      - Execute DELETE query on `ski_spec_notes` where `id = noteId`
      - RLS policies provide additional security layer
@@ -148,26 +158,28 @@ Possible "not found" scenarios:
 
 ```sql
 -- Step 1: Verify spec ownership
-SELECT id FROM ski_specs 
+SELECT id FROM ski_specs
 WHERE id = $specId AND user_id = $userId;
 
 -- Step 2: Verify note existence and association
-SELECT id FROM ski_spec_notes 
+SELECT id FROM ski_spec_notes
 WHERE id = $noteId AND ski_spec_id = $specId;
 
 -- Step 3: Delete note (RLS policies enforce ownership)
-DELETE FROM ski_spec_notes 
+DELETE FROM ski_spec_notes
 WHERE id = $noteId;
 ```
 
 ## 6. Security Considerations
 
 ### Authentication & Authorization
+
 - **Authentication**: Required via Supabase JWT Bearer token
 - **Authorization**: User must own the ski specification that contains the note
 - **Middleware**: Authentication handled by Astro middleware (`src/middleware/index.ts`)
 
 ### Ownership Verification
+
 - **Two-step verification**:
   1. Verify user owns the ski specification (prevents access to other users' specs)
   2. Verify note belongs to the specification (prevents cross-spec note deletion)
@@ -175,15 +187,16 @@ WHERE id = $noteId;
 
 ### Security Threats & Mitigations
 
-| Threat | Mitigation |
-|--------|------------|
-| IDOR (Insecure Direct Object Reference) | Verify ownership at service layer; RLS policies as second layer |
-| UUID Enumeration | Always verify ownership before revealing existence; consistent 404 responses |
-| SQL Injection | Use Supabase client with parameterized queries |
-| Missing Authentication | Middleware rejects unauthenticated requests |
-| Cross-user Access | Service checks user_id matches authenticated user |
+| Threat                                  | Mitigation                                                                   |
+| --------------------------------------- | ---------------------------------------------------------------------------- |
+| IDOR (Insecure Direct Object Reference) | Verify ownership at service layer; RLS policies as second layer              |
+| UUID Enumeration                        | Always verify ownership before revealing existence; consistent 404 responses |
+| SQL Injection                           | Use Supabase client with parameterized queries                               |
+| Missing Authentication                  | Middleware rejects unauthenticated requests                                  |
+| Cross-user Access                       | Service checks user_id matches authenticated user                            |
 
 ### Data Privacy
+
 - Don't leak information about resources user doesn't own
 - Return generic "Not found" message for both non-existent and unauthorized resources
 - Don't differentiate between "spec doesn't exist" and "spec exists but you don't own it"
@@ -218,6 +231,7 @@ WHERE id = $noteId;
 ### Error Logging Context
 
 For all errors, log:
+
 - Timestamp
 - User ID (if available)
 - Spec ID
@@ -234,29 +248,38 @@ try {
 } catch (error) {
   if (error instanceof NotFoundError) {
     console.error(`Note deletion failed - Not found: userId=${userId}, specId=${specId}, noteId=${noteId}`);
-    return new Response(JSON.stringify({
-      error: error.message,
-      code: 'NOT_FOUND',
-      timestamp: new Date().toISOString()
-    }), { status: 404 });
+    return new Response(
+      JSON.stringify({
+        error: error.message,
+        code: "NOT_FOUND",
+        timestamp: new Date().toISOString(),
+      }),
+      { status: 404 }
+    );
   }
-  
+
   if (error instanceof ValidationError) {
     console.error(`Note deletion failed - Validation: userId=${userId}, specId=${specId}, noteId=${noteId}`, error);
-    return new Response(JSON.stringify({
-      error: error.message,
-      code: 'VALIDATION_ERROR',
-      timestamp: new Date().toISOString()
-    }), { status: 400 });
+    return new Response(
+      JSON.stringify({
+        error: error.message,
+        code: "VALIDATION_ERROR",
+        timestamp: new Date().toISOString(),
+      }),
+      { status: 400 }
+    );
   }
-  
+
   // Unexpected errors
   console.error(`Note deletion failed - Internal error: userId=${userId}, specId=${specId}, noteId=${noteId}`, error);
-  return new Response(JSON.stringify({
-    error: 'Internal server error',
-    code: 'INTERNAL_ERROR',
-    timestamp: new Date().toISOString()
-  }), { status: 500 });
+  return new Response(
+    JSON.stringify({
+      error: "Internal server error",
+      code: "INTERNAL_ERROR",
+      timestamp: new Date().toISOString(),
+    }),
+    { status: 500 }
+  );
 }
 ```
 
@@ -313,23 +336,23 @@ async deleteNote(userId: string, specId: string, noteId: string): Promise<void> 
 Create file: `src/pages/api/ski-specs/[specId]/notes/[noteId].ts`
 
 ```typescript
-import type { APIRoute } from 'astro';
-import { SkiSpecService } from '@/lib/services/ski-spec.service';
-import { supabase } from '@/db/supabase.client';
+import type { APIRoute } from "astro";
+import { SkiSpecService } from "@/lib/services/ski-spec.service";
+import { supabase } from "@/db/supabase.client";
 
 export const DELETE: APIRoute = async ({ params, locals }) => {
   try {
     // Get authenticated user from locals (set by middleware)
     const user = locals.user;
-    
+
     if (!user) {
       return new Response(
         JSON.stringify({
-          error: 'Authentication required',
-          code: 'UNAUTHORIZED',
+          error: "Authentication required",
+          code: "UNAUTHORIZED",
           timestamp: new Date().toISOString(),
         }),
-        { status: 401, headers: { 'Content-Type': 'application/json' } }
+        { status: 401, headers: { "Content-Type": "application/json" } }
       );
     }
 
@@ -339,36 +362,36 @@ export const DELETE: APIRoute = async ({ params, locals }) => {
     if (!specId || !noteId) {
       return new Response(
         JSON.stringify({
-          error: 'Missing required parameters',
-          code: 'VALIDATION_ERROR',
+          error: "Missing required parameters",
+          code: "VALIDATION_ERROR",
           timestamp: new Date().toISOString(),
         }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
+        { status: 400, headers: { "Content-Type": "application/json" } }
       );
     }
 
     // Validate UUID formats
     const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-    
+
     if (!uuidRegex.test(specId)) {
       return new Response(
         JSON.stringify({
-          error: 'Invalid ski specification ID format',
-          code: 'VALIDATION_ERROR',
+          error: "Invalid ski specification ID format",
+          code: "VALIDATION_ERROR",
           timestamp: new Date().toISOString(),
         }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
+        { status: 400, headers: { "Content-Type": "application/json" } }
       );
     }
 
     if (!uuidRegex.test(noteId)) {
       return new Response(
         JSON.stringify({
-          error: 'Invalid note ID format',
-          code: 'VALIDATION_ERROR',
+          error: "Invalid note ID format",
+          code: "VALIDATION_ERROR",
           timestamp: new Date().toISOString(),
         }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
+        { status: 400, headers: { "Content-Type": "application/json" } }
       );
     }
 
@@ -378,30 +401,29 @@ export const DELETE: APIRoute = async ({ params, locals }) => {
 
     // Return 204 No Content on success
     return new Response(null, { status: 204 });
-
   } catch (error) {
     // Handle NotFoundError
-    if (error instanceof Error && error.name === 'NotFoundError') {
+    if (error instanceof Error && error.name === "NotFoundError") {
       console.error(`Note deletion failed - Not found:`, error.message);
       return new Response(
         JSON.stringify({
           error: error.message,
-          code: 'NOT_FOUND',
+          code: "NOT_FOUND",
           timestamp: new Date().toISOString(),
         }),
-        { status: 404, headers: { 'Content-Type': 'application/json' } }
+        { status: 404, headers: { "Content-Type": "application/json" } }
       );
     }
 
     // Handle unexpected errors
-    console.error('Note deletion failed - Internal error:', error);
+    console.error("Note deletion failed - Internal error:", error);
     return new Response(
       JSON.stringify({
-        error: 'Internal server error',
-        code: 'INTERNAL_ERROR',
+        error: "Internal server error",
+        code: "INTERNAL_ERROR",
         timestamp: new Date().toISOString(),
       }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } }
+      { status: 500, headers: { "Content-Type": "application/json" } }
     );
   }
 };
@@ -415,14 +437,14 @@ Create/update `src/lib/errors.ts`:
 export class NotFoundError extends Error {
   constructor(message: string) {
     super(message);
-    this.name = 'NotFoundError';
+    this.name = "NotFoundError";
   }
 }
 
 export class ValidationError extends Error {
   constructor(message: string) {
     super(message);
-    this.name = 'ValidationError';
+    this.name = "ValidationError";
   }
 }
 ```
@@ -471,4 +493,3 @@ Verify that `public/swagger.yaml` accurately reflects the implementation (alread
 - [ ] Code follows project conventions
 - [ ] API documentation matches implementation
 - [ ] Tests cover all scenarios
-

@@ -1,4 +1,5 @@
 <!-- b66472e8-8150-4062-b290-b1dabc13a547 45d8f9ac-ccbb-4da5-b507-c3e2253dd991 -->
+
 # Refactor Ski Dimensions Section with Visual Diagram
 
 ## Overview
@@ -31,16 +32,14 @@ Add imports for:
 Replace the current grid layout with:
 
 1. **Container Structure**
-
    - Outer wrapper with `space-y-3` for vertical spacing
    - Title: "Dimensions" heading remains
 
 2. **Visual Ski Diagram**
-
    - Container: `relative` positioned wrapper with appropriate padding
    - **Width values above ski**: Horizontal flex container with three values:
      - Tail (left): `{spec.tail} mm` with tooltip "Tail"
-     - Waist (center): `{spec.waist} mm` with tooltip "Waist"  
+     - Waist (center): `{spec.waist} mm` with tooltip "Waist"
      - Tip (right): `{spec.tip} mm` with tooltip "Tip"
      - Use `justify-between` or `justify-around` to align with SVG arrows
      - Style: text-sm, font-medium
@@ -51,9 +50,8 @@ Replace the current grid layout with:
      - Style: text-sm, font-medium, text-center
 
 3. **Bottom Row with Radius and Weight**
-
    - Flex container with `justify-between` and `items-center`
-   - **Radius (left)**: 
+   - **Radius (left)**:
      - Icon: `<CircleDot className="h-4 w-4" />`
      - Value: `{spec.radius} m`
      - Tooltip: "Radius"
@@ -73,7 +71,9 @@ Wrap each value with TooltipProvider and Tooltip:
 <TooltipProvider>
   <Tooltip>
     <TooltipTrigger asChild>
-      <span className="cursor-help">{value} {unit}</span>
+      <span className="cursor-help">
+        {value} {unit}
+      </span>
     </TooltipTrigger>
     <TooltipContent>
       <p>{label}</p>
@@ -89,9 +89,9 @@ Wrap each value with TooltipProvider and Tooltip:
 - Add hover states where appropriate
 - Maintain consistent font sizes: `text-sm` for most values
 
-### 4.  SpecValue Component
+### 4. SpecValue Component
 
-Use the `SpecValue`  component for displaaing the values, this is the intended component for displaing value + unit
+Use the `SpecValue` component for displaaing the values, this is the intended component for displaing value + unit
 
 ## Files to Modify
 

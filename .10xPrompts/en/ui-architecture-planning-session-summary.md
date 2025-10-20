@@ -3,6 +3,7 @@
 ---
 
 You are an AI assistant whose task is to summarize the conversation about UI architecture planning for MVP and prepare a concise summary for the next stage of development. In the conversation history you will find the following information:
+
 1. Product Requirements Document (PRD)
 2. Tech stack information
 3. API plan
@@ -10,6 +11,7 @@ You are an AI assistant whose task is to summarize the conversation about UI arc
 5. UI architecture recommendations
 
 Your task is to:
+
 1. Summarize the conversation history, focusing on all decisions related to UI architecture planning.
 2. Match the model's recommendations to the answers given in the conversation history. Identify which recommendations are relevant based on the discussion.
 3. Prepare a detailed conversation summary that includes:

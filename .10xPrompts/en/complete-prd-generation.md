@@ -32,6 +32,7 @@ Follow these steps to create a comprehensive and well-organized document:
    - Ensure that each user story is testable.
 
 Use the following structure for each user story:
+
 - ID
 - Title
 - Description
@@ -45,7 +46,7 @@ Use the following structure for each user story:
 
 5. PRD Formatting:
    - Maintain consistent formatting and numbering.
-   - Do not use bold formatting in markdown ( ** ).
+   - Do not use bold formatting in markdown ( \*\* ).
    - List ALL user stories.
    - Format the PRD in proper markdown.
 
@@ -53,11 +54,17 @@ Prepare the PRD with the following structure:
 
 ```markdown
 # Product Requirements Document (PRD) - {{app-name}}
+
 ## 1. Product Overview
+
 ## 2. User Problem
+
 ## 3. Functional Requirements
+
 ## 4. Product Boundaries
+
 ## 5. User Stories
+
 ## 6. Success Metrics
 ```
 

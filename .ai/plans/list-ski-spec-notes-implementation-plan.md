@@ -5,50 +5,57 @@
 The `GET /api/ski-specs/{specId}/notes` endpoint retrieves a paginated list of notes for a specific ski specification, sorted chronologically with the newest notes first. This endpoint is essential for users to review all observations, test results, and other documentation associated with a particular ski model.
 
 **Key Features:**
+
 - Paginated response with configurable page size
 - Fixed sorting by creation date (newest first)
 - Authentication and authorization required
 - Returns 404 for both non-existent specs and unauthorized access (IDOR prevention)
 
 **Related User Stories:**
+
 - US-020: Przeglądanie listy notatek
 - US-018: Wyświetlanie widoku szczegółów specyfikacji
 
 ## 2. Request Details
 
 ### HTTP Method
+
 `GET`
 
 ### URL Structure
+
 ```
 /api/ski-specs/{specId}/notes
 ```
 
 ### Path Parameters
 
-| Parameter | Type | Required | Constraints | Description |
-|-----------|------|----------|-------------|-------------|
-| `specId` | string | Yes | Valid UUID format | ID of the ski specification |
+| Parameter | Type   | Required | Constraints       | Description                 |
+| --------- | ------ | -------- | ----------------- | --------------------------- |
+| `specId`  | string | Yes      | Valid UUID format | ID of the ski specification |
 
 ### Query Parameters
 
-| Parameter | Type | Required | Constraints | Default | Description |
-|-----------|------|----------|-------------|---------|-------------|
-| `page` | integer | No | Min: 1 | 1 | Page number (1-indexed) |
-| `limit` | integer | No | Min: 1, Max: 100 | 50 | Items per page |
+| Parameter | Type    | Required | Constraints      | Default | Description             |
+| --------- | ------- | -------- | ---------------- | ------- | ----------------------- |
+| `page`    | integer | No       | Min: 1           | 1       | Page number (1-indexed) |
+| `limit`   | integer | No       | Min: 1, Max: 100 | 50      | Items per page          |
 
 ### Request Headers
+
 - `Authorization: Bearer <token>` - Supabase JWT token (handled by middleware)
 - `Content-Type: application/json` - Expected content type
 
 ### Example Requests
 
 **Basic request:**
+
 ```
 GET /api/ski-specs/550e8400-e29b-41d4-a716-446655440000/notes
 ```
 
 **With pagination:**
+
 ```
 GET /api/ski-specs/550e8400-e29b-41d4-a716-446655440000/notes?page=2&limit=25
 ```
@@ -58,12 +65,14 @@ GET /api/ski-specs/550e8400-e29b-41d4-a716-446655440000/notes?page=2&limit=25
 ### From `src/types.ts`:
 
 **Request Types:**
+
 - `ListNotesQuery` - Query parameters type
   - `page?: number` (default: 1)
   - `limit?: number` (default: 50)
 - `ListNotesQuerySchema` - Zod schema for validation
 
 **Response Types:**
+
 - `NoteDTO` - Individual note data
   - `id: string` (UUID)
   - `ski_spec_id: string` (UUID)
@@ -82,6 +91,7 @@ GET /api/ski-specs/550e8400-e29b-41d4-a716-446655440000/notes?page=2&limit=25
   - `total_pages: number`
 
 **Error Types:**
+
 - `ApiErrorResponse` - Standard error response
   - `error: string`
   - `code?: string`
@@ -97,6 +107,7 @@ GET /api/ski-specs/550e8400-e29b-41d4-a716-446655440000/notes?page=2&limit=25
 **Schema:** `NoteListResponse`
 
 **Example:**
+
 ```json
 {
   "data": [
@@ -127,6 +138,7 @@ GET /api/ski-specs/550e8400-e29b-41d4-a716-446655440000/notes?page=2&limit=25
 ### Error Responses
 
 #### 400 Bad Request - Invalid UUID Format
+
 ```json
 {
   "error": "Invalid ski specification ID format",
@@ -142,6 +154,7 @@ GET /api/ski-specs/550e8400-e29b-41d4-a716-446655440000/notes?page=2&limit=25
 ```
 
 #### 400 Bad Request - Invalid Query Parameters
+
 ```json
 {
   "error": "Invalid query parameters",
@@ -157,6 +170,7 @@ GET /api/ski-specs/550e8400-e29b-41d4-a716-446655440000/notes?page=2&limit=25
 ```
 
 #### 401 Unauthorized
+
 ```json
 {
   "error": "Authentication required",
@@ -166,6 +180,7 @@ GET /api/ski-specs/550e8400-e29b-41d4-a716-446655440000/notes?page=2&limit=25
 ```
 
 #### 404 Not Found - Specification Not Found or Unauthorized
+
 ```json
 {
   "error": "Ski specification not found",
@@ -175,6 +190,7 @@ GET /api/ski-specs/550e8400-e29b-41d4-a716-446655440000/notes?page=2&limit=25
 ```
 
 #### 500 Internal Server Error
+
 ```json
 {
   "error": "An unexpected error occurred while fetching notes",
@@ -239,28 +255,26 @@ GET /api/ski-specs/550e8400-e29b-41d4-a716-446655440000/notes?page=2&limit=25
 ### Database Queries
 
 **Query 1: Verify Specification Ownership**
+
 ```typescript
-const { data: spec } = await supabase
-  .from('ski_specs')
-  .select('id')
-  .eq('id', specId)
-  .eq('user_id', userId)
-  .single();
+const { data: spec } = await supabase.from("ski_specs").select("id").eq("id", specId).eq("user_id", userId).single();
 ```
 
 **Query 2: Fetch Notes with Pagination**
+
 ```typescript
 const { data, count } = await supabase
-  .from('ski_spec_notes')
-  .select('*', { count: 'exact' })
-  .eq('ski_spec_id', specId)
-  .order('created_at', { ascending: false })
+  .from("ski_spec_notes")
+  .select("*", { count: "exact" })
+  .eq("ski_spec_id", specId)
+  .order("created_at", { ascending: false })
   .range(offset, offset + limit - 1);
 ```
 
 ### RLS Policy Enforcement
 
 The database RLS policies automatically enforce authorization:
+
 - Notes can only be selected if the parent ski_spec belongs to the authenticated user
 - Additional application-level check provides better error messages
 - Defense in depth security strategy
@@ -268,27 +282,32 @@ The database RLS policies automatically enforce authorization:
 ## 6. Security Considerations
 
 ### Authentication
+
 - **Mechanism:** Supabase JWT Bearer token
 - **Implementation:** Middleware extracts userId from token and injects into locals
 - **Failure Mode:** 401 Unauthorized if token missing or invalid
 
 ### Authorization
+
 - **Ownership Verification:** Service layer verifies ski specification belongs to user
 - **RLS Policies:** Database enforces ownership through parent ski_specs relationship
 - **Defense in Depth:** Both application and database layers enforce authorization
 
 ### IDOR Prevention
+
 - **Risk:** User attempts to access notes for specifications they don't own
 - **Mitigation 1:** Verify spec ownership before fetching notes
 - **Mitigation 2:** Return same 404 error for "not found" and "unauthorized" cases
 - **Result:** Attackers cannot determine if a specification exists by trying different IDs
 
 ### Input Validation
+
 - **UUID Validation:** Verify specId is valid UUID format before database query
 - **Query Parameter Validation:** Use Zod schema to validate and sanitize inputs
 - **SQL Injection Prevention:** Supabase client uses parameterized queries
 
 ### Rate Limiting
+
 - **Consideration:** Not implemented in MVP
 - **Future Enhancement:** Add rate limiting middleware to prevent abuse
 - **Recommendation:** Limit to 100 requests per minute per user
@@ -300,6 +319,7 @@ The database RLS policies automatically enforce authorization:
 #### 1. Validation Errors (400)
 
 **UUID Format Error:**
+
 ```typescript
 // Check if specId is valid UUID
 const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -317,14 +337,15 @@ if (!uuidRegex.test(specId)) {
 ```
 
 **Query Parameter Errors:**
+
 ```typescript
 const validation = ListNotesQuerySchema.safeParse(parsedQuery);
 if (!validation.success) {
-  const details = validation.error.issues.map(err => ({
-    field: err.path.join('.'),
-    message: err.message
+  const details = validation.error.issues.map((err) => ({
+    field: err.path.join("."),
+    message: err.message,
   }));
-  
+
   return new Response(
     JSON.stringify({
       error: "Invalid query parameters",
@@ -340,6 +361,7 @@ if (!validation.success) {
 #### 2. Authorization Errors (404)
 
 **Specification Not Found or Unauthorized:**
+
 ```typescript
 // Service returns null if spec doesn't exist or user doesn't own it
 const result = await listNotes(supabase, userId, specId, validatedQuery);
@@ -359,6 +381,7 @@ if (result === null) {
 #### 3. Database Errors (500)
 
 **Unexpected Database Errors:**
+
 ```typescript
 try {
   const result = await listNotes(supabase, userId, specId, validatedQuery);
@@ -370,7 +393,7 @@ try {
     specId,
     timestamp: new Date().toISOString(),
   });
-  
+
   return new Response(
     JSON.stringify({
       error: "An unexpected error occurred while fetching notes",
@@ -385,6 +408,7 @@ try {
 ### Error Logging
 
 **Structured Logging Format:**
+
 ```typescript
 console.error("Error in GET /api/ski-specs/{specId}/notes:", {
   error: error instanceof Error ? error.message : "Unknown error",
@@ -397,6 +421,7 @@ console.error("Error in GET /api/ski-specs/{specId}/notes:", {
 ```
 
 **What to Log:**
+
 - Error message and stack trace
 - User ID (for audit trail)
 - Specification ID (for debugging)
@@ -404,6 +429,7 @@ console.error("Error in GET /api/ski-specs/{specId}/notes:", {
 - Timestamp (for correlation)
 
 **What NOT to Log:**
+
 - Sensitive user data
 - Authentication tokens
 - Complete database records
@@ -413,15 +439,17 @@ console.error("Error in GET /api/ski-specs/{specId}/notes:", {
 ### Database Query Optimization
 
 **Index Usage:**
+
 - Composite index on `(ski_spec_id, created_at DESC)` - Already defined in db-plan.md
 - Enables efficient filtering and sorting in single index scan
 - Supports pagination with minimal overhead
 
 **Query Patterns:**
+
 ```sql
 -- Optimized query leverages composite index
 SELECT * FROM ski_spec_notes
-WHERE ski_spec_id = ? 
+WHERE ski_spec_id = ?
 ORDER BY created_at DESC
 LIMIT ? OFFSET ?
 ```
@@ -429,12 +457,14 @@ LIMIT ? OFFSET ?
 ### Pagination Strategy
 
 **Offset-Based Pagination:**
+
 - Simple to implement and understand
 - Works well for small to medium datasets
 - Performance degrades with very large offsets
 - Acceptable for MVP given typical usage patterns (users rarely go beyond page 3-5)
 
 **Future Optimization (Post-MVP):**
+
 - Consider cursor-based pagination for large note collections
 - Use keyset pagination with created_at + id composite key
 - Better performance for deep pagination
@@ -442,12 +472,14 @@ LIMIT ? OFFSET ?
 ### Response Size
 
 **Default Limit (50 notes):**
+
 - Balances data transfer with usability
 - Typical note content: 200-500 chars
 - Estimated response size: ~10-25 KB
 - Well within acceptable range for API responses
 
 **Maximum Limit (100 notes):**
+
 - Prevents excessive data transfer
 - Maximum response size: ~50 KB
 - Still acceptable for modern networks
@@ -455,11 +487,13 @@ LIMIT ? OFFSET ?
 ### Caching Considerations
 
 **Not Implemented in MVP:**
+
 - Notes are user-specific (no shared cache benefit)
 - Data changes frequently (notes can be added/edited)
 - Complexity outweighs benefits for MVP
 
 **Future Enhancement:**
+
 - Add ETag headers for conditional requests
 - Client-side caching with cache invalidation on mutations
 - Consider Redis for frequently accessed note lists
@@ -471,6 +505,7 @@ LIMIT ? OFFSET ?
 **File:** `src/lib/services/ski-spec-note.service.ts`
 
 **Content:**
+
 ```typescript
 import type { SupabaseClient } from "@/db/supabase.client";
 import type { NoteDTO, ListNotesQuery } from "@/types";
@@ -553,14 +588,10 @@ mkdir -p src/pages/api/ski-specs/[specId]/notes
 **File:** `src/pages/api/ski-specs/[specId]/notes/index.ts`
 
 **Content:**
+
 ```typescript
 import type { APIRoute } from "astro";
-import {
-  ListNotesQuerySchema,
-  type ApiErrorResponse,
-  type NoteListResponse,
-  type PaginationMeta,
-} from "@/types";
+import { ListNotesQuerySchema, type ApiErrorResponse, type NoteListResponse, type PaginationMeta } from "@/types";
 import { listNotes } from "@/lib/services/ski-spec-note.service";
 
 export const prerender = false;
@@ -705,45 +736,57 @@ export const GET: APIRoute = async ({ params, url, locals }) => {
 **Manual Testing Checklist:**
 
 1. **Valid Request:**
+
    ```bash
    curl -X GET "http://localhost:3000/api/ski-specs/{valid-spec-id}/notes" \
      -H "Authorization: Bearer {token}"
    ```
+
    Expected: 200 with note list
 
 2. **With Pagination:**
+
    ```bash
    curl -X GET "http://localhost:3000/api/ski-specs/{valid-spec-id}/notes?page=1&limit=10" \
      -H "Authorization: Bearer {token}"
    ```
+
    Expected: 200 with 10 notes max
 
 3. **Invalid UUID:**
+
    ```bash
    curl -X GET "http://localhost:3000/api/ski-specs/invalid-uuid/notes" \
      -H "Authorization: Bearer {token}"
    ```
+
    Expected: 400 with validation error
 
 4. **Invalid Query Parameters:**
+
    ```bash
    curl -X GET "http://localhost:3000/api/ski-specs/{valid-spec-id}/notes?limit=200" \
      -H "Authorization: Bearer {token}"
    ```
+
    Expected: 400 with validation error
 
 5. **Not Found:**
+
    ```bash
    curl -X GET "http://localhost:3000/api/ski-specs/{non-existent-id}/notes" \
      -H "Authorization: Bearer {token}"
    ```
+
    Expected: 404 with not found error
 
 6. **Unauthorized (Different User's Spec):**
+
    ```bash
    curl -X GET "http://localhost:3000/api/ski-specs/{other-user-spec-id}/notes" \
      -H "Authorization: Bearer {token}"
    ```
+
    Expected: 404 (same as not found - IDOR prevention)
 
 7. **Empty Notes List:**
@@ -756,8 +799,9 @@ export const GET: APIRoute = async ({ params, url, locals }) => {
 ### Step 7: Verify Database Index
 
 Confirm the composite index exists (from migration):
+
 ```sql
-CREATE INDEX ski_spec_notes_ski_spec_id_created_at_idx 
+CREATE INDEX ski_spec_notes_ski_spec_id_created_at_idx
   ON ski_spec_notes (ski_spec_id, created_at DESC);
 ```
 
@@ -796,6 +840,7 @@ Before merging, verify:
 This implementation plan provides comprehensive guidance for developing the `GET /api/ski-specs/{specId}/notes` endpoint. The implementation follows established patterns from the existing codebase, ensures security through proper authorization checks, and provides a robust, maintainable solution for listing ski specification notes.
 
 **Key Implementation Points:**
+
 1. Create new service file for note operations
 2. Implement route handler with comprehensive validation
 3. Verify specification ownership before returning notes
@@ -803,4 +848,3 @@ This implementation plan provides comprehensive guidance for developing the `GET
 5. Follow existing code patterns and TypeScript practices
 6. Ensure IDOR prevention through unified error responses
 7. Leverage database indexes for optimal performance
-

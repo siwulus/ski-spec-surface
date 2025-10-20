@@ -42,8 +42,8 @@ Your final output should include:
 ```typescript
 // Example structure (replace with actual types):
 
-import { z } from 'zod';
-import { expectTypeOf } from 'expect-type';
+import { z } from "zod";
+import { expectTypeOf } from "expect-type";
 
 // DTO Type Definition
 export interface UserCreateDto {
@@ -60,13 +60,12 @@ export const UserCreateDtoSchema = z.object({
 });
 
 // Compile-time type assertion
-expectTypeOf<z.infer<typeof UserCreateDtoSchema>>()
-  .toEqualTypeOf<UserCreateDto>();
+expectTypeOf<z.infer<typeof UserCreateDtoSchema>>().toEqualTypeOf<UserCreateDto>();
 
 // Command Model example
 export interface UpdateUserCommand {
   id: string;
-  updates: Partial<Pick<User, 'name' | 'email' | 'age'>>;
+  updates: Partial<Pick<User, "name" | "email" | "age">>;
 }
 
 export const UpdateUserCommandSchema = z.object({
@@ -78,8 +77,7 @@ export const UpdateUserCommandSchema = z.object({
   }),
 });
 
-expectTypeOf<z.infer<typeof UpdateUserCommandSchema>>()
-  .toEqualTypeOf<UpdateUserCommand>();
+expectTypeOf<z.infer<typeof UpdateUserCommandSchema>>().toEqualTypeOf<UpdateUserCommand>();
 ```
 
 Provide complete type definitions and schemas that would go in the `src/types.ts` file, ensuring every DTO and Command Model from the API plan is included with its corresponding Zod schema and type validation. Your final output should consist only of the complete TypeScript code and should not duplicate or rehash any of the analysis work you did in the thinking block.

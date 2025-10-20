@@ -32,6 +32,7 @@ Wykonaj następujące kroki, aby stworzyć kompleksowy i dobrze zorganizowany do
    - Upewnij się, że każda historia użytkownika jest testowalna.
 
 Użyj następującej struktury dla każdej historii użytkownika:
+
 - ID
 - Tytuł
 - Opis
@@ -45,7 +46,7 @@ Użyj następującej struktury dla każdej historii użytkownika:
 
 5. Formatowanie PRD:
    - Zachowaj spójne formatowanie i numerację.
-   - Nie używaj pogrubionego formatowania w markdown ( ** ).
+   - Nie używaj pogrubionego formatowania w markdown ( \*\* ).
    - Wymień WSZYSTKIE historyjki użytkownika.
    - Sformatuj PRD w poprawnym markdown.
 
@@ -53,11 +54,17 @@ Przygotuj PRD z następującą strukturą:
 
 ```markdown
 # Dokument wymagań produktu (PRD) - {{app-name}}
+
 ## 1. Przegląd produktu
+
 ## 2. Problem użytkownika
+
 ## 3. Wymagania funkcjonalne
+
 ## 4. Granice produktu
+
 ## 5. Historyjki użytkowników
+
 ## 6. Metryki sukcesu
 ```
 

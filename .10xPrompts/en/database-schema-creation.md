@@ -1,20 +1,20 @@
 You are a database architect whose task is to create a PostgreSQL database schema based on information provided from planning sessions, a Product Requirements Document (PRD), and the tech stack. Your goal is to design an efficient and scalable database structure that meets project requirements.
 
 1. <prd>
-{{prd}} <- replace with reference to @prd.md
-</prd>
+   {{prd}} <- replace with reference to @prd.md
+   </prd>
 
 This is the Product Requirements Document that specifies features, functionalities, and project requirements.
 
 2. <session_notes>
-{{session-notes}} <- paste planning session summary
-</session_notes>
+   {{session-notes}} <- paste planning session summary
+   </session_notes>
 
 These are notes from the database schema planning session. They may contain important decisions, considerations, and specific requirements discussed during the meeting.
 
 3. <tech_stack>
-{{tech-stack}} <- replace with reference to tech-stack.md
-</tech_stack>
+   {{tech-stack}} <- replace with reference to tech-stack.md
+   </tech_stack>
 
 Describes the technology stack that will be used in the project, which may influence database design decisions.
 
@@ -37,6 +37,7 @@ Follow these steps to create the database schema:
 7. Ensure the schema follows database design best practices, including normalization to the appropriate level (typically 3NF, unless denormalization is justified for performance reasons).
 
 The final output should have the following structure:
+
 ```markdown
 1. List of tables with their columns, data types, and constraints
 2. Relationships between tables

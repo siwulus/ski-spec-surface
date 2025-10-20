@@ -39,6 +39,7 @@ Na podstawie przeprowadzonej analizy utwórz kompleksowy przewodnik implementacj
 7. Plan wdrożenia krok po kroku
 
 Upewnij się, że plan wdrożenia
+
 1. Jest dostosowany do określonego stacku technologicznego
 2. Obejmuje wszystkie istotne komponenty usługi OpenRouter
 3. Obejmuje obsługę błędów i najlepsze praktyki bezpieczeństwa

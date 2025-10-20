@@ -9,7 +9,7 @@ Najpierw przejrzyj plan implementacji:
 Teraz przejrzyj zasady implementacji:
 
 <implementation_rules>
-{{frontend-rules}}  <- zamień na referencję do reguł frontendowych (np. @shared.mdc, @frontend.mdc, @astro.mdc, @react.mdc, @ui-shadcn-helper.mdc)
+{{frontend-rules}} <- zamień na referencję do reguł frontendowych (np. @shared.mdc, @frontend.mdc, @astro.mdc, @react.mdc, @ui-shadcn-helper.mdc)
 </implementation_rules>
 
 Przejrzyj zdefiniowane typy:

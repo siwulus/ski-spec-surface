@@ -5,6 +5,7 @@
 This endpoint creates a new note for a specific ski specification. Notes allow users to record observations, test results, and personal comments about their ski specifications. The endpoint validates that the parent ski specification exists and belongs to the authenticated user before creating the note.
 
 **Key Features:**
+
 - Creates a new note attached to a ski specification
 - Automatically generates note ID and timestamps
 - Validates content length (1-2000 characters)
@@ -14,24 +15,29 @@ This endpoint creates a new note for a specific ski specification. Notes allow u
 ## 2. Request Details
 
 ### HTTP Method
+
 `POST`
 
 ### URL Structure
+
 ```
 /api/ski-specs/{specId}/notes
 ```
 
 ### Path Parameters
+
 - **specId** (required): UUID of the ski specification to attach the note to
   - Type: string (UUID format)
   - Validation: Must be a valid UUID format
   - Example: `550e8400-e29b-41d4-a716-446655440000`
 
 ### Request Headers
+
 - **Content-Type**: `application/json` (required)
 - **Authorization**: `Bearer <token>` (required, handled by middleware)
 
 ### Request Body
+
 ```json
 {
   "content": "Tested in deep powder at Chamonix. Excellent float and maneuverability."
@@ -39,9 +45,10 @@ This endpoint creates a new note for a specific ski specification. Notes allow u
 ```
 
 **Schema:** `CreateNoteCommand`
+
 - **content** (required): Note content
   - Type: string
-  - Constraints: 
+  - Constraints:
     - Minimum length: 1 character
     - Maximum length: 2000 characters
   - Will be trimmed before storage
@@ -49,49 +56,54 @@ This endpoint creates a new note for a specific ski specification. Notes allow u
 ## 3. Used Types
 
 ### Request Types
+
 - **CreateNoteCommand**: Command model for creating a note
   ```typescript
   type CreateNoteCommand = {
     content: string; // min 1 char, max 2000 chars
-  }
+  };
   ```
 - **CreateNoteCommandSchema**: Zod validation schema for request body
 
 ### Response Types
+
 - **NoteDTO**: Complete note data transfer object
   ```typescript
   type NoteDTO = {
-    id: string;              // UUID
-    ski_spec_id: string;     // UUID
-    content: string;         // 1-2000 chars
-    created_at: string;      // ISO datetime
-    updated_at: string;      // ISO datetime
-  }
+    id: string; // UUID
+    ski_spec_id: string; // UUID
+    content: string; // 1-2000 chars
+    created_at: string; // ISO datetime
+    updated_at: string; // ISO datetime
+  };
   ```
 - **NoteDTOSchema**: Zod validation schema for response
 
 ### Error Types
+
 - **ApiErrorResponse**: Standard error response format
   ```typescript
   type ApiErrorResponse = {
-    error: string;                        // Human-readable message
-    code?: string;                        // Machine-readable code
-    details?: ValidationErrorDetail[];    // Field-level errors
-    timestamp?: string;                   // ISO datetime
-  }
+    error: string; // Human-readable message
+    code?: string; // Machine-readable code
+    details?: ValidationErrorDetail[]; // Field-level errors
+    timestamp?: string; // ISO datetime
+  };
   ```
 
 ### Validation Schemas
+
 - **UuidParamSchema**: Validates path parameter UUID format
   ```typescript
   const UuidParamSchema = z.object({
-    specId: z.string().uuid("Invalid UUID format")
+    specId: z.string().uuid("Invalid UUID format"),
   });
   ```
 
 ## 4. Response Details
 
 ### Success Response (201 Created)
+
 ```json
 {
   "id": "6ba7b810-9dad-11d1-80b4-00c04fd430c8",
@@ -105,6 +117,7 @@ This endpoint creates a new note for a specific ski specification. Notes allow u
 ### Error Responses
 
 #### 400 Bad Request - Invalid UUID
+
 ```json
 {
   "error": "Invalid specification ID format",
@@ -114,6 +127,7 @@ This endpoint creates a new note for a specific ski specification. Notes allow u
 ```
 
 #### 400 Bad Request - Invalid JSON
+
 ```json
 {
   "error": "Invalid request body",
@@ -123,6 +137,7 @@ This endpoint creates a new note for a specific ski specification. Notes allow u
 ```
 
 #### 400 Bad Request - Validation Failed
+
 ```json
 {
   "error": "Validation failed",
@@ -138,6 +153,7 @@ This endpoint creates a new note for a specific ski specification. Notes allow u
 ```
 
 #### 401 Unauthorized
+
 ```json
 {
   "error": "Authentication required",
@@ -147,6 +163,7 @@ This endpoint creates a new note for a specific ski specification. Notes allow u
 ```
 
 #### 404 Not Found
+
 ```json
 {
   "error": "Ski specification not found",
@@ -156,6 +173,7 @@ This endpoint creates a new note for a specific ski specification. Notes allow u
 ```
 
 #### 500 Internal Server Error
+
 ```json
 {
   "error": "Internal server error",
@@ -167,6 +185,7 @@ This endpoint creates a new note for a specific ski specification. Notes allow u
 ## 5. Data Flow
 
 ### Request Flow
+
 1. **Middleware Processing**
    - Astro middleware extracts JWT token from Authorization header
    - Validates token with Supabase Auth
@@ -207,9 +226,11 @@ This endpoint creates a new note for a specific ski specification. Notes allow u
    - Return 201 Created with note data
 
 ### Database Interactions
+
 1. **Ownership Verification Query**
+
    ```sql
-   SELECT id FROM ski_specs 
+   SELECT id FROM ski_specs
    WHERE id = $specId AND user_id = $userId
    LIMIT 1
    ```
@@ -255,11 +276,13 @@ export async function createNote(
 ## 6. Security Considerations
 
 ### Authentication
+
 - **Requirement**: Valid Supabase JWT token in Authorization header
 - **Enforcement**: Astro middleware validates token and injects userId into locals
 - **Error Handling**: Return 401 if userId is missing (token invalid/expired)
 
 ### Authorization (IDOR Prevention)
+
 - **Threat**: User attempts to add notes to another user's ski specification
 - **Mitigation Strategy**:
   1. Verify ski specification exists before creating note
@@ -269,17 +292,20 @@ export async function createNote(
 - **Implementation**: Service layer checks `ski_specs` ownership before insert
 
 ### Input Validation
+
 - **UUID Format**: Validate specId is valid UUID to prevent injection
 - **Content Length**: Enforce 1-2000 character limit to prevent DoS
 - **Content Trimming**: Trim whitespace to prevent padding attacks
 - **JSON Parsing**: Safe parsing with try-catch for malformed JSON
 
 ### Database Security
+
 - **RLS Policies**: Row-Level Security on `ski_spec_notes` table verifies ownership through parent `ski_specs` table
 - **Foreign Key Constraint**: Ensures note can only be created for existing ski specifications
 - **Parameterized Queries**: Supabase SDK uses parameterized queries preventing SQL injection
 
 ### Data Privacy
+
 - **No Information Disclosure**: Return same 404 error for "not found" and "unauthorized"
 - **Error Logging**: Log errors server-side only, don't expose internal details to client
 - **User Isolation**: Each user can only create notes for their own specifications
@@ -288,19 +314,19 @@ export async function createNote(
 
 ### Error Scenarios
 
-| Scenario | Detection | Status Code | Error Code | Response Message | Logging |
-|----------|-----------|-------------|------------|------------------|---------|
-| Invalid UUID format | Zod validation on path param | 400 | VALIDATION_ERROR | "Invalid specification ID format" | None |
-| Malformed JSON body | JSON.parse() exception | 400 | INVALID_JSON | "Invalid request body" | None |
-| Missing content field | Zod validation on body | 400 | VALIDATION_ERROR | "Content is required" | None |
-| Content too short | Zod validation on body | 400 | VALIDATION_ERROR | "Content is required" | None |
-| Content too long | Zod validation on body | 400 | VALIDATION_ERROR | "Content must be between 1 and 2000 characters" | None |
-| Missing auth (no userId) | Check locals.userId | 401 | UNAUTHORIZED | "Authentication required" | None |
-| Spec not found | Service query returns null | 404 | NOT_FOUND | "Ski specification not found" | None |
-| Spec owned by different user | Service ownership check fails | 404 | NOT_FOUND | "Ski specification not found" | None |
-| Foreign key violation | Database constraint error | 404 | NOT_FOUND | "Ski specification not found" | Yes (server) |
-| Database connection error | Supabase client error | 500 | INTERNAL_ERROR | "Internal server error" | Yes (server) |
-| Unexpected error | Catch-all exception | 500 | INTERNAL_ERROR | "Internal server error" | Yes (server) |
+| Scenario                     | Detection                     | Status Code | Error Code       | Response Message                                | Logging      |
+| ---------------------------- | ----------------------------- | ----------- | ---------------- | ----------------------------------------------- | ------------ |
+| Invalid UUID format          | Zod validation on path param  | 400         | VALIDATION_ERROR | "Invalid specification ID format"               | None         |
+| Malformed JSON body          | JSON.parse() exception        | 400         | INVALID_JSON     | "Invalid request body"                          | None         |
+| Missing content field        | Zod validation on body        | 400         | VALIDATION_ERROR | "Content is required"                           | None         |
+| Content too short            | Zod validation on body        | 400         | VALIDATION_ERROR | "Content is required"                           | None         |
+| Content too long             | Zod validation on body        | 400         | VALIDATION_ERROR | "Content must be between 1 and 2000 characters" | None         |
+| Missing auth (no userId)     | Check locals.userId           | 401         | UNAUTHORIZED     | "Authentication required"                       | None         |
+| Spec not found               | Service query returns null    | 404         | NOT_FOUND        | "Ski specification not found"                   | None         |
+| Spec owned by different user | Service ownership check fails | 404         | NOT_FOUND        | "Ski specification not found"                   | None         |
+| Foreign key violation        | Database constraint error     | 404         | NOT_FOUND        | "Ski specification not found"                   | Yes (server) |
+| Database connection error    | Supabase client error         | 500         | INTERNAL_ERROR   | "Internal server error"                         | Yes (server) |
+| Unexpected error             | Catch-all exception           | 500         | INTERNAL_ERROR   | "Internal server error"                         | Yes (server) |
 
 ### Error Handling Implementation Pattern
 
@@ -309,29 +335,35 @@ try {
   // Main logic
 } catch (error: unknown) {
   const dbError = error as { message?: string; code?: string };
-  
+
   // Handle specific error cases
   if (dbError?.message?.includes("Specification not found")) {
-    return new Response(JSON.stringify({
-      error: "Ski specification not found",
-      code: "NOT_FOUND",
-      timestamp: new Date().toISOString()
-    }), { status: 404, headers: { "Content-Type": "application/json" } });
+    return new Response(
+      JSON.stringify({
+        error: "Ski specification not found",
+        code: "NOT_FOUND",
+        timestamp: new Date().toISOString(),
+      }),
+      { status: 404, headers: { "Content-Type": "application/json" } }
+    );
   }
-  
+
   // Log unexpected errors
   console.error("Failed to create note:", {
     userId,
     specId,
-    error: dbError?.message || "Unknown error"
+    error: dbError?.message || "Unknown error",
   });
-  
+
   // Generic error response
-  return new Response(JSON.stringify({
-    error: "Internal server error",
-    code: "INTERNAL_ERROR",
-    timestamp: new Date().toISOString()
-  }), { status: 500, headers: { "Content-Type": "application/json" } });
+  return new Response(
+    JSON.stringify({
+      error: "Internal server error",
+      code: "INTERNAL_ERROR",
+      timestamp: new Date().toISOString(),
+    }),
+    { status: 500, headers: { "Content-Type": "application/json" } }
+  );
 }
 ```
 
@@ -340,22 +372,26 @@ try {
 When Zod validation fails, format errors as:
 
 ```typescript
-const details = validationError.issues.map(err => ({
+const details = validationError.issues.map((err) => ({
   field: err.path.join("."),
-  message: err.message
+  message: err.message,
 }));
 
-return new Response(JSON.stringify({
-  error: "Validation failed",
-  code: "VALIDATION_ERROR",
-  details,
-  timestamp: new Date().toISOString()
-}), { status: 400, headers: { "Content-Type": "application/json" } });
+return new Response(
+  JSON.stringify({
+    error: "Validation failed",
+    code: "VALIDATION_ERROR",
+    details,
+    timestamp: new Date().toISOString(),
+  }),
+  { status: 400, headers: { "Content-Type": "application/json" } }
+);
 ```
 
 ## 9. Implementation Steps
 
 ### Step 1: Create Service Function
+
 **File**: `src/lib/services/ski-spec.service.ts`
 
 Add the following function at the end of the file:
@@ -411,11 +447,7 @@ export async function createNote(
   };
 
   // Step 3: Insert note into database
-  const { data, error } = await supabase
-    .from("ski_spec_notes")
-    .insert(noteData)
-    .select()
-    .single();
+  const { data, error } = await supabase.from("ski_spec_notes").insert(noteData).select().single();
 
   // Step 4: Handle errors
   if (error) {
@@ -432,14 +464,17 @@ export async function createNote(
 ```
 
 **Update imports** at the top of the file:
+
 ```typescript
 import type { CreateNoteCommand, NoteDTO } from "@/types";
 ```
 
 ### Step 2: Create API Endpoint File
+
 **File**: `src/pages/api/ski-specs/[specId]/notes/index.ts`
 
 Create the directory structure if it doesn't exist:
+
 ```bash
 mkdir -p src/pages/api/ski-specs/[specId]/notes
 ```
@@ -605,9 +640,11 @@ export const POST: APIRoute = async ({ params, request, locals }) => {
 ```
 
 ### Step 3: Update Type Imports (if needed)
+
 **File**: `src/types.ts`
 
 Verify the following types are exported (they should already exist):
+
 - `CreateNoteCommand`
 - `CreateNoteCommandSchema`
 - `NoteDTO`
@@ -619,6 +656,7 @@ Verify the following types are exported (they should already exist):
 Create manual test cases to verify:
 
 #### Valid Requests
+
 - [ ] Create note with valid content (1-2000 chars) → Returns 201 with NoteDTO
 - [ ] Create note with minimum content (1 char) → Returns 201
 - [ ] Create note with maximum content (2000 chars) → Returns 201
@@ -627,11 +665,13 @@ Create manual test cases to verify:
 - [ ] Verify ski_spec_id matches the path parameter
 
 #### Invalid Path Parameters
+
 - [ ] Invalid UUID format → Returns 400 with "Invalid specification ID format"
 - [ ] Non-existent spec UUID → Returns 404 with "Ski specification not found"
 - [ ] Spec owned by different user → Returns 404 with "Ski specification not found"
 
 #### Invalid Request Bodies
+
 - [ ] Malformed JSON → Returns 400 with "Invalid request body"
 - [ ] Missing content field → Returns 400 with validation details
 - [ ] Empty content → Returns 400 with validation details
@@ -640,15 +680,18 @@ Create manual test cases to verify:
 - [ ] Content is not a string → Returns 400 with validation details
 
 #### Authentication/Authorization
+
 - [ ] Missing auth token → Returns 401 with "Authentication required"
 - [ ] Invalid auth token → Returns 401 (handled by middleware)
 - [ ] Expired auth token → Returns 401 (handled by middleware)
 
 #### Database/System Errors
+
 - [ ] Simulate database connection error → Returns 500 with "Internal server error"
 - [ ] Verify error logging includes userId, specId, and error details
 
 ### Step 5: Update API Documentation (if needed)
+
 **File**: `public/swagger.yaml`
 
 Verify the POST /api/ski-specs/{specId}/notes endpoint documentation is accurate and matches implementation. The swagger.yaml should already contain the correct specification based on the initial review.
@@ -658,6 +701,7 @@ Verify the POST /api/ski-specs/{specId}/notes endpoint documentation is accurate
 ## Implementation Notes
 
 ### Directory Structure
+
 ```
 src/
 ├── lib/
@@ -685,4 +729,3 @@ src/
 5. **Type Safety**: Full TypeScript typing with Zod validation ensures runtime safety.
 
 6. **Security-First Approach**: Ownership verification happens before any database modifications.
-

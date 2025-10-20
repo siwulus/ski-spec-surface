@@ -20,13 +20,14 @@
 </decisions>
 
 <matched_recommendations>
+
 1. Dodawanie numerowanego sufiksu (`_1`, `_2`, …) przy importowanych duplikatach nazw.
 2. Unikalny indeks złożony `(user_id, name)` dla tabeli specyfikacji.
 3. Użycie jednostek bazowych (mm / g) i konwersji wyłącznie w warstwie prezentacji.
 4. Typ `NUMERIC(10,2)` dla wartości z miejscami po przecinku.
 5. Polityka RLS ograniczająca dostęp do własnych rekordów (`user_id = auth.uid()`).
 6. Hard-delete zamiast soft-delete.
-</matched_recommendations>
+   </matched_recommendations>
 
 <database_planning_summary>
 Główne wymagania:

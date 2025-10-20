@@ -54,10 +54,13 @@ Ostateczny plan API powinien być sformatowany w markdown i zawierać następuj�
 # REST API Plan
 
 ## 1. Zasoby
+
 - Wymień każdy główny zasób i odpowiadającą mu tabelę bazy danych
 
 ## 2. Punkty końcowe
+
 Dla każdego zasobu podaj:
+
 - Metoda HTTP
 - Ścieżka URL
 - Krótki opis
@@ -68,9 +71,11 @@ Dla każdego zasobu podaj:
 - Kody i komunikaty błędów
 
 ## 3. Uwierzytelnianie i autoryzacja
+
 - Opisz wybrany mechanizm uwierzytelniania i szczegóły implementacji
 
 ## 4. Walidacja i logika biznesowa
+
 - Lista warunków walidacji dla każdego zasobu
 - Opisz, w jaki sposób logika biznesowa jest zaimplementowana w API
 ```

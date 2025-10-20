@@ -27,6 +27,7 @@ Your task is to create a README.md file with the following structure:
 8. License
 
 Instructions:
+
 1. Carefully read all provided project files.
 2. Extract appropriate information for each README section.
 3. Organize information into the specified structure.
@@ -40,6 +41,7 @@ Instructions:
 5. Carefully verify that you have included all relevant information from the input files.
 
 Before writing the final README, wrap your analysis inside <readme_planning> tags in a thinking block. In this section:
+
 - List key information from each input file separately (PRD, tech stack, dependencies).
 - Create a brief outline for each README section.
 - Note any missing information that might be needed for a comprehensive README.

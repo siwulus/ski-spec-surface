@@ -5,37 +5,40 @@ Description for new UI element that implementation should be planned is describe
 First, review the following information:
 
 1. Product Requirements Document (PRD):
-<prd>
-@prd.md
-</prd>
+   <prd>
+   @prd.md
+   </prd>
 
 2. High-level UI Plan:
-<ui_plan>
-@ui-plan.md
-</ui_plan>
+   <ui_plan>
+   @ui-plan.md
+   </ui_plan>
 
-4. Backend endpoints specification:
-<endpoint_description>
-@swagger.yaml
-</endpoint_description>
+3. Backend endpoints specification:
+   <endpoint_description>
+   @swagger.yaml
+   </endpoint_description>
 
-6. Type Definitions (DTO and Command Models):
-<type_definitions>
-@api.types.ts
-</type_definitions>
+4. Type Definitions (DTO and Command Models):
+   <type_definitions>
+   @api.types.ts
+   </type_definitions>
 
-7. Tech Stack:
-<tech_stack>
-@tech-stack.md
-</tech_stack>
+5. Tech Stack:
+   <tech_stack>
+   @tech-stack.md
+   </tech_stack>
 
 Before creating the final implementation plan, conduct analysis and planning inside <implementation_breakdown> tags in your thinking block. This section can be quite long, as it's important to be thorough.
 
 In your implementation breakdown, execute the following steps:
+
 1. For each input section (Product Requirements Document, High-level UI Plan, Backend endpoints specification, Type Definitions, Tech Stack):
-  - Summarize key points
-  - List any requirements or constraints
- - Note any potential challenges or important issues
+
+- Summarize key points
+- List any requirements or constraints
+- Note any potential challenges or important issues
+
 2. Extract and list key requirements from the PRD
 3. List all needed main components, along with a brief description of their purpose, needed types, handled events, and validation conditions
 4. Create a high-level component tree diagram
