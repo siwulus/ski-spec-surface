@@ -46,7 +46,7 @@ Aplikacja jest zbudowana w oparciu o Astro 5 (strony `.astro`) z wyspami React 1
 - **Dostępność**: Publiczny
 - **Główny cel**: Uwierzytelnienie użytkownika i rozpoczęcie sesji.
 - **Kluczowe informacje do wyświetlenia**: pola email/hasło, link do rejestracji, komunikaty błędów.
-- **Kluczowe komponenty widoku**: Formularz logowania (React island), `Input`, `Button`, link do `/auth/register`, toasty.
+- **Kluczowe komponenty widoku**: Formularz logowania (React island), `Input`, `Button`, link do `/auth/register`, link do `/auth/reset-password` ("Zapomniałem hasła"), toasty.
 - **UX, dostępność i bezpieczeństwo**:
   - Walidacja e‑mail/hasło po stronie klienta i mapowanie błędów auth.
   - Po sukcesie redirect do `redirectTo` lub `/ski-specs`.
@@ -67,6 +67,47 @@ Aplikacja jest zbudowana w oparciu o Astro 5 (strony `.astro`) z wyspami React 1
   - Zalogowany użytkownik próbujący wejść na `/auth/register` jest automatycznie przekierowany do `/ski-specs`.
   - ARIA + focus management.
 - **Mapowanie US**: US-001 (Rejestracja), US-017 (błędy sieciowe).
+
+### Widok: Reset hasła (żądanie)
+
+- **Ścieżka widoku**: `/auth/reset-password`
+- **Dostępność**: Publiczny
+- **Główny cel**: Umożliwienie użytkownikowi zażądania wysłania linku do resetowania hasła.
+- **Kluczowe informacje do wyświetlenia**: pole email, komunikat o celu strony, link powrotu do logowania.
+- **Kluczowe komponenty widoku**: Formularz reset hasła (React island), `Input`, `Button`, link do `/auth/login`, Alert box z komunikatem po wysłaniu.
+- **UX, dostępność i bezpieczeństwo**:
+  - Formularz przyjmuje tylko adres email
+  - Walidacja formatu email po stronie klienta (Zod)
+  - Po wysłaniu zawsze wyświetla komunikat sukcesu (security best practice): "Jeśli podany adres email jest w naszej bazie, otrzymasz link do resetowania hasła"
+  - Komunikat nie ujawnia czy email istnieje w systemie
+  - Wyświetlenie Alert box z instrukcją: "Sprawdź swoją skrzynkę pocztową i kliknij link w emailu"
+  - Link "Powrót do logowania" → `/auth/login`
+  - ARIA dla pola email i komunikatów
+- **Parametry API**: Supabase Auth API (client-side)
+- **Mapowanie US**: US-004 (Resetowanie hasła - etap 1), US-017 (błędy sieciowe).
+
+### Widok: Ustawienie nowego hasła
+
+- **Ścieżka widoku**: `/auth/update-password`
+- **Dostępność**: Publiczny (dostępna przez link z emaila z tokenami)
+- **Główny cel**: Umożliwienie użytkownikowi ustawienia nowego hasła po kliknięciu linku z emaila.
+- **Kluczowe informacje do wyświetlenia**: pola nowego hasła i potwierdzenia, wskaźnik siły hasła, komunikaty o wymaganiach hasła.
+- **Kluczowe komponenty widoku**: Formularz nowego hasła (React island), `Input` (password), `PasswordStrengthIndicator`, `Button`, toasty.
+- **UX, dostępność i bezpieczeństwo**:
+  - Automatyczna weryfikacja tokenów z URL (access_token, refresh_token w hash fragment) przy montowaniu komponentu
+  - Jeśli token nieprawidłowy/wygasły: wyświetlenie komunikatu błędu "Link resetujący hasło wygasł lub jest nieprawidłowy" + link do `/auth/reset-password`
+  - Formularz zawiera: pole nowego hasła, pole potwierdzenia hasła
+  - Walidacja real-time z wymogami: min 8 znaków, wielka litera, mała litera, cyfra
+  - Komponent `PasswordStrengthIndicator` wyświetla pasek postępu (0-100%) i checklist wymogów (✓/✗)
+  - Walidacja zgodności hasła i potwierdzenia (Zod)
+  - Aktualizacja hasła
+  - Po sukcesie: przekierowanie do `/auth/login` + toast "Hasło zostało zmienione. Możesz się teraz zalogować"
+  - ARIA dla pól formularza, focus management
+- **Parametry URL**:
+  - `access_token` (w hash fragment) - token z Supabase
+  - `refresh_token` (w hash fragment) - token z Supabase
+- **Parametry API**: Supabase Auth API (client-side)
+- **Mapowanie US**: US-004 (Resetowanie hasła - etap 2), US-015 (walidacja), US-017 (błędy sieciowe).
 
 ### Widok: Lista specyfikacji nart
 
@@ -176,10 +217,27 @@ Aplikacja jest zbudowana w oparciu o Astro 5 (strony `.astro`) z wyspami React 1
 
 6. **Import/eksport danych**
 
-- Import: z menu lub toolbaru listy → modal → upload CSV → POST `/import` → summary (zakładki „Zaimportowane”/„Błędy”) → zamknięcie → odświeżenie listy.
-- Eksport: kliknięcie „Eksport CSV” → GET `/export` → pobranie pliku (nazwa z `Content-Disposition`), przycisk zablokowany w trakcie.
+- Import: z menu lub toolbaru listy → modal → upload CSV → POST `/import` → summary (zakładki „Zaimportowane"/„Błędy") → zamknięcie → odświeżenie listy.
+- Eksport: kliknięcie „Eksport CSV" → GET `/export` → pobranie pliku (nazwa z `Content-Disposition`), przycisk zablokowany w trakcie.
 
-7. **Obsługa błędów i stany brzegowe**
+7. **Resetowanie hasła**
+
+- Użytkownik na stronie `/auth/login` klika link "Zapomniałem hasła"
+- Przekierowanie do `/auth/reset-password`
+- Wprowadzenie emaila w formularz → kliknięcie "Wyślij link resetujący"
+- Wywołanie logiki resetu hasła
+- Wyświetlenie komunikatu: "Jeśli podany adres email jest w naszej bazie, otrzymasz link do resetowania hasła" (zawsze, niezależnie czy email istnieje)
+- Wyświetlenie Alert box z instrukcją: "Sprawdź swoją skrzynkę pocztową i kliknij link w emailu"
+- Użytkownik otrzymuje email z linkiem zawierającym tokeny (access_token, refresh_token w hash fragment)
+- Kliknięcie linku → przekierowanie do `/auth/update-password` z tokenami w URL
+- Automatyczna weryfikacja tokenu przy załadowaniu strony
+- Jeśli token prawidłowy: wyświetlenie formularza nowego hasła
+- Jeśli token nieprawidłowy/wygasły: komunikat błędu + link do `/auth/reset-password`
+- Wprowadzenie nowego hasła i potwierdzenia → walidacja real-time (siła hasła, zgodność)
+- Kliknięcie "Ustaw nowe hasło" → wywołanie aktualizacji hasła w systemie
+- Po sukcesie: przekierowanie do `/auth/login` + toast "Hasło zostało zmienione. Możesz się teraz zalogować"
+
+8. **Obsługa błędów i stany brzegowe**
 
 - 400/422: mapowanie do pól formularza; 409 przy `name`; 401 → redirect do `/auth/login`.
 - Sieciowe błędy → toasty i opcja ponowienia; dane formularza zachowane.
@@ -247,16 +305,47 @@ Aplikacja jest zbudowana w oparciu o Astro 5 (strony `.astro`) z wyspami React 1
 - **ImportModal**: upload CSV (multipart), podsumowanie (summary)
 - **ExportButton**: obsługa `GET /export`, blokada w trakcie pobierania, odczyt nazwy z `Content-Disposition`.
 - **CompareTable**: 2–4 kolumny, wybór kolumny bazowej, sortowanie per wiersz, wyróżnienie `surface_area` i `relative_weight`
-- **NotesList**: paginacja `limit=50`, „Pokaż więcej”, formularze dodawania/edycji, confirm delete, aktualizacja licznika po mutacjach.
+- **NotesList**: paginacja `limit=50`, „Pokaż więcej", formularze dodawania/edycji, confirm delete, aktualizacja licznika po mutacjach.
 - **NumberInputLocalized**: akceptacja `,` i `.`; wewnętrzna normalizacja do kropki; prezentacja według locale; walidacje zakresów zgodnych z API.
 - **DateTimeLocalized**: wyświetlanie dat/czasów w locale strony.
 - **Toast/Alert/ConfirmDialog**: komunikaty sukcesu/błędu, potwierdzenia czynności destrukcyjnych.
 - **ErrorBoundary**: fallback UI dla błędów nieprzechwyconych lokalnie.
+- **ResetPasswordForm** (React):
+  - Formularz żądania resetu hasła na `/auth/reset-password`
+  - Pole email z walidacją (RHF+Zod)
+  - Przycisk "Wyślij link resetujący"
+  - Link "Powrót do logowania" → `/auth/login`
+  - Wywołanie `supabase.auth.resetPasswordForEmail()` z redirectTo
+  - Wyświetlanie Alert box z komunikatem sukcesu (zawsze, security best practice)
+  - Obsługa błędów sieciowych i rate limiting (toast)
+  - A11y: aria-invalid, aria-describedby dla pola email
+- **UpdatePasswordForm** (React):
+  - Formularz ustawienia nowego hasła na `/auth/update-password`
+  - Automatyczna weryfikacja tokenu z URL (hash fragment) przy montowaniu
+  - Pola: nowe hasło, potwierdzenie hasła (type="password")
+  - Integracja z `PasswordStrengthIndicator` (wyświetlanie na żywo)
+  - Walidacja RHF+Zod: min 8 znaków, wielka/mała litera, cyfra, zgodność pól
+  - Wywołanie `supabase.auth.updateUser({ password })`
+  - Obsługa wygasłego/nieprawidłowego tokenu: komunikat + link do `/auth/reset-password`
+  - Po sukcesie: redirect `/auth/login` + toast
+  - A11y: focus management, aria-invalid, aria-describedby
+- **PasswordStrengthIndicator** (React):
+  - Komponent pomocniczy do wizualizacji siły hasła w czasie rzeczywistym
+  - Używany w `RegisterForm` i `UpdatePasswordForm`
+  - Props: `password: string`
+  - Wyświetlanie: pasek postępu (0-100%) z kolorami (czerwony/pomarańczowy/żółty/zielony)
+  - Checklist wymogów z ikonami ✓/✗:
+    - Minimum 8 znaków
+    - Wielka litera
+    - Mała litera
+    - Cyfra
+  - Algorytm: każdy spełniony wymóg +25% siły
+  - A11y: role="progressbar", aria-valuenow, aria-label
 
 ## 6. Wymagania bezpieczeństwa i walidacji
 
 - **Chronienie tras**: Middleware sprawdza sesję użytkownika przed dostępem do chronionych zasobów:
-  - **Trasy publiczne**: `/` (landing page), `/auth/login`, `/auth/register`, `/404`
+  - **Trasy publiczne**: `/` (landing page), `/auth/login`, `/auth/register`, `/auth/reset-password`, `/auth/update-password`, `/404`
   - **Trasy chronione**: `/ski-specs`, `/ski-specs/*`, `/compare`, `/api/ski-specs/*`
   - Próba dostępu do chronionej trasy bez sesji → redirect `/auth/login?redirectTo=<ścieżka>`
   - Próba dostępu do `/auth/login` lub `/auth/register` z aktywną sesją → redirect `/ski-specs`

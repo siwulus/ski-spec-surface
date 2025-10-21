@@ -89,7 +89,7 @@ Obecnie narciarze muszą samodzielnie szacować te parametry lub polegać na sub
 - Landing page z opisem aplikacji dostępny publicznie bez uwierzytelniania
 - Rejestracja nowych użytkowników
 - Logowanie i wylogowanie
-- Zarządzanie kontem: Resetowanie hasla użytkownika
+- Zarządzanie kontem: Resetowanie hasła użytkownika przez dwuetapowy proces (żądanie resetu + ustawienie nowego hasła) dostępny z poziomu strony logowania
 - Integracja z zewnętrznym dostawcą uwierzytelniania
 
 ### 3.7 Formatowanie i jednostki
@@ -256,6 +256,18 @@ Obecnie narciarze muszą samodzielnie szacować te parametry lub polegać na sub
   - Link resetowania hasła wygasa po określonym czasie
   - Nowe hasło musi spełniać wymagania bezpieczeństwa
   - Po zmianie hasła użytkownik może się zalogować nowym hasłem
+  - Link "Zapomniałem hasła" jest dostępny na stronie logowania i prowadzi do `/auth/reset-password`
+  - Proces resetowania składa się z dwóch etapów:
+    - Etap 1: Żądanie resetu na stronie `/auth/reset-password` - wprowadzenie emaila
+    - Etap 2: Ustawienie nowego hasła na stronie `/auth/update-password` - dostępna przez link z emaila
+  - System wysyła emaila z linkiem zawierającym tokeny dostępowe (access_token i refresh_token w hash fragment URL)
+  - Po wysłaniu żądania resetu system zawsze wyświetla komunikat sukcesu: "Jeśli podany adres email jest w naszej bazie, otrzymasz link do resetowania hasła" (security best practice - nie ujawniaj czy email istnieje)
+  - Link z emaila przekierowuje na `/auth/update-password` z tokenami w URL
+  - Strona `/auth/update-password` weryfikuje tokeny automatycznie przy załadowaniu
+  - Jeśli token nieprawidłowy lub wygasły: komunikat błędu + link powrotu do `/auth/reset-password`
+  - Formularz nowego hasła zawiera: pole hasła, pole potwierdzenia hasła, wskaźnik siły hasła
+  - Nowe hasło musi spełniać wymagania: min 8 znaków, wielka litera, mała litera, cyfra
+  - Po pomyślnej zmianie hasła użytkownik jest przekierowany do `/auth/login` z komunikatem: "Hasło zostało zmienione. Możesz się teraz zalogować"
 
 ### 5.2 Zarządzanie specyfikacjami nart
 
