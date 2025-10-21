@@ -31,6 +31,8 @@ tags:
     description: Operations for managing ski specifications
   - name: Notes
     description: Operations for managing notes on ski specifications
+  - name: Authentication
+    description: Server-side authentication operations (session check and logout)
   - name: Health
     description: API health and status endpoints
 
@@ -38,6 +40,58 @@ security:
   - BearerAuth: []
 
 paths:
+  /api/auth/session:
+    get:
+      tags:
+        - Authentication
+      summary: Get current session
+      description: |
+        Returns the current user session information. No authentication required
+        (returns null user and false isAuthenticated if not authenticated).
+      operationId: getSession
+      security: []
+      responses:
+        "200":
+          description: Session information
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SessionResponse"
+              examples:
+                authenticated:
+                  summary: Authenticated user
+                  value:
+                    user:
+                      id: "550e8400-e29b-41d4-a716-446655440000"
+                      email: "user@example.com"
+                    isAuthenticated: true
+                unauthenticated:
+                  summary: Unauthenticated user
+                  value:
+                    user: null
+                    isAuthenticated: false
+
+  /api/auth/logout:
+    post:
+      tags:
+        - Authentication
+      summary: Logout user
+      description: |
+        Logs out the current user by clearing the session and removing authentication cookies.
+        Requires the user to be authenticated.
+      operationId: logout
+      responses:
+        "200":
+          description: Logout successful
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LogoutResponse"
+              example:
+                success: true
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+
   /api/health:
     get:
       tags:
@@ -1259,6 +1313,51 @@ components:
           minLength: 1
           description: Error message
           example: Tip width must be between 50 and 250 mm
+
+    UserDTO:
+      type: object
+      description: Simplified user information from Supabase Auth
+      required:
+        - id
+        - email
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: User ID
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        email:
+          type: string
+          format: email
+          description: User email address
+          example: "user@example.com"
+
+    SessionResponse:
+      type: object
+      description: Session information response
+      required:
+        - user
+        - isAuthenticated
+      properties:
+        user:
+          $ref: "#/components/schemas/UserDTO"
+          nullable: true
+          description: User information (null if not authenticated)
+        isAuthenticated:
+          type: boolean
+          description: Whether the user is authenticated
+          example: true
+
+    LogoutResponse:
+      type: object
+      description: Logout operation response
+      required:
+        - success
+      properties:
+        success:
+          type: boolean
+          description: Logout success status
+          example: true
 
     ApiErrorResponse:
       type: object

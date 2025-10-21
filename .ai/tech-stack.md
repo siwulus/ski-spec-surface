@@ -12,6 +12,7 @@
 - TypeScript 5 dla statycznego typowania kodu i lepszego wsparcia IDE
 - Tailwind 4 pozwala na wygodne stylowanie aplikacji
 - Shadcn/ui zapewnia bibliotekę dostępnych komponentów React, na których oprzemy UI
+- React Hook Form jako biblioteka formularzy
 
 ## Backend - Supabase jako kompleksowe rozwiązanie backendowe:
 
@@ -27,11 +28,6 @@
 - Umożliwia integrację z zewnętrznymi dostawcami tożsamości (np. Google, GitHub)
 - Prosty w integracji z frontendem dzięki dostarczanym SDK
 - Zapewnia przechowywanie sesji i automatyczną odnowę tokenów
-
-## AI - Komunikacja z modelami przez usługę Openrouter.ai:
-
-- Dostęp do szerokiej gamy modeli (OpenAI, Anthropic, Google i wiele innych), które pozwolą nam znaleźć rozwiązanie zapewniające wysoką efektywność i niskie koszta
-- Pozwala na ustawianie limitów finansowych na klucze API
 
 ## CI/CD i Hosting:
 

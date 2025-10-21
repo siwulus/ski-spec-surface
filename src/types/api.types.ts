@@ -512,6 +512,62 @@ export const HealthCheckResponseSchema = z.object({
 export type HealthCheckResponse = z.infer<typeof HealthCheckResponseSchema>;
 
 // ============================================================================
+// Authentication Types
+// ============================================================================
+
+/**
+ * Zod schema for UserDTO.
+ * Validates user information in session responses.
+ */
+export const UserDTOSchema = z.object({
+  id: z.uuid("User ID must be a valid UUID"),
+  email: z.email("Email must be a valid email address"),
+});
+
+/**
+ * User DTO - Simplified user information from Supabase Auth.
+ * Used in: GET /api/auth/session
+ *
+ * Contains only essential user identification fields.
+ * Additional Supabase user metadata is not exposed in the API.
+ */
+export type UserDTO = z.infer<typeof UserDTOSchema>;
+
+/**
+ * Zod schema for SessionResponse.
+ * Validates session check response data.
+ */
+export const SessionResponseSchema = z.object({
+  user: UserDTOSchema.nullish(),
+  isAuthenticated: z.boolean(),
+});
+
+/**
+ * Session response DTO.
+ * Used in: GET /api/auth/session
+ *
+ * Returns current user session information or null if not authenticated.
+ * The isAuthenticated flag provides quick boolean check without null checking.
+ */
+export type SessionResponse = z.infer<typeof SessionResponseSchema>;
+
+/**
+ * Zod schema for LogoutResponse.
+ * Validates logout operation response.
+ */
+export const LogoutResponseSchema = z.object({
+  success: z.boolean(),
+});
+
+/**
+ * Logout response DTO.
+ * Used in: POST /api/auth/logout
+ *
+ * Simple success confirmation for logout operation.
+ */
+export type LogoutResponse = z.infer<typeof LogoutResponseSchema>;
+
+// ============================================================================
 // Error Response Types
 // ============================================================================
 
