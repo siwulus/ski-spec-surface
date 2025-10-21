@@ -2,9 +2,9 @@
 
 ## 1. Przegląd struktury UI
 
-Aplikacja jest zbudowana w oparciu o Astro 5 (strony `.astro`) z wyspami React 19 dla sekcji interaktywnych, Tailwind 4 oraz komponenty shadcn/ui. Wszystkie trasy są chronione globalnie przez middleware w `src/middleware/index.ts` (whitelist: `/login`, `/register`, `/api/health`) oraz dodatkowy klientowy guard, który przechwytuje odpowiedzi 401 i przekierowuje na `/login?redirectTo=…`. Autentykacja opiera się o Supabase (JWT Bearer) korzystające z sesji przeglądarkowej.
+Aplikacja jest zbudowana w oparciu o Astro 5 (strony `.astro`) z wyspami React 19 dla sekcji interaktywnych, Tailwind 4 oraz komponenty shadcn/ui. Wszystkie trasy są chronione globalnie przez middleware w `src/middleware/index.ts` (whitelist: `/auth/login`, `/auth/register`, `/api/health`) oraz dodatkowy klientowy guard, który przechwytuje odpowiedzi 401 i przekierowuje na `/login?redirectTo=…`. Autentykacja opiera się o Supabase (JWT Bearer) korzystające z sesji przeglądarkowej.
 
-- **Główne strony**: `/login`, `/register`, `/ski-specs`, `/ski-specs/:id`, `/compare?ids=…`, `/account`.
+- **Główne strony**: `/auth/login`, `/auth/register`, `/ski-specs`, `/ski-specs/:id`, `/compare?ids=…`, `/account`.
 - **Interaktywność**: formularze (RHF+Zod), tabela/siatka, sekcja notatek, modal Create/Edit, modal Import, tabela porównania.
 - **Formaty i lokalizacja**: wartości numeryczne wyświetlane z jednostkami; liczby akceptują przecinek i kropkę (wewnętrzna normalizacja do kropki); daty i czasy zgodne z lokalizacją strony.
 - **Dostępność (a11y)**: ARIA w formularzach (aria-invalid/aria-describedby), focus management w modalach, kontrast WCAG AA, klawiaturowa nawigacja; komponenty shadcn/ui.
@@ -29,8 +29,8 @@ Aplikacja jest zbudowana w oparciu o Astro 5 (strony `.astro`) z wyspami React 1
 - **Kluczowe komponenty widoku**:
   - **LandingPageHero**: Hero section z nagłówkiem, opisem problemu użytkownika i wyraźnym primary CTA.
   - **BenefitsList**: Sekcja prezentująca korzyści w formie kart lub listy z ikonami (responsywny grid: 1 kolumna mobile, 2-4 desktop).
-  - **Primary CTA button**: Wyraźny przycisk "Zarejestruj się" / "Rozpocznij" prowadzący do `/register`.
-  - **Secondary CTA link**: "Masz już konto? Zaloguj się" prowadzący do `/login`.
+  - **Primary CTA button**: Wyraźny przycisk "Zarejestruj się" / "Rozpocznij" prowadzący do `/auth/register`.
+  - **Secondary CTA link**: "Masz już konto? Zaloguj się" prowadzący do `/auth/login`.
   - Prosty, przejrzysty layout skoncentrowany na jednym głównym działaniu (rejestracja).
 - **UX, dostępność i bezpieczeństwo**:
   - Zalogowani użytkownicy **mogą pozostać** na landing page - nie ma automatycznego przekierowania do `/ski-specs` (użytkownik może wejść przez menu "Home").
@@ -42,21 +42,21 @@ Aplikacja jest zbudowana w oparciu o Astro 5 (strony `.astro`) z wyspami React 1
 
 ### Widok: Logowanie
 
-- **Ścieżka widoku**: `/login`
+- **Ścieżka widoku**: `/auth/login`
 - **Dostępność**: Publiczny
 - **Główny cel**: Uwierzytelnienie użytkownika i rozpoczęcie sesji.
 - **Kluczowe informacje do wyświetlenia**: pola email/hasło, link do rejestracji, komunikaty błędów.
-- **Kluczowe komponenty widoku**: Formularz logowania (React island), `Input`, `Button`, link do `/register`, toasty.
+- **Kluczowe komponenty widoku**: Formularz logowania (React island), `Input`, `Button`, link do `/auth/register`, toasty.
 - **UX, dostępność i bezpieczeństwo**:
   - Walidacja e‑mail/hasło po stronie klienta i mapowanie błędów auth.
   - Po sukcesie redirect do `redirectTo` lub `/ski-specs`.
-  - Zalogowany użytkownik próbujący wejść na `/login` jest automatycznie przekierowany do `/ski-specs`.
+  - Zalogowany użytkownik próbujący wejść na `/auth/login` jest automatycznie przekierowany do `/ski-specs`.
   - ARIA dla pól i błędów; obsługa Enter; widoczny focus.
 - **Mapowanie US**: US-002 (Logowanie), US-003 (początek wylogowania po stronie konta), US-017 (błędy sieciowe).
 
 ### Widok: Rejestracja
 
-- **Ścieżka widoku**: `/register`
+- **Ścieżka widoku**: `/auth/register`
 - **Dostępność**: Publiczny
 - **Główny cel**: Założenie konta i automatyczne zalogowanie.
 - **Kluczowe informacje do wyświetlenia**: pola email/hasło, polityka haseł, link do logowania.
@@ -64,7 +64,7 @@ Aplikacja jest zbudowana w oparciu o Astro 5 (strony `.astro`) z wyspami React 1
 - **UX, dostępność i bezpieczeństwo**:
   - Walidacja e‑mail/hasło; jasne komunikaty błędów.
   - Po sukcesie automatyczne logowanie i redirect na `/ski-specs`.
-  - Zalogowany użytkownik próbujący wejść na `/register` jest automatycznie przekierowany do `/ski-specs`.
+  - Zalogowany użytkownik próbujący wejść na `/auth/register` jest automatycznie przekierowany do `/ski-specs`.
   - ARIA + focus management.
 - **Mapowanie US**: US-001 (Rejestracja), US-017 (błędy sieciowe).
 
@@ -125,18 +125,6 @@ Aplikacja jest zbudowana w oparciu o Astro 5 (strony `.astro`) z wyspami React 1
 - **Parametry API**: `GET /api/ski-specs/compare?ids=…`.
 - **Mapowanie US**: US-010/011/012.
 
-### Widok: Konto
-
-- **Ścieżka widoku**: `/account`
-- **Dostępność**: Wymaga autentykacji
-- **Główny cel**: Zarządzanie kontem w zakresie dostępnych akcji (podgląd e‑mail, reset hasła, wylogowanie).
-- **Kluczowe informacje do wyświetlenia**: e‑mail użytkownika, data ostatniego logowania (jeśli dostępna w sesji), akcje.
-- **Kluczowe komponenty widoku**: Sekcja informacji, przyciski „Zmień hasło” (Supabase reset link), „Wyloguj”, toasty.
-- **UX, dostępność i bezpieczeństwo**:
-  - Potwierdzenia i czytelne komunikaty po akcjach.
-  - A11y: odpowiednie role i focus.
-- **Mapowanie US**: US-003/004.
-
 ### Widoki systemowe i stany globalne
 
 - **Not Found (404)**:
@@ -154,16 +142,16 @@ Aplikacja jest zbudowana w oparciu o Astro 5 (strony `.astro`) z wyspami React 1
 0. **Pierwsze wejście na stronę (landing page)**
 
 - Niezalogowany użytkownik wchodzi na `/` (landing page) → przegląda opis problemu i korzyści aplikacji.
-- Użytkownik klika "Zarejestruj się" → redirect do `/register`.
-- LUB użytkownik klika "Zaloguj się" (link na landing page lub przycisk w menu) → redirect do `/login`.
+- Użytkownik klika "Zarejestruj się" → redirect do `/auth/register`.
+- LUB użytkownik klika "Zaloguj się" (link na landing page lub przycisk w menu) → redirect do `/auth/login`.
 - Zalogowany użytkownik może wejść na `/` przez menu "Home" i pozostać na landing page (bez automatycznego przekierowania do `/ski-specs`).
 
 1. **Wejście i autoryzacja**
 
 - Użytkownik wchodzi na trasę chronioną → middleware przekierowuje na `/login?redirectTo=…`.
-- Rejestracja na `/register` → po sukcesie automatyczne logowanie → redirect do `/ski-specs`.
-- Logowanie na `/login` → po sukcesie redirect do `redirectTo` lub `/ski-specs`.
-- Zalogowany użytkownik próbujący wejść na `/login` lub `/register` → automatyczny redirect do `/ski-specs`.
+- Rejestracja na `/auth/register` → po sukcesie automatyczne logowanie → redirect do `/ski-specs`.
+- Logowanie na `/auth/login` → po sukcesie redirect do `redirectTo` lub `/ski-specs`.
+- Zalogowany użytkownik próbujący wejść na `/auth/login` lub `/auth/register` → automatyczny redirect do `/ski-specs`.
 
 2. **Dodanie nowej specyfikacji**
 
@@ -191,13 +179,9 @@ Aplikacja jest zbudowana w oparciu o Astro 5 (strony `.astro`) z wyspami React 1
 - Import: z menu lub toolbaru listy → modal → upload CSV → POST `/import` → summary (zakładki „Zaimportowane”/„Błędy”) → zamknięcie → odświeżenie listy.
 - Eksport: kliknięcie „Eksport CSV” → GET `/export` → pobranie pliku (nazwa z `Content-Disposition`), przycisk zablokowany w trakcie.
 
-7. **Konto użytkownika**
+7. **Obsługa błędów i stany brzegowe**
 
-- `/account` → podgląd e‑mail, akcje reset hasła (Supabase link), wylogowanie → toasty.
-
-8. **Obsługa błędów i stany brzegowe**
-
-- 400/422: mapowanie do pól formularza; 409 przy `name`; 401 → redirect do `/login`.
+- 400/422: mapowanie do pól formularza; 409 przy `name`; 401 → redirect do `/auth/login`.
 - Sieciowe błędy → toasty i opcja ponowienia; dane formularza zachowane.
 - Pusta lista → komunikat i CTA.
 
@@ -216,19 +200,17 @@ Aplikacja jest zbudowana w oparciu o Astro 5 (strony `.astro`) z wyspami React 1
 - **Menu główne** (lewa strona):
   - `Home` → `/` (landing page)
 - **CTA** (prawa strona):
-  - Przycisk primary "Log in" → `/login`
+  - Przycisk primary "Log in" → `/auth/login`
+  - Przycisk secondary "Register" → `/auth/register`
 
 #### Stan: Użytkownik zalogowany
 
 - **Menu główne** (środek/lewa strona):
   - `Home` → `/` (landing page)
   - `Ski Specs` → `/ski-specs`
-  - `Account` → `/account`
 - **User menu** (prawa strona):
-  - Avatar uzytkownika (button z dropdown)
+  - Avatar uzytkownika + email (button z dropdown)
   - Dropdown zawiera:
-    - Email użytkownika (nieaktywny element informacyjny)
-    - Separator (wizualny divider)
     - "Wyloguj" → akcja wylogowania + redirect na `/` (landing page)
 
 ### Zachowanie nawigacji przy zmianie stanu autentykacji
@@ -237,7 +219,7 @@ Aplikacja jest zbudowana w oparciu o Astro 5 (strony `.astro`) z wyspami React 1
 - Po wylogowaniu: automatyczna zmiana menu (usunięcie Ski Specs, Account, zamiana user menu na CTA "Zaloguj się") + redirect na `/` (landing page).
 - Zalogowany użytkownik może wejść na `/` (Home w menu) i **pozostać** na landing page - nie ma automatycznego przekierowania do `/ski-specs`.
 - Próba wejścia na chronione trasy przez niezalogowanego → redirect do `/login?redirectTo=...`.
-- Próba wejścia na `/login` lub `/register` przez zalogowanego → redirect do `/ski-specs`.
+- Próba wejścia na `/auth/login` lub `/auth/register` przez zalogowanego → redirect do `/ski-specs`.
 
 ## 5. Kluczowe komponenty
 
@@ -246,17 +228,15 @@ Aplikacja jest zbudowana w oparciu o Astro 5 (strony `.astro`) z wyspami React 1
   - Logo zawsze prowadzi do `/` (landing page) dla wszystkich użytkowników.
   - Menu adaptacyjne:
     - Niezalogowany: `Home`
-    - Zalogowany: `Home`, `Ski Specs`, `Account`
+    - Zalogowany: `Home`, `Ski Specs`
   - Prawa strona:
-    - Niezalogowany: przycisk "Zaloguj się" → `/login`
-    - Zalogowany: User dropdown (avatar + email)
-  - Sticky header (opcjonalnie).
+    - Niezalogowany: przycisk "Log in" → `/auth/login`, przycisk "Register"  → `/auth/register`
+    - Zalogowany: User dropdown (avatar + email) z opcja "Logout"
+  - Sticky header
   - Aktywny link wyróżniony wizualnie (`aria-current="page"`).
 
 - **UserDropdownMenu** (React):
-  - Dropdown pod avatarem użytkownika (komponent z shadcn/ui lub custom).
-  - Wyświetla email/nazwę użytkownika (nieaktywny element informacyjny).
-  - Separator (wizualny divider).
+  - Dropdown pod avatarem użytkownika (komponent z shadcn/ui).
   - Opcja "Wyloguj" → wywołanie akcji wylogowania + redirect do `/`.
   
 - **ProtectedRoute/ClientGuard**: przechwytuje 401 i przekierowuje z `redirectTo`.
@@ -276,10 +256,10 @@ Aplikacja jest zbudowana w oparciu o Astro 5 (strony `.astro`) z wyspami React 1
 ## 6. Wymagania bezpieczeństwa i walidacji
 
 - **Chronienie tras**: Middleware sprawdza sesję użytkownika przed dostępem do chronionych zasobów:
-  - **Trasy publiczne**: `/` (landing page), `/login`, `/register`, `/404`
-  - **Trasy chronione**: `/ski-specs`, `/ski-specs/*`, `/account`, `/compare`, `/api/ski-specs/*`
-  - Próba dostępu do chronionej trasy bez sesji → redirect `/login?redirectTo=<ścieżka>`
-  - Próba dostępu do `/login` lub `/register` z aktywną sesją → redirect `/ski-specs`
+  - **Trasy publiczne**: `/` (landing page), `/auth/login`, `/auth/register`, `/404`
+  - **Trasy chronione**: `/ski-specs`, `/ski-specs/*`, `/compare`, `/api/ski-specs/*`
+  - Próba dostępu do chronionej trasy bez sesji → redirect `/auth/login?redirectTo=<ścieżka>`
+  - Próba dostępu do `/auth/login` lub `/auth/register` z aktywną sesją → redirect `/ski-specs`
   - **Zalogowany użytkownik może wejść na landing page `/` bez przekierowania** - użytkownik pozostaje na stronie głównej
 - **Walidacja danych**: wszystkie formularze wykorzystują React Hook Form + Zod dla walidacji po stronie klienta; błędy z API (400/422) mapowane do odpowiednich pól.
 - **CSRF protection**: Supabase zarządza tokenami sesji; wszystkie zapytania modyfikujące używają JWT Bearer token.

@@ -89,7 +89,7 @@ Obecnie narciarze muszą samodzielnie szacować te parametry lub polegać na sub
 - Landing page z opisem aplikacji dostępny publicznie bez uwierzytelniania
 - Rejestracja nowych użytkowników
 - Logowanie i wylogowanie
-- Zarządzanie kontem użytkownika
+- Zarządzanie kontem: Resetowanie hasla użytkownika
 - Integracja z zewnętrznym dostawcą uwierzytelniania
 
 ### 3.7 Formatowanie i jednostki
@@ -211,7 +211,7 @@ Obecnie narciarze muszą samodzielnie szacować te parametry lub polegać na sub
 - Tytuł: Rejestracja nowego użytkownika
 - Opis: Jako nowy użytkownik chcę się zarejestrować w aplikacji, aby móc korzystać z jej funkcjonalności
 - Kryteria akceptacji:
-  - Formularz rejestracji dostępny z landing page (przycisk CTA) oraz bezpośrednio pod adresem `/signup` lub `/register`
+  - Formularz rejestracji dostępny z landing page (przycisk CTA) oraz bezpośrednio pod adresem `/auth/signup` lub `/auth/register`
   - Formularz rejestracji zawiera wymagane pola (email, hasło)
   - System waliduje poprawność adresu email
   - System wymusza minimalne wymagania bezpieczeństwa hasła
@@ -225,7 +225,7 @@ Obecnie narciarze muszą samodzielnie szacować te parametry lub polegać na sub
 - Tytuł: Logowanie do aplikacji
 - Opis: Jako zarejestrowany użytkownik chcę się zalogować do aplikacji, aby uzyskać dostęp do moich danych
 - Kryteria akceptacji:
-  - Formularz logowania dostępny z landing page (link "Zaloguj się") oraz bezpośrednio pod adresem `/login`
+  - Formularz logowania dostępny z landing page (link "Zaloguj się") oraz bezpośrednio pod adresem `/auth/login`
   - Formularz logowania zawiera pola email i hasło
   - System weryfikuje poprawność danych logowania
   - Po pomyślnym logowaniu użytkownik jest przekierowany do listy specyfikacji
@@ -251,7 +251,8 @@ Obecnie narciarze muszą samodzielnie szacować te parametry lub polegać na sub
 - Opis: Jako użytkownik chcę zresetować zapomniane hasło, aby odzyskać dostęp do konta
 - Kryteria akceptacji:
   - Link "Zapomniałem hasła" jest dostępny na stronie logowania
-  - System wysyła email z linkiem do resetowania hasła
+  - System prezentuje formularz do wpisania email na ktory bedzie wyslany link do resetowania hasla
+  - System wysyla emaila z linkiem do resetowania hasla na wskazany email
   - Link resetowania hasła wygasa po określonym czasie
   - Nowe hasło musi spełniać wymagania bezpieczeństwa
   - Po zmianie hasła użytkownik może się zalogować nowym hasłem
