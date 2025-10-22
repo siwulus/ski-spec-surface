@@ -139,13 +139,15 @@ All API routes follow this pattern:
 - **Type safety**: Use `SupabaseClient` type from `src/db/supabase.client.ts`, NOT from `@supabase/supabase-js`
 - **Access pattern**: Always use `context.locals.supabase` in routes, never import client directly
 
-#### 6. Authentication (Current State)
+#### 6. Authentication
 
-**IMPORTANT**: Authentication is currently mocked in middleware (`userId` is hardcoded). When implementing real auth:
+Authentication is implemented using Supabase Auth in the middleware:
 
-- Replace mock with Supabase Auth session check
-- Extract user ID from session
-- Protect routes by verifying authentication before service calls
+- **Session Management**: Middleware extracts user from `supabase.auth.getUser()`
+- **Route Protection**: Non-public routes redirect unauthenticated users to `/auth/login`
+- **Guest-Only Routes**: Authenticated users are redirected from login/register pages to `/ski-specs`
+- **Public Paths**: `/`, `/auth/login`, `/auth/register`, `/auth/reset-password`
+- **Access Pattern**: User object is available via `context.locals.user` in all routes
 
 #### 7. Component Architecture
 
@@ -156,6 +158,24 @@ All API routes follow this pattern:
   - Use `React.FC<Props>` arrow function syntax
   - **Never use Next.js directives** like `"use client"` (this is Astro + React, not Next.js)
   - Optimize with `React.memo()`, `useCallback`, `useMemo`, `useTransition`
+
+#### 8. Shadcn/ui Components
+
+This project uses Shadcn/ui components located in `src/components/ui/`. To install additional components:
+
+```bash
+npx shadcn@latest add [component-name]
+```
+
+**Important**: Use `npx shadcn@latest`, not the deprecated `npx shadcn-ui@latest`
+
+Commonly used components include: accordion, alert, alert-dialog, calendar, checkbox, form, popover, scroll-area, sheet, skeleton, slider, switch, table, textarea.
+
+Project configuration (from `components.json`):
+
+- Style variant: "new-york"
+- Base color: "neutral"
+- Theming: CSS variables
 
 ## Core Business Logic
 
@@ -215,12 +235,21 @@ The `SkiSpecService` implements these algorithms:
 - Component signature: `const ComponentName: React.FC<Props> = (props) => {}`
 - Extract reusable logic into custom hooks (`src/components/hooks`)
 - Performance: Use `React.memo()`, `useCallback`, `useMemo` for optimization
+- React Compiler ESLint plugin is enabled for automatic optimization detection
 - Accessibility: Use `useId()` for unique IDs in ARIA attributes
+- Existing custom hooks in `src/components/hooks/`:
+  - `useSkiSpecs` - Fetching and managing ski specifications
+  - `useAuth` - Authentication state management
+  - `useFocusTrap` - Accessibility focus management
+  - `useSkiSpecForm` - Form state for ski spec creation/editing
+  - `useSkiSpecMutation` - Mutations for ski spec CRUD operations
+  - `useSkiSpecsUrlState` - URL state synchronization for filters and sorting
 
 ### Tailwind CSS
 
 - Use `@layer` directive for organizing styles (components, utilities, base)
-- Use arbitrary values with square brackets for one-off designs (e.g., `w-[123px]`)
+- Prefer theme-aligned styling using design tokens exposed via CSS variables
+- Use arbitrary values with square brackets (e.g., `w-[123px]`) only when theme values don't fit the use case
 - Implement dark mode with `dark:` variant
 - Use responsive variants (`sm:`, `md:`, `lg:`) for adaptive designs
 - Leverage state variants (`hover:`, `focus-visible:`, `active:`)
@@ -286,3 +315,5 @@ All list endpoints return:
 6. **Algorithm Version Tracking**: Always set `algorithm_version` when creating/updating specs to enable future recalculation auditing
 
 7. **Service Layer TODO**: `listSkiSpecs` currently uses N+1 pattern for notes count aggregation - optimize with single query if performance becomes an issue
+
+8. **Testing**: No test framework is currently configured. When adding tests, consider Vitest for unit tests and Playwright for E2E tests (both have good Astro integration)

@@ -444,10 +444,12 @@ Aplikacja jest zbudowana w oparciu o Astro 5 (strony `.astro`) z wyspami React 1
 ### Uwaga techniczna: Routing dla modali
 
 Modale dodawania i edycji specyfikacji używają **query parameters** zamiast zmiany ścieżki URL:
+
 - **Create**: `/ski-specs?action=new`
 - **Edit**: `/ski-specs?action=edit&id=<uuid>`
 
 **Uzasadnienie:**
+
 - Unikanie błędów 404 przy bezpośrednim dostępie do URL (brak server-side routes dla modal states)
 - Zachowanie możliwości linkowania i bookmarkowania
 - Poprawne działanie przycisku wstecz/dalej przeglądarki
@@ -455,6 +457,7 @@ Modale dodawania i edycji specyfikacji używają **query parameters** zamiast zm
 - Pełna obsługa client-side routing bez konieczności dodatkowych tras Astro
 
 **Implementacja:**
+
 - Unified hook `useSkiSpecsUrlState` zarządza wszystkimi parametrami URL (grid + dialog state) w jednym miejscu
 - Eliminuje race conditions między różnymi hookami zarządzającymi URL
 - Jeden `window.history.pushState()` i jeden listener `popstate` dla całego stanu strony `/ski-specs`
