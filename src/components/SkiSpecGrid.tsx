@@ -8,7 +8,7 @@ import { SkiSpecFormDialog } from "@/components/ski-specs/SkiSpecFormDialog";
 import { Button } from "@/components/ui/button";
 import { PlusIcon } from "lucide-react";
 import { useSkiSpecs } from "./hooks/useSkiSpecs";
-import { useSkiSpecsQueryUrlState } from "./hooks/useSkiSpecsQueryUrlState";
+import { useSkiSpecsUrlState } from "./hooks/useSkiSpecsUrlState";
 
 interface EmptyStateProps {
   onAddClick: () => void;
@@ -17,74 +17,61 @@ interface EmptyStateProps {
 const EmptyState: React.FC<EmptyStateProps> = ({ onAddClick }) => (
   <div className="flex flex-col items-center justify-center py-12 px-4">
     <div className="text-center space-y-4 max-w-md">
-      <h2 className="text-2xl font-semibold text-foreground">No specifications yet</h2>
-      <p className="text-muted-foreground">
-        Get started by adding your first ski specification to compare different models and analyze their
-        characteristics.
-      </p>
       <Button onClick={onAddClick} className="mt-4">
         <PlusIcon className="h-4 w-4 mr-2" aria-hidden="true" />
-        Add your first specification
+        Add your ski specification
       </Button>
     </div>
   </div>
 );
 
 export const SkiSpecGrid: React.FC = () => {
-  const { state, updateState } = useSkiSpecsQueryUrlState();
-  const { specs, pagination, isLoading, error, refetch } = useSkiSpecs(state);
+  const { queryState, updateQueryState, dialogAction, openDialog, closeDialog } = useSkiSpecsUrlState();
+  const { specs, pagination, isLoading, error, refetch } = useSkiSpecs(queryState);
 
-  // Dialog state management
-  const [dialogOpen, setDialogOpen] = React.useState(false);
+  // Ref for focus management
   const addButtonRef = React.useRef<HTMLButtonElement>(null);
-
-  // Check URL on mount to auto-open dialog
-  React.useEffect(() => {
-    if (window.location.pathname === "/ski-specs/new") {
-      setDialogOpen(true);
-    }
-  }, []);
 
   const handleSearchChange = React.useCallback(
     (search: string) => {
-      updateState({ search, page: 1 }); // Reset to page 1 on new search
+      updateQueryState({ search, page: 1 }); // Reset to page 1 on new search
     },
-    [updateState]
+    [updateQueryState]
   );
 
   const handleSortByChange = React.useCallback(
     (sort_by: ListSkiSpecsQuery["sort_by"]) => {
-      updateState({ sort_by });
+      updateQueryState({ sort_by });
     },
-    [updateState]
+    [updateQueryState]
   );
 
   const handleSortOrderChange = React.useCallback(
     (sort_order: ListSkiSpecsQuery["sort_order"]) => {
-      updateState({ sort_order });
+      updateQueryState({ sort_order });
     },
-    [updateState]
+    [updateQueryState]
   );
 
   const handlePageChange = React.useCallback(
     (page: number) => {
-      updateState({ page });
+      updateQueryState({ page });
       // Scroll to top after page change
       window.scrollTo({ top: 0, behavior: "smooth" });
     },
-    [updateState]
+    [updateQueryState]
   );
 
   const handleLimitChange = React.useCallback(
     (limit: number) => {
-      updateState({ limit, page: 1 }); // Reset to page 1 on limit change
+      updateQueryState({ limit, page: 1 }); // Reset to page 1 on limit change
     },
-    [updateState]
+    [updateQueryState]
   );
 
   const handleAddClick = React.useCallback(() => {
-    setDialogOpen(true);
-  }, []);
+    openDialog();
+  }, [openDialog]);
 
   const handleDialogSuccess = React.useCallback(() => {
     // Refetch the list after successful creation
@@ -93,29 +80,27 @@ export const SkiSpecGrid: React.FC = () => {
 
   return (
     <>
-      {/* Header with Add button */}
       <div className="flex items-center justify-between mb-6">
-        <div className="flex-1">
-          {(pagination?.total_pages ?? 0) > 0 && (
-            <SkiSpecToolbar
-              search={state.search || ""}
-              sortBy={state.sort_by || "created_at"}
-              sortOrder={state.sort_order || "desc"}
-              limit={state.limit || 20}
-              onSearchChange={handleSearchChange}
-              onSortByChange={handleSortByChange}
-              onSortOrderChange={handleSortOrderChange}
-              onLimitChange={handleLimitChange}
-            />
-          )}
-        </div>
-        {(pagination?.total_pages ?? 0) > 0 && (
-          <Button ref={addButtonRef} onClick={handleAddClick} className="ml-4">
-            <PlusIcon className="h-4 w-4 mr-2" aria-hidden="true" />
-            Add Specification
-          </Button>
-        )}
+        <header>
+          <h1 className="text-3xl font-bold text-foreground">Ski Specifications</h1>
+          <p className="mt-2 text-muted-foreground">Manage your ski specifications and compare different models.</p>
+        </header>
+        <Button ref={addButtonRef} onClick={handleAddClick} className="ml-4">
+          <PlusIcon className="h-4 w-4 mr-2" aria-hidden="true" />
+          Add Specification
+        </Button>
       </div>
+
+      <SkiSpecToolbar
+        search={queryState.search || ""}
+        sortBy={queryState.sort_by || "created_at"}
+        sortOrder={queryState.sort_order || "desc"}
+        limit={queryState.limit || 20}
+        onSearchChange={handleSearchChange}
+        onSortByChange={handleSortByChange}
+        onSortOrderChange={handleSortOrderChange}
+        onLimitChange={handleLimitChange}
+      />
 
       {isLoading && <SkiSpecGridSkeleton />}
 
@@ -146,8 +131,8 @@ export const SkiSpecGrid: React.FC = () => {
 
       {/* Add Specification Dialog */}
       <SkiSpecFormDialog
-        open={dialogOpen}
-        onOpenChange={setDialogOpen}
+        open={dialogAction === "new"}
+        onOpenChange={(open) => (open ? openDialog() : closeDialog())}
         mode="create"
         onSuccess={handleDialogSuccess}
         triggerRef={addButtonRef}

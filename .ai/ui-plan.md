@@ -133,7 +133,7 @@ Aplikacja jest zbudowana w oparciu o Astro 5 (strony `.astro`) z wyspami React 1
 
 ### Widok: Dodawanie nowej specyfikacji
 
-- **Ścieżka widoku**: `/ski-specs/new` (odzwierciedlone w URL bez przeładowania strony)
+- **Ścieżka widoku**: `/ski-specs?action=new` (odzwierciedlone w URL bez przeładowania strony)
 - **Dostępność**: Wymaga autentykacji
 - **Główny cel**: Umożliwienie użytkownikowi dodania nowej specyfikacji narty z pełnym zestawem parametrów technicznych i opcjonalnym opisem.
 - **Kluczowe informacje do wprowadzenia**:
@@ -154,8 +154,8 @@ Aplikacja jest zbudowana w oparciu o Astro 5 (strony `.astro`) z wyspami React 1
   - Toast notifications dla sukcesu i błędów.
   - Po zapisie: automatyczne obliczenie surface_area i relative_weight przez API.
 - **UX, dostępność i bezpieczeństwo**:
-  - Otwarcie modala: kliknięcie przycisku CTA w prawym górnym rogu listy → URL zmienia się na `/ski-specs/new` → modal otwiera się bez przeładowania strony (React state + history.pushState).
-  - Zamknięcie modala: „Anuluj", ESC, kliknięcie poza modalem → jeśli są niezapisane zmiany: confirm dialog „Czy na pewno chcesz odrzucić zmiany?" → URL wraca do `/ski-specs`.
+  - Otwarcie modala: kliknięcie przycisku CTA w prawym górnym rogu listy → URL zmienia się na `/ski-specs?action=new` → modal otwiera się bez przeładowania strony (React state + history.pushState).
+  - Zamknięcie modala: „Anuluj", ESC, kliknięcie poza modalem → jeśli są niezapisane zmiany: confirm dialog „Czy na pewno chcesz odrzucić zmiany?" → parametr `action` usuwany z URL, powrót do `/ski-specs`.
   - Walidacja real-time dla wszystkich pól (RHF + Zod):
     - Sprawdzenie relacji tip ≥ waist ≤ tail.
     - Sprawdzenie zakresów min/max dla wszystkich wartości numerycznych.
@@ -180,7 +180,7 @@ Aplikacja jest zbudowana w oparciu o Astro 5 (strony `.astro`) z wyspami React 1
 
 ### Widok: Edycja specyfikacji
 
-- **Ścieżka widoku**: `/ski-specs/:id/edit` (odzwierciedlone w URL bez przeładowania strony)
+- **Ścieżka widoku**: `/ski-specs?action=edit&id=:id` (odzwierciedlone w URL bez przeładowania strony)
 - **Dostępność**: Wymaga autentykacji
 - **Główny cel**: Umożliwienie użytkownikowi edycji istniejącej specyfikacji narty.
 - **Kluczowe informacje do wyświetlenia**: Wszystkie pola specyfikacji wypełnione aktualnymi danymi.
@@ -189,19 +189,19 @@ Aplikacja jest zbudowana w oparciu o Astro 5 (strony `.astro`) z wyspami React 1
   - Formularz (React island) z React Hook Form + Zod walidacją, wypełniony danymi do edycji.
   - Wszystkie te same komponenty i walidacje co w widoku dodawania.
 - **UX, dostępność i bezpieczeństwo**:
-  - Otwarcie modala: kliknięcie „Edytuj" z listy lub ze szczegółów → URL zmienia się na `/ski-specs/:id/edit` → modal otwiera się z danymi specyfikacji.
+  - Otwarcie modala: kliknięcie „Edytuj" z listy lub ze szczegółów → URL zmienia się na `/ski-specs?action=edit&id=:id` → modal otwiera się z danymi specyfikacji.
   - Walidacja i mapowanie błędów: identyczne jak w widoku dodawania.
   - Po sukcesie (200):
     - Toast z komunikatem „Specyfikacja została zaktualizowana".
     - Zamknięcie modala.
     - Odświeżenie danych (lista lub widok szczegółów).
-    - URL wraca do poprzedniego widoku (`/ski-specs` lub `/ski-specs/:id`).
+    - Parametry `action` i `id` usuwane z URL, powrót do poprzedniego widoku (`/ski-specs` lub `/ski-specs/:id`).
   - A11y: identyczne wymagania jak w widoku dodawania.
 - **Parametry API**:
   - `PUT /api/ski-specs/:id` z body typu `UpdateSkiSpecCommand` (identyczny z `CreateSkiSpecCommand`).
   - Response 200: `SkiSpecDTO` z przeliczonymi wartościami.
 - **Parametry URL**:
-  - `/ski-specs/:id/edit` (client-side routing).
+  - Query parameters: `action=edit`, `id=<uuid>` (client-side routing).
 - **Mapowanie US**: US-006 (Edycja specyfikacji), US-015 (walidacja), US-017 (błędy sieciowe).
 
 ### Widok: Szczegóły specyfikacji
@@ -270,23 +270,23 @@ Aplikacja jest zbudowana w oparciu o Astro 5 (strony `.astro`) z wyspami React 1
 2. **Dodanie nowej specyfikacji**
 
 - `/ski-specs` → kliknięcie przycisku CTA „Dodaj specyfikację" (prawy górny róg).
-- URL zmienia się na `/ski-specs/new` bez przeładowania strony.
+- URL zmienia się na `/ski-specs?action=new` bez przeładowania strony.
 - Otwiera się Dialog/Modal z formularzem dodawania specyfikacji.
 - Użytkownik wypełnia wszystkie wymagane pola numeryczne typu integer (nazwa, długość, tip, waist, tail, promień, waga) i opcjonalnie opis.
 - Pole opisu z licznikiem pozostałych znaków.
 - Walidacja real-time: relacja tip ≥ waist ≤ tail, zakresy min/max, max długość opisu.
 - Kliknięcie „Zapisz" → POST `/api/ski-specs` → 201 → toast sukcesu „Specyfikacja została dodana".
-- Zamknięcie modala → URL wraca do `/ski-specs` → odświeżenie listy (nowa specyfikacja widoczna).
-- Alternatywnie: „Anuluj"/ESC/kliknięcie poza modalem → confirm dialog jeśli są niezapisane zmiany → zamknięcie → URL wraca do `/ski-specs`.
+- Zamknięcie modala → parametr `action` usuwany, URL wraca do `/ski-specs` → odświeżenie listy (nowa specyfikacja widoczna).
+- Alternatywnie: „Anuluj"/ESC/kliknięcie poza modalem → confirm dialog jeśli są niezapisane zmiany → zamknięcie → parametr `action` usuwany z URL, powrót do `/ski-specs`.
 
 3. **Edycja i usuwanie specyfikacji**
 
 - Z listy lub ze szczegółów → kliknięcie „Edytuj".
-- URL zmienia się na `/ski-specs/:id/edit` bez przeładowania strony.
+- URL zmienia się na `/ski-specs?action=edit&id=:id` bez przeładowania strony.
 - Otwiera się Dialog/Modal z formularzem edycji, wypełnionym aktualnymi danymi specyfikacji.
 - Użytkownik edytuje pola (wszystkie te same walidacje co przy dodawaniu).
 - Kliknięcie „Zapisz" → PUT `/api/ski-specs/{id}` → 200 → toast sukcesu „Specyfikacja została zaktualizowana".
-- Zamknięcie modala → URL wraca do poprzedniego widoku (`/ski-specs` lub `/ski-specs/:id`) → odświeżenie danych.
+- Zamknięcie modala → parametry `action` i `id` usuwane z URL, powrót do poprzedniego widoku (`/ski-specs` lub `/ski-specs/:id`) → odświeżenie danych.
 - Alternatywnie: „Anuluj"/ESC → confirm dialog jeśli są niezapisane zmiany → zamknięcie.
 - **Usuwanie**: „Usuń" → confirm dialog → DELETE `/api/ski-specs/{id}` → 204 → toast → powrót/odświeżenie listy.
 
@@ -389,7 +389,7 @@ Aplikacja jest zbudowana w oparciu o Astro 5 (strony `.astro`) z wyspami React 1
 - **SkiSpecGrid**: responsywny grid cart z checkboxami do porównania, akcjami elementów i prezentacją jednostek.
 - **SkiSpecFormDialog** (React):
   - Dialog/Modal (shadcn/ui Dialog component) dla dodawania i edycji specyfikacji.
-  - Sterowany URL-em: `/ski-specs/new` (tryb create) lub `/ski-specs/:id/edit` (tryb edit).
+  - Sterowany URL-em przez query parametry: `?action=new` (tryb create) lub `?action=edit&id=:id` (tryb edit).
   - Client-side routing bez przeładowania strony (React state + history.pushState).
   - Formularz z React Hook Form + Zod walidacją.
   - Komponenty formularza:
@@ -440,6 +440,25 @@ Aplikacja jest zbudowana w oparciu o Astro 5 (strony `.astro`) z wyspami React 1
     - Cyfra
   - Algorytm: każdy spełniony wymóg +25% siły
   - A11y: role="progressbar", aria-valuenow, aria-label
+
+### Uwaga techniczna: Routing dla modali
+
+Modale dodawania i edycji specyfikacji używają **query parameters** zamiast zmiany ścieżki URL:
+- **Create**: `/ski-specs?action=new`
+- **Edit**: `/ski-specs?action=edit&id=<uuid>`
+
+**Uzasadnienie:**
+- Unikanie błędów 404 przy bezpośrednim dostępie do URL (brak server-side routes dla modal states)
+- Zachowanie możliwości linkowania i bookmarkowania
+- Poprawne działanie przycisku wstecz/dalej przeglądarki
+- Współdzielenie URL z innymi parametrami (pagination, sorting, search)
+- Pełna obsługa client-side routing bez konieczności dodatkowych tras Astro
+
+**Implementacja:**
+- Unified hook `useSkiSpecsUrlState` zarządza wszystkimi parametrami URL (grid + dialog state) w jednym miejscu
+- Eliminuje race conditions między różnymi hookami zarządzającymi URL
+- Jeden `window.history.pushState()` i jeden listener `popstate` dla całego stanu strony `/ski-specs`
+- Automatyczne otwieranie dialogu przy bezpośrednim dostępie do URL z parametrem `action`
 
 ## 6. Wymagania bezpieczeństwa i walidacji
 

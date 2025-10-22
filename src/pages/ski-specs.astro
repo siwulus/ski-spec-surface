@@ -6,10 +6,6 @@ import { AuthGuard } from "@/components/auth/AuthGuard";
 
 <Layout title="Ski Specifications">
   <div class="space-y-6">
-    <header>
-      <h1 class="text-3xl font-bold text-foreground">Ski Specifications</h1>
-      <p class="mt-2 text-muted-foreground">Manage your ski specifications and compare different models.</p>
-    </header>
     <AuthGuard client:load redirectTo="/auth/login">
       <SkiSpecGrid client:load />
     </AuthGuard>

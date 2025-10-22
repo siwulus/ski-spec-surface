@@ -2,7 +2,6 @@ import React, { useRef, useState } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { SkiSpecForm } from "./SkiSpecForm";
 import { UnsavedChangesDialog } from "./UnsavedChangesDialog";
-import { useUrlSync } from "@/components/hooks/useUrlSync";
 import { useSkiSpecMutation } from "@/components/hooks/useSkiSpecMutation";
 import { useFocusTrap } from "@/components/hooks/useFocusTrap";
 import type { CreateSkiSpecCommand, SkiSpecDTO } from "@/types/api.types";
@@ -37,9 +36,6 @@ export const SkiSpecFormDialog: React.FC<SkiSpecFormDialogProps> = ({
   const dialogRef = useRef<HTMLDivElement>(null);
   const [showUnsavedDialog, setShowUnsavedDialog] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
-
-  // Sync modal state with URL
-  useUrlSync(open, onOpenChange);
 
   // Focus management
   useFocusTrap(dialogRef, open, triggerRef);
