@@ -1,17 +1,13 @@
 /// <reference types="astro/client" />
 
 import type { SkiSpecService } from "@/lib/services/SkiSpecService";
-import type { Session, User } from "@supabase/supabase-js";
+import type { User } from "@supabase/supabase-js";
 
 declare global {
   namespace App {
     interface Locals {
       skiSpecService: SkiSpecService;
       supabase: SupabaseClient<Database>;
-      userId: string;
-      /** User session from Supabase Auth (set by middleware) */
-      session: Session | null;
-      /** User object from Supabase Auth (set by middleware) */
       user: User | null;
     }
   }

@@ -1,8 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { HttpClientError, post } from "@/lib/utils/httpClient";
-import { LoginResponseSchema, type LoginCommand } from "@/types/api.types";
+import { useAuth } from "@/components/hooks/useAuth";
 import { LoginSchema, type LoginFormData } from "@/types/auth.schemas";
 import { zodResolver } from "@hookform/resolvers/zod";
 import React, { useState } from "react";
@@ -19,9 +18,8 @@ interface LoginFormProps {
  *
  * Provides login functionality with:
  * - Email and password fields
- * - Optional "Remember me" checkbox
  * - Client-side validation with Zod
- * - API-based authentication
+ * - Supabase-based authentication via useAuth hook
  * - Error handling with user-friendly messages
  * - Redirect after successful login
  *
@@ -32,6 +30,7 @@ interface LoginFormProps {
  */
 export const LoginForm: React.FC<LoginFormProps> = ({ redirectTo }) => {
   const [isLoading, setIsLoading] = useState(false);
+  const { signIn } = useAuth();
 
   const form = useForm<LoginFormData>({
     resolver: zodResolver(LoginSchema),
@@ -45,12 +44,15 @@ export const LoginForm: React.FC<LoginFormProps> = ({ redirectTo }) => {
     setIsLoading(true);
 
     try {
-      const loginCommand: LoginCommand = {
+      const { success, error } = await signIn({
         email: data.email,
         password: data.password,
-      };
+      });
 
-      await post("/api/auth/login", LoginResponseSchema, JSON.stringify(loginCommand));
+      if (!success) {
+        toast.error(error?.message || "Failed to sign in");
+        return;
+      }
 
       // Success - redirect to intended page or default
       toast.success("Successfully logged in!");
@@ -61,13 +63,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ redirectTo }) => {
     } catch (error) {
       // eslint-disable-next-line no-console
       console.error("Login error:", error);
-
-      // Handle HTTP client errors with specific messages
-      if (error instanceof HttpClientError) {
-        toast.error(error.message);
-      } else {
-        toast.error("An unexpected error occurred. Please try again.");
-      }
+      toast.error("An unexpected error occurred. Please try again.");
     } finally {
       setIsLoading(false);
     }

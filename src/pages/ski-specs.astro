@@ -1,6 +1,7 @@
 ---
 import Layout from "@/layouts/Layout.astro";
 import { SkiSpecGrid } from "@/components/SkiSpecGrid";
+import { AuthGuard } from "@/components/auth/AuthGuard";
 ---
 
 <Layout title="Ski Specifications">
@@ -9,7 +10,8 @@ import { SkiSpecGrid } from "@/components/SkiSpecGrid";
       <h1 class="text-3xl font-bold text-foreground">Ski Specifications</h1>
       <p class="mt-2 text-muted-foreground">Manage your ski specifications and compare different models.</p>
     </header>
-
-    <SkiSpecGrid client:load />
+    <AuthGuard client:load redirectTo="/auth/login">
+      <SkiSpecGrid client:load />
+    </AuthGuard>
   </div>
 </Layout>

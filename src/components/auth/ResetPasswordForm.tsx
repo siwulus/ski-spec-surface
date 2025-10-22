@@ -3,9 +3,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { ResetPasswordSchema, type ResetPasswordFormData } from "@/types/auth.schemas";
-import { post } from "@/lib/utils/httpClient";
-import { HttpClientError } from "@/lib/utils/httpClient";
-import { ResetPasswordResponseSchema, type ResetPasswordCommand } from "@/types/api.types";
+import { useAuth } from "@/components/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -18,7 +16,7 @@ import { MailCheck } from "lucide-react";
  * Provides password reset request functionality with:
  * - Email input field
  * - Client-side validation with Zod
- * - API-based password reset flow
+ * - Supabase-based password reset via useAuth hook
  * - Success message (always shown - security best practice)
  * - Link back to login page
  *
@@ -33,6 +31,7 @@ import { MailCheck } from "lucide-react";
 export const ResetPasswordForm: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
+  const { resetPassword } = useAuth();
 
   const form = useForm<ResetPasswordFormData>({
     resolver: zodResolver(ResetPasswordSchema),
@@ -45,30 +44,20 @@ export const ResetPasswordForm: React.FC = () => {
     setIsLoading(true);
 
     try {
-      const resetPasswordCommand: ResetPasswordCommand = {
-        email: data.email,
-      };
+      const { success, error } = await resetPassword({ email: data.email });
 
-      const response = await post(
-        "/api/auth/reset-password",
-        ResetPasswordResponseSchema,
-        JSON.stringify(resetPasswordCommand)
-      );
+      if (!success) {
+        toast.error(error?.message || "Failed to send reset email");
+        return;
+      }
 
       // Always show success state (security best practice - don't reveal if email exists)
       setEmailSent(true);
-      toast.success(response.message);
+      toast.success("Password reset email sent");
     } catch (error) {
       // eslint-disable-next-line no-console
       console.error("Reset password error:", error);
-
-      // Handle HTTP client errors with specific messages
-      if (error instanceof HttpClientError) {
-        // Handle rate limiting or other specific errors
-        toast.error(error.message);
-      } else {
-        toast.error("An unexpected error occurred. Please try again.");
-      }
+      toast.error("An unexpected error occurred. Please try again.");
     } finally {
       setIsLoading(false);
     }

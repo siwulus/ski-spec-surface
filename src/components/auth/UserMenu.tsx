@@ -9,7 +9,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { LogOut } from "lucide-react";
-import React, { useState } from "react";
+import React from "react";
 import { toast } from "sonner";
 
 interface UserMenuProps {
@@ -46,16 +46,13 @@ const getUserInitials = (email: string): string => {
  * ```
  */
 export const UserMenu: React.FC<UserMenuProps> = ({ userEmail }) => {
-  const { user, signOut } = useAuth();
-  const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const { user, signOut, isAuthenticated, isLoading } = useAuth();
 
   // Use email from props (server-side) or from auth hook (client-side)
   const email = userEmail || user?.email || "";
   const initials = email ? getUserInitials(email) : "U";
 
   const handleLogout = async (): Promise<void> => {
-    setIsLoggingOut(true);
-
     try {
       await signOut();
       toast.success("Successfully logged out");
@@ -66,7 +63,6 @@ export const UserMenu: React.FC<UserMenuProps> = ({ userEmail }) => {
       // eslint-disable-next-line no-console
       console.error("Logout error:", error);
       toast.error("An error occurred while logging out. Please try again.");
-      setIsLoggingOut(false);
     }
   };
 
@@ -92,9 +88,9 @@ export const UserMenu: React.FC<UserMenuProps> = ({ userEmail }) => {
 
         <DropdownMenuSeparator />
 
-        <DropdownMenuItem onClick={handleLogout} disabled={isLoggingOut} className="cursor-pointer">
+        <DropdownMenuItem onClick={handleLogout} disabled={!isAuthenticated || isLoading} className="cursor-pointer">
           <LogOut className="mr-2 size-4" />
-          <span>{isLoggingOut ? "Logging out..." : "Log out"}</span>
+          <span>{isLoading ? "Logging out..." : "Log out"}</span>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

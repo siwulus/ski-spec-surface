@@ -21,7 +21,7 @@ export const prerender = false;
 export const GET: APIRoute = async ({ url, locals }) => {
   try {
     // Step 1: Get authenticated user ID from middleware
-    const { userId, skiSpecService } = locals;
+    const { user, skiSpecService } = locals;
 
     // Step 2: Extract query parameters from URL
     const rawQuery = {
@@ -117,7 +117,7 @@ export const GET: APIRoute = async ({ url, locals }) => {
 export const POST: APIRoute = async ({ request, locals }) => {
   try {
     // Step 1: Get authenticated user ID from middleware
-    const { userId, skiSpecService } = locals;
+    const { user, skiSpecService } = locals;
 
     // Step 2: Parse request body
     let body: unknown;
@@ -158,7 +158,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
 
     // Step 4: Create ski specification via service
     try {
-      const skiSpec = await skiSpecService.createSkiSpec(userId, command);
+      const skiSpec = await skiSpecService.createSkiSpec(user.id, command);
 
       // Step 5: Return success response
       return new Response(JSON.stringify(skiSpec), {

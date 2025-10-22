@@ -2,16 +2,16 @@
 import Navigation from "@/components/Navigation";
 import { UserMenu } from "@/components/auth/UserMenu";
 import { Button } from "@/components/ui/button";
-import type { Session } from "@supabase/supabase-js";
+import type { User } from "@supabase/supabase-js";
 
 interface Props {
   currentPath: string;
   /** User session data from middleware */
-  session?: Session | null;
+  user?: User | null;
 }
 
-const { currentPath, session } = Astro.props;
-const isAuthenticated = !!session;
+const { currentPath, user } = Astro.props;
+const isAuthenticated = !!user;
 ---
 
 <header
@@ -37,7 +37,7 @@ const isAuthenticated = !!session;
       {
         isAuthenticated ? (
           // <!-- Show user menu for authenticated users -->
-          <UserMenu userEmail={session.user.email} client:load />
+          <UserMenu userEmail={user.email} client:load />
         ) : (
           // <!-- Show login/register buttons for guests -->
           <div class="flex items-center gap-2">

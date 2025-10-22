@@ -1,4 +1,4 @@
-import { createSupabaseServerInstance } from "@/db/supabase.client";
+import { createSupabaseServerClient } from "@/db/supabase.client";
 import { defineMiddleware } from "astro:middleware";
 
 import { SkiSpecService } from "@/lib/services/SkiSpecService";
@@ -20,9 +20,9 @@ const PUBLIC_PATHS = [
 ];
 
 export const onRequest = defineMiddleware(async ({ locals, cookies, url, request, redirect }, next) => {
-  const supabase = createSupabaseServerInstance({
-    cookies,
+  const supabase = createSupabaseServerClient({
     headers: request.headers,
+    cookies,
   });
   locals.skiSpecService = new SkiSpecService(supabase);
   locals.supabase = supabase;
@@ -32,11 +32,6 @@ export const onRequest = defineMiddleware(async ({ locals, cookies, url, request
 
   if (user) {
     locals.user = user;
-    locals.userId = user.id;
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
-    locals.session = session;
   } else if (!PUBLIC_PATHS.includes(url.pathname)) {
     const redirectUrl = new URL("/auth/login", url);
     redirectUrl.searchParams.set("redirectTo", url.pathname);

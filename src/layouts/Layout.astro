@@ -10,7 +10,7 @@ interface Props {
 const { title = "Ski Surface Spec" } = Astro.props;
 const currentPath = Astro.url.pathname;
 // Get session from middleware (set in middleware/index.ts)
-const session = Astro.locals.session;
+const user = Astro.locals.user;
 ---
 
 <!doctype html>
@@ -23,7 +23,7 @@ const session = Astro.locals.session;
     <title>{title}</title>
   </head>
   <body class="relative w-full mx-auto min-h-screen flex flex-col">
-    <Header currentPath={currentPath} session={session} />
+    <Header currentPath={currentPath} user={user} />
     <main id="main-content" class="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <slot />
     </main>

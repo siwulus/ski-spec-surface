@@ -1,8 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { HttpClientError, post } from "@/lib/utils/httpClient";
-import { RegisterResponseSchema, type RegisterCommand } from "@/types/api.types";
+import { useAuth } from "@/components/hooks/useAuth";
 import { RegisterSchema, type RegisterFormData } from "@/types/auth.schemas";
 import { zodResolver } from "@hookform/resolvers/zod";
 import React, { useState } from "react";
@@ -17,7 +16,7 @@ import { PasswordStrengthIndicator } from "./PasswordStrengthIndicator";
  * - Email, password, and confirm password fields
  * - Real-time password strength indicator
  * - Client-side validation with Zod
- * - API-based authentication
+ * - Supabase-based authentication via useAuth hook
  * - Automatic login after successful registration
  * - Redirect to /ski-specs after registration
  *
@@ -28,6 +27,7 @@ import { PasswordStrengthIndicator } from "./PasswordStrengthIndicator";
  */
 export const RegisterForm: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
+  const { signUp } = useAuth();
 
   const form = useForm<RegisterFormData>({
     resolver: zodResolver(RegisterSchema),
@@ -45,35 +45,24 @@ export const RegisterForm: React.FC = () => {
     setIsLoading(true);
 
     try {
-      const registerCommand: RegisterCommand = {
+      const { success, error } = await signUp({
         email: data.email,
         password: data.password,
-        confirmPassword: data.confirmPassword,
-      };
+      });
 
-      const response = await post("/api/auth/register", RegisterResponseSchema, JSON.stringify(registerCommand));
-
-      // Handle email confirmation case
-      if (response.requiresEmailConfirmation) {
-        toast.success(response.message);
-        // Redirect to login page with info message
-        window.location.href = "/auth/login?message=check_email";
-      } else {
-        // Success - user is logged in automatically
-        toast.success(response.message);
-        // Force full page reload to refresh middleware and session
-        window.location.href = "/ski-specs";
+      if (!success) {
+        toast.error(error?.message || "Failed to create account");
+        return;
       }
+
+      // Success - user account created
+      toast.success("Account created successfully!");
+      // Force full page reload to refresh middleware and session
+      window.location.href = "/ski-specs";
     } catch (error) {
       // eslint-disable-next-line no-console
       console.error("Registration error:", error);
-
-      // Handle HTTP client errors with specific messages
-      if (error instanceof HttpClientError) {
-        toast.error(error.message);
-      } else {
-        toast.error("An unexpected error occurred. Please try again.");
-      }
+      toast.error("An unexpected error occurred. Please try again.");
     } finally {
       setIsLoading(false);
     }

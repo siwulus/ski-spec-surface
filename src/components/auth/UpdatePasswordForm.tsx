@@ -3,9 +3,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { UpdatePasswordSchema, type UpdatePasswordFormData } from "@/types/auth.schemas";
-import { post } from "@/lib/utils/httpClient";
-import { HttpClientError } from "@/lib/utils/httpClient";
-import { UpdatePasswordResponseSchema, type UpdatePasswordCommand } from "@/types/api.types";
+import { useAuth } from "@/components/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -20,7 +18,7 @@ import { PasswordStrengthIndicator } from "./PasswordStrengthIndicator";
  * - New password and confirm password fields
  * - Real-time password strength indicator
  * - Client-side validation with Zod
- * - API-based password update flow
+ * - Supabase-based password update via useAuth hook
  * - Automatic redirect to /ski-specs after success
  *
  * Used on /auth/update-password page after password reset email link.
@@ -35,6 +33,7 @@ import { PasswordStrengthIndicator } from "./PasswordStrengthIndicator";
 export const UpdatePasswordForm: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const { updatePassword } = useAuth();
 
   const form = useForm<UpdatePasswordFormData>({
     resolver: zodResolver(UpdatePasswordSchema),
@@ -51,13 +50,12 @@ export const UpdatePasswordForm: React.FC = () => {
     setIsLoading(true);
 
     try {
-      const updatePasswordCommand: UpdatePasswordCommand = {
-        password: data.password,
-        confirmPassword: data.confirmPassword,
-      };
+      const { success, error } = await updatePassword({ password: data.password });
 
-      await post("/api/auth/update-password", UpdatePasswordResponseSchema, JSON.stringify(updatePasswordCommand));
-
+      if (!success) {
+        toast.error(error?.message || "Failed to update password");
+        return;
+      }
       // Success
       setIsSuccess(true);
       toast.success("Password updated successfully!");
@@ -69,13 +67,7 @@ export const UpdatePasswordForm: React.FC = () => {
     } catch (error) {
       // eslint-disable-next-line no-console
       console.error("Update password error:", error);
-
-      // Handle HTTP client errors with specific messages
-      if (error instanceof HttpClientError) {
-        toast.error(error.message);
-      } else {
-        toast.error("An unexpected error occurred. Please try again.");
-      }
+      toast.error("An unexpected error occurred. Please try again.");
     } finally {
       setIsLoading(false);
     }
