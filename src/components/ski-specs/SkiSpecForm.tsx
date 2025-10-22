@@ -70,7 +70,7 @@ export const SkiSpecForm: React.FC<SkiSpecFormProps> = ({
         {/* Name field */}
         <div className="space-y-2">
           <Label htmlFor="name" className={formState.errors.name ? "text-destructive" : ""}>
-            Nazwa
+            Name
             <span className="text-destructive ml-1" aria-label="required">
               *
             </span>
@@ -95,7 +95,7 @@ export const SkiSpecForm: React.FC<SkiSpecFormProps> = ({
         {/* Description field with counter */}
         <TextareaWithCounter
           name="description"
-          label="Opis (opcjonalny)"
+          label="Description (optional)"
           maxLength={2000}
           currentLength={descriptionLength}
           required={false}
@@ -104,14 +104,14 @@ export const SkiSpecForm: React.FC<SkiSpecFormProps> = ({
 
         {/* Dimensions grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <NumberInputWithUnit name="length" label="Długość" unit="cm" min={100} max={250} disabled={isSubmitting} />
+          <NumberInputWithUnit name="length" label="Length" unit="cm" min={100} max={250} disabled={isSubmitting} />
 
-          <NumberInputWithUnit name="radius" label="Promień" unit="m" min={1} max={30} disabled={isSubmitting} />
+          <NumberInputWithUnit name="radius" label="Radius" unit="m" min={1} max={30} disabled={isSubmitting} />
         </div>
 
         {/* Width fields - all three in one row on larger screens */}
         <div className="space-y-2">
-          <h3 className="text-sm font-medium">Szerokości</h3>
+          <h3 className="text-sm font-medium">Widths</h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <NumberInputWithUnit name="tip" label="Tip" unit="mm" min={50} max={250} disabled={isSubmitting} />
 
@@ -131,7 +131,7 @@ export const SkiSpecForm: React.FC<SkiSpecFormProps> = ({
         {/* Weight field */}
         <NumberInputWithUnit
           name="weight"
-          label="Waga (jedna narta)"
+          label="Weight (single ski)"
           unit="g"
           min={500}
           max={3000}
@@ -141,11 +141,11 @@ export const SkiSpecForm: React.FC<SkiSpecFormProps> = ({
         {/* Form actions */}
         <div className="flex justify-end gap-3 pt-4">
           <Button type="button" variant="outline" onClick={onCancel} disabled={isSubmitting}>
-            Anuluj
+            Cancel
           </Button>
 
           <Button type="submit" disabled={isSubmitting || !formState.isValid}>
-            {isSubmitting ? "Zapisywanie..." : "Zapisz"}
+            {isSubmitting ? "Saving..." : "Save"}
           </Button>
         </div>
       </form>
