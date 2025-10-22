@@ -4,6 +4,7 @@ import { SkiSpecForm } from "./SkiSpecForm";
 import { UnsavedChangesDialog } from "./UnsavedChangesDialog";
 import { useSkiSpecMutation } from "@/components/hooks/useSkiSpecMutation";
 import { useFocusTrap } from "@/components/hooks/useFocusTrap";
+import { Loader2 } from "lucide-react";
 import type { CreateSkiSpecCommand, SkiSpecDTO } from "@/types/api.types";
 
 /**
@@ -113,6 +114,10 @@ export const SkiSpecFormDialog: React.FC<SkiSpecFormDialogProps> = ({
     setShowUnsavedDialog(false);
   };
 
+  // Determine if we should show content or loading state
+  const isLoading = mode === "edit" && !initialData;
+  const showContent = mode === "create" || (mode === "edit" && initialData);
+
   return (
     <>
       <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -120,45 +125,52 @@ export const SkiSpecFormDialog: React.FC<SkiSpecFormDialogProps> = ({
           ref={dialogRef}
           className="max-w-2xl max-h-[90vh] overflow-y-auto"
           aria-labelledby="dialog-title"
-          aria-describedby="dialog-description"
+          aria-describedby={isLoading ? undefined : "dialog-description"}
         >
-          <DialogHeader>
-            <DialogTitle id="dialog-title">
-              {mode === "create" ? "Add New Specification" : "Edit Specification"}
-            </DialogTitle>
-            <DialogDescription id="dialog-description">
-              Enter the technical parameters of the skis. All fields marked with an asterisk (*) are required.
-            </DialogDescription>
-          </DialogHeader>
+          {isLoading ? (
+            // Show centered spinner while loading
+            <div className="flex flex-col items-center justify-center py-12" role="status" aria-live="polite">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" aria-hidden="true" />
+              <p className="mt-4 text-sm text-muted-foreground">Loading specification...</p>
+            </div>
+          ) : (
+            // Show full content when ready
+            <>
+              <DialogHeader>
+                <DialogTitle id="dialog-title">
+                  {mode === "create" ? "Add New Specification" : "Edit Specification"}
+                </DialogTitle>
+                <DialogDescription id="dialog-description">
+                  Enter the technical parameters of the skis. All fields marked with an asterisk (*) are required.
+                </DialogDescription>
+              </DialogHeader>
 
-          {/* Only render form when we have data in edit mode, or immediately in create mode */}
-          {(mode === "create" || (mode === "edit" && initialData)) && (
-            <SkiSpecForm
-              key={mode === "edit" ? specId : "new"}
-              onSubmit={handleSubmit}
-              onCancel={handleCancel}
-              defaultValues={
-                mode === "edit" && initialData
-                  ? {
-                      name: initialData.name,
-                      description: initialData.description,
-                      length: initialData.length,
-                      tip: initialData.tip,
-                      waist: initialData.waist,
-                      tail: initialData.tail,
-                      radius: initialData.radius,
-                      weight: initialData.weight,
-                    }
-                  : undefined
-              }
-              isSubmitting={isSubmitting}
-              apiErrors={apiErrors}
-              onUnsavedChanges={setHasUnsavedChanges}
-            />
+              {showContent && (
+                <SkiSpecForm
+                  key={mode === "edit" ? specId : "new"}
+                  onSubmit={handleSubmit}
+                  onCancel={handleCancel}
+                  defaultValues={
+                    mode === "edit" && initialData
+                      ? {
+                          name: initialData.name,
+                          description: initialData.description,
+                          length: initialData.length,
+                          tip: initialData.tip,
+                          waist: initialData.waist,
+                          tail: initialData.tail,
+                          radius: initialData.radius,
+                          weight: initialData.weight,
+                        }
+                      : undefined
+                  }
+                  isSubmitting={isSubmitting}
+                  apiErrors={apiErrors}
+                  onUnsavedChanges={setHasUnsavedChanges}
+                />
+              )}
+            </>
           )}
-
-          {/* Show loading state while fetching data in edit mode */}
-          {mode === "edit" && !initialData && <div className="py-8 text-center text-muted-foreground">Loading...</div>}
         </DialogContent>
       </Dialog>
 
