@@ -512,6 +512,179 @@ export const HealthCheckResponseSchema = z.object({
 export type HealthCheckResponse = z.infer<typeof HealthCheckResponseSchema>;
 
 // ============================================================================
+// Authentication Command Types
+// ============================================================================
+
+/**
+ * Command model for user login.
+ * Used in: POST /api/auth/login
+ *
+ * Contains only user-provided fields for authentication.
+ */
+/**
+ * Zod schema for LoginCommand.
+ * Validates user input for login authentication.
+ */
+export const LoginCommandSchema = z.object({
+  email: z.string().min(1, "Email is required").email("Invalid email address"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
+});
+
+export type LoginCommand = z.infer<typeof LoginCommandSchema>;
+
+/**
+ * Command model for user registration.
+ * Used in: POST /api/auth/register
+ *
+ * Contains user-provided fields for account creation.
+ */
+/**
+ * Zod schema for RegisterCommand.
+ * Validates user input for account registration.
+ */
+export const RegisterCommandSchema = z
+  .object({
+    email: z.string().min(1, "Email is required").email("Invalid email address"),
+    password: z
+      .string()
+      .min(8, "Password must be at least 8 characters")
+      .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
+      .regex(/[a-z]/, "Password must contain at least one lowercase letter")
+      .regex(/[0-9]/, "Password must contain at least one number"),
+    confirmPassword: z.string().min(1, "Please confirm your password"),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords do not match",
+    path: ["confirmPassword"],
+  });
+
+// Compile-time type check to ensure schema matches type
+export type RegisterCommand = z.infer<typeof RegisterCommandSchema>;
+
+/**
+ * Command model for password reset request.
+ * Used in: POST /api/auth/reset-password
+ *
+ * Contains only email for password reset.
+ */
+/**
+ * Zod schema for ResetPasswordCommand.
+ * Validates email for password reset request.
+ */
+export const ResetPasswordCommandSchema = z.object({
+  email: z.string().min(1, "Email is required").email("Invalid email address"),
+});
+
+// Compile-time type check to ensure schema matches type
+export type ResetPasswordCommand = z.infer<typeof ResetPasswordCommandSchema>;
+
+/**
+ * Command model for password update.
+ * Used in: POST /api/auth/update-password
+ *
+ * Contains new password and confirmation.
+ */
+/**
+ * Zod schema for UpdatePasswordCommand.
+ * Validates new password for password update.
+ */
+export const UpdatePasswordCommandSchema = z
+  .object({
+    password: z
+      .string()
+      .min(8, "Password must be at least 8 characters")
+      .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
+      .regex(/[a-z]/, "Password must contain at least one lowercase letter")
+      .regex(/[0-9]/, "Password must contain at least one number"),
+    confirmPassword: z.string().min(1, "Please confirm your password"),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords do not match",
+    path: ["confirmPassword"],
+  });
+
+export type UpdatePasswordCommand = z.infer<typeof UpdatePasswordCommandSchema>;
+
+// ============================================================================
+// Authentication Response Types
+// ============================================================================
+
+/**
+ * Zod schema for LoginResponse.
+ * Validates login operation response.
+ */
+export const LoginResponseSchema = z.object({
+  user: z.object({
+    id: z.uuid("User ID must be a valid UUID"),
+    email: z.email("Email must be a valid email address"),
+  }),
+  message: z.string().optional(),
+});
+
+/**
+ * Login response DTO.
+ * Used in: POST /api/auth/login
+ *
+ * Returns user information on successful authentication.
+ */
+export type LoginResponse = z.infer<typeof LoginResponseSchema>;
+
+/**
+ * Zod schema for RegisterResponse.
+ * Validates registration operation response.
+ */
+export const RegisterResponseSchema = z.object({
+  user: z
+    .object({
+      id: z.uuid("User ID must be a valid UUID"),
+      email: z.email("Email must be a valid email address"),
+    })
+    .nullable(),
+  message: z.string(),
+  requiresEmailConfirmation: z.boolean(),
+});
+
+/**
+ * Registration response DTO.
+ * Used in: POST /api/auth/register
+ *
+ * Returns user information and confirmation status.
+ */
+export type RegisterResponse = z.infer<typeof RegisterResponseSchema>;
+
+/**
+ * Zod schema for ResetPasswordResponse.
+ * Validates password reset request response.
+ */
+export const ResetPasswordResponseSchema = z.object({
+  message: z.string(),
+});
+
+/**
+ * Password reset response DTO.
+ * Used in: POST /api/auth/reset-password
+ *
+ * Confirms password reset email was sent.
+ */
+export type ResetPasswordResponse = z.infer<typeof ResetPasswordResponseSchema>;
+
+/**
+ * Zod schema for UpdatePasswordResponse.
+ * Validates password update response.
+ */
+export const UpdatePasswordResponseSchema = z.object({
+  message: z.string(),
+});
+
+/**
+ * Password update response DTO.
+ * Used in: POST /api/auth/update-password
+ *
+ * Confirms password was successfully updated.
+ */
+export type UpdatePasswordResponse = z.infer<typeof UpdatePasswordResponseSchema>;
+
+// ============================================================================
 // Authentication Types
 // ============================================================================
 

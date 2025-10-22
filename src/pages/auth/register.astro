@@ -1,0 +1,30 @@
+---
+import Layout from "@/layouts/Layout.astro";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { RegisterForm } from "@/components/auth/RegisterForm";
+
+// Check if user is already logged in (session will be set by middleware)
+const session = Astro.locals.session;
+const isAuthenticated = !!session;
+
+// If user is already logged in, redirect to ski-specs
+if (isAuthenticated) {
+  return Astro.redirect("/ski-specs");
+}
+---
+
+<Layout title="Create account - Ski Surface Spec Extension">
+  <main class="container mx-auto flex min-h-[calc(100vh-4rem)] max-w-7xl items-center justify-center px-4 py-12">
+    <div class="w-full max-w-md">
+      <Card>
+        <CardHeader className="space-y-1 text-center">
+          <CardTitle className="text-2xl font-bold">Create an account</CardTitle>
+          <CardDescription>Enter your details to get started with ski specifications</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <RegisterForm client:load />
+        </CardContent>
+      </Card>
+    </div>
+  </main>
+</Layout>

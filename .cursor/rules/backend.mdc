@@ -1,6 +1,5 @@
 ---
-description: 
-globs: src/db/*.ts,src/middleware/*.ts,src/lib/*.ts
+globs: src/db/*.ts,src/middleware/*.ts,src/lib/*.ts,src/pages/api/**/*.ts
 alwaysApply: false
 ---
 ### Backend and Database

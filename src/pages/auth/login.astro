@@ -1,0 +1,52 @@
+---
+import Layout from "@/layouts/Layout.astro";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { LoginForm } from "@/components/auth/LoginForm";
+
+// Check if user is already logged in (session will be set by middleware)
+const session = Astro.locals.session;
+const isAuthenticated = !!session;
+
+// Get redirectTo from URL params
+const redirectTo = Astro.url.searchParams.get("redirectTo") || undefined;
+const error = Astro.url.searchParams.get("error");
+
+// If user is already logged in, redirect to ski-specs
+if (isAuthenticated) {
+  return Astro.redirect("/ski-specs");
+}
+
+// Map error codes to user-friendly messages
+const errorMessages: Record<string, string> = {
+  session_expired: "Your session has expired. Please log in again.",
+  unauthorized: "Please log in to continue.",
+};
+
+const errorMessage = error && errorMessages[error];
+---
+
+<Layout title="Log in - Ski Surface Spec Extension">
+  <main class="container mx-auto flex min-h-[calc(100vh-4rem)] max-w-7xl items-center justify-center px-4 py-12">
+    <div class="w-full max-w-md">
+      <Card>
+        <CardHeader className="space-y-1 text-center">
+          <CardTitle className="text-2xl font-bold">Welcome back</CardTitle>
+          <CardDescription>Enter your credentials to access your account</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {
+            errorMessage && (
+              <div
+                class="mb-4 rounded-md border border-destructive/50 bg-destructive/10 p-3 text-sm text-destructive"
+                role="alert"
+              >
+                {errorMessage}
+              </div>
+            )
+          }
+          <LoginForm client:load redirectTo={redirectTo} />
+        </CardContent>
+      </Card>
+    </div>
+  </main>
+</Layout>

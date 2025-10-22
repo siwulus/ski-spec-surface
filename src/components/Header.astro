@@ -1,11 +1,17 @@
 ---
 import Navigation from "@/components/Navigation";
+import { UserMenu } from "@/components/auth/UserMenu";
+import { Button } from "@/components/ui/button";
+import type { Session } from "@supabase/supabase-js";
 
 interface Props {
   currentPath: string;
+  /** User session data from middleware */
+  session?: Session | null;
 }
 
-const { currentPath } = Astro.props;
+const { currentPath, session } = Astro.props;
+const isAuthenticated = !!session;
 ---
 
 <header
@@ -24,6 +30,26 @@ const { currentPath } = Astro.props;
       <nav aria-label="Main navigation">
         <Navigation currentPath={currentPath} client:load />
       </nav>
+    </div>
+
+    <!-- Auth section -->
+    <div class="flex items-center gap-3">
+      {
+        isAuthenticated ? (
+          // <!-- Show user menu for authenticated users -->
+          <UserMenu userEmail={session.user.email} client:load />
+        ) : (
+          // <!-- Show login/register buttons for guests -->
+          <div class="flex items-center gap-2">
+            <Button variant="default" size="sm" asChild>
+              <a href="/auth/login">Log in</a>
+            </Button>
+            <Button variant="secondary" size="sm" asChild>
+              <a href="/auth/register">Sign up</a>
+            </Button>
+          </div>
+        )
+      }
     </div>
   </div>
 </header>

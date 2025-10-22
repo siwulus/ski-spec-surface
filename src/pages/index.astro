@@ -3,6 +3,10 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import Layout from "../layouts/Layout.astro";
+
+// Get session from middleware (set in middleware/index.ts)
+const session = Astro.locals.session;
+const isAuthenticated = !!session;
 ---
 
 <Layout title="Ski Surface Spec Extension - Advanced Ski Specifications">
@@ -21,12 +25,30 @@ import Layout from "../layouts/Layout.astro";
           informed decisions about your ski equipment.
         </p>
         <div class="mt-10 flex items-center justify-center gap-6">
-          <Button size="lg" asChild>
-            <a href="/ski-specs" aria-label="Get started with ski specifications">Get Started</a>
-          </Button>
-          <Button variant="outline" size="lg" asChild>
-            <a href="/api-docs" aria-label="View API documentation">View API Docs</a>
-          </Button>
+          {
+            isAuthenticated ? (
+              // <!-- Show "Go to Ski Specs" for authenticated users -->
+              <Button size="lg" asChild>
+                <a href="/ski-specs" aria-label="Go to your ski specifications">
+                  Go to Ski Specs
+                </a>
+              </Button>
+            ) : (
+              // <!-- Show "Get Started" and "Sign Up" for guests -->
+              <>
+                <Button size="lg" asChild>
+                  <a href="/auth/register" aria-label="Create account to get started">
+                    Get Started
+                  </a>
+                </Button>
+                <Button variant="outline" size="lg" asChild>
+                  <a href="/api-docs" aria-label="View API documentation">
+                    View API Docs
+                  </a>
+                </Button>
+              </>
+            )
+          }
         </div>
       </div>
     </div>
@@ -357,12 +379,30 @@ import Layout from "../layouts/Layout.astro";
           specification today.
         </p>
         <div class="mt-10 flex items-center justify-center gap-6">
-          <Button size="lg" asChild>
-            <a href="/ski-specs" aria-label="Start adding ski specifications">Start Adding Specs</a>
-          </Button>
-          <Button variant="outline" size="lg" asChild>
-            <a href="/account" aria-label="Create a new account">Create Account</a>
-          </Button>
+          {
+            isAuthenticated ? (
+              // <!-- Show "Add Your First Spec" for authenticated users -->
+              <Button size="lg" asChild>
+                <a href="/ski-specs" aria-label="Add your first ski specification">
+                  Add Your First Spec
+                </a>
+              </Button>
+            ) : (
+              // <!-- Show "Create Account" and "Learn More" for guests -->
+              <>
+                <Button size="lg" asChild>
+                  <a href="/auth/register" aria-label="Create a new account">
+                    Create Account
+                  </a>
+                </Button>
+                <Button variant="outline" size="lg" asChild>
+                  <a href="/auth/login" aria-label="Sign in to existing account">
+                    Sign In
+                  </a>
+                </Button>
+              </>
+            )
+          }
         </div>
       </div>
     </div>
