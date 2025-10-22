@@ -116,6 +116,7 @@ export const SkiSpecFormDialog: React.FC<SkiSpecFormDialogProps> = ({
             onCancel={handleCancel}
             isSubmitting={isSubmitting}
             apiErrors={apiErrors}
+            onUnsavedChanges={setHasUnsavedChanges}
           />
         </DialogContent>
       </Dialog>

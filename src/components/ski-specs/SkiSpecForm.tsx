@@ -22,6 +22,8 @@ export interface SkiSpecFormProps {
   isSubmitting: boolean;
   /** API validation errors mapped by field name */
   apiErrors?: Record<string, string>;
+  /** Callback to notify parent of unsaved changes state */
+  onUnsavedChanges?: (hasUnsavedChanges: boolean) => void;
 }
 
 /**
@@ -34,6 +36,7 @@ export const SkiSpecForm: React.FC<SkiSpecFormProps> = ({
   defaultValues,
   isSubmitting,
   apiErrors = {},
+  onUnsavedChanges,
 }) => {
   const { form, hasUnsavedChanges } = useSkiSpecForm(defaultValues);
   const { watch, formState, handleSubmit, setError } = form;
@@ -41,6 +44,11 @@ export const SkiSpecForm: React.FC<SkiSpecFormProps> = ({
   // Watch description field for character counter
   const description = watch("description");
   const descriptionLength = description?.length || 0;
+
+  // Notify parent of unsaved changes state
+  React.useEffect(() => {
+    onUnsavedChanges?.(hasUnsavedChanges);
+  }, [hasUnsavedChanges, onUnsavedChanges]);
 
   // Set API errors on fields when they arrive
   React.useEffect(() => {
