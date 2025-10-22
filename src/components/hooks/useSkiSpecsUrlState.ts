@@ -9,14 +9,16 @@ const DEFAULT_QUERY_STATE: ListSkiSpecsQuery = {
   search: "",
 };
 
-type DialogAction = "new" | null;
+type DialogAction = "new" | "edit" | null;
 
 interface SkiSpecsUrlState {
   queryState: ListSkiSpecsQuery;
   updateQueryState: (updates: Partial<ListSkiSpecsQuery>) => void;
   dialogAction: DialogAction;
   setDialogAction: (action: DialogAction) => void;
+  editingId: string | null;
   openDialog: () => void;
+  openEditDialog: (id: string) => void;
   closeDialog: () => void;
 }
 
@@ -47,52 +49,68 @@ export const useSkiSpecsUrlState = (): SkiSpecsUrlState => {
     }
 
     const params = new URLSearchParams(window.location.search);
-    return params.get("action") === "new" ? "new" : null;
+    const action = params.get("action");
+    return action === "new" ? "new" : action === "edit" ? "edit" : null;
+  });
+
+  const [editingId, setEditingId] = useState<string | null>(() => {
+    if (typeof window === "undefined") {
+      return null;
+    }
+
+    const params = new URLSearchParams(window.location.search);
+    return params.get("action") === "edit" ? params.get("id") : null;
   });
 
   /**
    * Update URL without page reload using History API
    * Manages all URL parameters in one place
    */
-  const updateURL = useCallback((newQueryState: ListSkiSpecsQuery, newDialogAction: DialogAction) => {
-    if (typeof window === "undefined") {
-      return;
-    }
+  const updateURL = useCallback(
+    (newQueryState: ListSkiSpecsQuery, newDialogAction: DialogAction, newEditingId: string | null) => {
+      if (typeof window === "undefined") {
+        return;
+      }
 
-    const params = new URLSearchParams();
+      const params = new URLSearchParams();
 
-    // Add dialog action parameter
-    if (newDialogAction === "new") {
-      params.set("action", "new");
-    }
+      // Add dialog action parameter
+      if (newDialogAction === "new") {
+        params.set("action", "new");
+      } else if (newDialogAction === "edit" && newEditingId) {
+        params.set("action", "edit");
+        params.set("id", newEditingId);
+      }
 
-    // Add query parameters (only non-default values)
-    if (newQueryState.page !== DEFAULT_QUERY_STATE.page) {
-      params.set("page", String(newQueryState.page));
-    }
+      // Add query parameters (only non-default values)
+      if (newQueryState.page !== DEFAULT_QUERY_STATE.page) {
+        params.set("page", String(newQueryState.page));
+      }
 
-    if (newQueryState.limit !== DEFAULT_QUERY_STATE.limit) {
-      params.set("limit", String(newQueryState.limit));
-    }
+      if (newQueryState.limit !== DEFAULT_QUERY_STATE.limit) {
+        params.set("limit", String(newQueryState.limit));
+      }
 
-    if (newQueryState.sort_by !== DEFAULT_QUERY_STATE.sort_by) {
-      params.set("sort_by", newQueryState.sort_by);
-    }
+      if (newQueryState.sort_by !== DEFAULT_QUERY_STATE.sort_by) {
+        params.set("sort_by", newQueryState.sort_by);
+      }
 
-    if (newQueryState.sort_order !== DEFAULT_QUERY_STATE.sort_order) {
-      params.set("sort_order", newQueryState.sort_order);
-    }
+      if (newQueryState.sort_order !== DEFAULT_QUERY_STATE.sort_order) {
+        params.set("sort_order", newQueryState.sort_order);
+      }
 
-    if (newQueryState.search) {
-      params.set("search", newQueryState.search);
-    }
+      if (newQueryState.search) {
+        params.set("search", newQueryState.search);
+      }
 
-    // Build new URL
-    const newUrl = params.toString() ? `${window.location.pathname}?${params.toString()}` : window.location.pathname;
+      // Build new URL
+      const newUrl = params.toString() ? `${window.location.pathname}?${params.toString()}` : window.location.pathname;
 
-    // Update URL without page reload
-    window.history.pushState({}, "", newUrl);
-  }, []);
+      // Update URL without page reload
+      window.history.pushState({}, "", newUrl);
+    },
+    []
+  );
 
   /**
    * Update query state and sync with URL
@@ -101,34 +119,45 @@ export const useSkiSpecsUrlState = (): SkiSpecsUrlState => {
     (updates: Partial<ListSkiSpecsQuery>) => {
       const newState = { ...queryState, ...updates };
       setQueryState(newState);
-      updateURL(newState, dialogAction);
+      updateURL(newState, dialogAction, editingId);
     },
-    [queryState, dialogAction, updateURL]
+    [queryState, dialogAction, editingId, updateURL]
   );
 
   /**
    * Update dialog action and sync with URL
    */
   const setDialogAction = useCallback(
-    (action: DialogAction) => {
+    (action: DialogAction, id: string | null = null) => {
       setDialogActionState(action);
-      updateURL(queryState, action);
+      setEditingId(id);
+      updateURL(queryState, action, id);
     },
     [queryState, updateURL]
   );
 
   /**
-   * Convenience method to open dialog
+   * Convenience method to open create dialog
    */
   const openDialog = useCallback(() => {
-    setDialogAction("new");
+    setDialogAction("new", null);
   }, [setDialogAction]);
+
+  /**
+   * Convenience method to open edit dialog with spec ID
+   */
+  const openEditDialog = useCallback(
+    (id: string) => {
+      setDialogAction("edit", id);
+    },
+    [setDialogAction]
+  );
 
   /**
    * Convenience method to close dialog
    */
   const closeDialog = useCallback(() => {
-    setDialogAction(null);
+    setDialogAction(null, null);
   }, [setDialogAction]);
 
   /**
@@ -152,7 +181,11 @@ export const useSkiSpecsUrlState = (): SkiSpecsUrlState => {
       });
 
       // Update dialog action from URL
-      setDialogActionState(params.get("action") === "new" ? "new" : null);
+      const action = params.get("action");
+      setDialogActionState(action === "new" ? "new" : action === "edit" ? "edit" : null);
+
+      // Update editing ID from URL
+      setEditingId(action === "edit" ? params.get("id") : null);
     };
 
     window.addEventListener("popstate", handlePopState);
@@ -164,7 +197,9 @@ export const useSkiSpecsUrlState = (): SkiSpecsUrlState => {
     updateQueryState,
     dialogAction,
     setDialogAction,
+    editingId,
     openDialog,
+    openEditDialog,
     closeDialog,
   };
 };

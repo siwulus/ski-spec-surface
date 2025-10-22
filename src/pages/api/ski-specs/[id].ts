@@ -1,6 +1,6 @@
+import { UpdateSkiSpecCommandSchema, type ApiErrorResponse } from "@/types/api.types";
 import type { APIRoute } from "astro";
 import { z } from "zod";
-import { UpdateSkiSpecCommandSchema, type ApiErrorResponse } from "@/types/api.types";
 
 export const prerender = false;
 
@@ -43,9 +43,9 @@ export const GET: APIRoute = async ({ params, locals }) => {
   }
 
   // Step 2: Check authentication
-  const { userId, skiSpecService } = locals;
+  const { user, skiSpecService } = locals;
 
-  if (!userId) {
+  if (!user) {
     return new Response(
       JSON.stringify({
         error: "Authentication required",
@@ -62,7 +62,7 @@ export const GET: APIRoute = async ({ params, locals }) => {
   // Step 3: Retrieve ski specification
   try {
     const specId = validationResult.data.id;
-    const skiSpec = await skiSpecService.getSkiSpec(userId, specId);
+    const skiSpec = await skiSpecService.getSkiSpec(user.id, specId);
 
     // Step 4: Handle not found
     if (!skiSpec) {
@@ -90,7 +90,7 @@ export const GET: APIRoute = async ({ params, locals }) => {
     if (error instanceof Error) {
       // eslint-disable-next-line no-console
       console.error("Failed to retrieve ski specification:", {
-        userId,
+        userId: user.id,
         specId: validationResult.data.id,
         error: error.message,
       });
@@ -132,7 +132,18 @@ export const GET: APIRoute = async ({ params, locals }) => {
 export const PUT: APIRoute = async ({ params, request, locals }) => {
   try {
     // Step 1: Get authenticated user ID and Supabase client from middleware
-    const { userId, skiSpecService } = locals;
+    const { user, skiSpecService } = locals;
+
+    if (!user) {
+      return new Response(
+        JSON.stringify({
+          error: "Authentication required",
+          code: "UNAUTHORIZED",
+          timestamp: new Date().toISOString(),
+        } satisfies ApiErrorResponse),
+        { status: 401, headers: { "Content-Type": "application/json" } }
+      );
+    }
 
     // Step 2: Validate path parameter (UUID format)
     const validationResult = UuidParamSchema.safeParse({ id: params.id });
@@ -187,7 +198,7 @@ export const PUT: APIRoute = async ({ params, request, locals }) => {
 
     // Step 5: Update ski specification via service
     try {
-      const updatedSpec = await skiSpecService.updateSkiSpec(userId, id, commandValidation.data);
+      const updatedSpec = await skiSpecService.updateSkiSpec(user.id, id, commandValidation.data);
 
       // Step 6: Return success response
       return new Response(JSON.stringify(updatedSpec), {
@@ -224,7 +235,7 @@ export const PUT: APIRoute = async ({ params, request, locals }) => {
       // Log error for debugging
       // eslint-disable-next-line no-console
       console.error("Failed to update ski specification:", {
-        userId,
+        userId: user.id,
         specId: id,
         error: dbError?.message || "Unknown error",
       });
@@ -268,7 +279,18 @@ export const PUT: APIRoute = async ({ params, request, locals }) => {
 export const DELETE: APIRoute = async ({ params, locals }) => {
   try {
     // Step 1: Get authenticated user ID and Supabase client from middleware
-    const { userId, skiSpecService } = locals;
+    const { user, skiSpecService } = locals;
+
+    if (!user) {
+      return new Response(
+        JSON.stringify({
+          error: "Authentication required",
+          code: "UNAUTHORIZED",
+          timestamp: new Date().toISOString(),
+        } satisfies ApiErrorResponse),
+        { status: 401, headers: { "Content-Type": "application/json" } }
+      );
+    }
 
     // Step 2: Extract and validate path parameter
     const validationResult = UuidParamSchema.safeParse({ id: params.id });
@@ -288,7 +310,7 @@ export const DELETE: APIRoute = async ({ params, locals }) => {
 
     // Step 3: Delete via service (includes ownership verification)
     try {
-      await skiSpecService.deleteSkiSpec(userId, id);
+      await skiSpecService.deleteSkiSpec(user.id, id);
 
       // Step 4: Return success response (204 No Content)
       return new Response(null, { status: 204 });

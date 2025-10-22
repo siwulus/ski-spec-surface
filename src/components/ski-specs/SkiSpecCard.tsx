@@ -8,9 +8,10 @@ import { SpecValue } from "./SpecValue";
 
 interface SkiSpecCardProps {
   spec: SkiSpecDTO;
+  onEdit?: (id: string) => void;
 }
 
-export const SkiSpecCard: React.FC<SkiSpecCardProps> = ({ spec }) => {
+export const SkiSpecCard: React.FC<SkiSpecCardProps> = ({ spec, onEdit }) => {
   return (
     <Card>
       <CardHeader>
@@ -136,7 +137,7 @@ export const SkiSpecCard: React.FC<SkiSpecCardProps> = ({ spec }) => {
           <span className="text-sm text-muted-foreground">
             {spec.notes_count} {spec.notes_count === 1 ? "note" : "notes"}
           </span>
-          <Button variant="ghost" size="sm" aria-label="Edit ski specification">
+          <Button variant="ghost" size="sm" aria-label={`Edit ${spec.name}`} onClick={() => onEdit?.(spec.id)}>
             <Pencil className="h-4 w-4" />
           </Button>
         </div>

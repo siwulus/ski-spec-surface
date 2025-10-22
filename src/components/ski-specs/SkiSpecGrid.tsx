@@ -26,10 +26,11 @@ const EmptyState: React.FC<EmptyStateProps> = ({ onAddClick }) => (
 );
 
 export const SkiSpecGrid: React.FC = () => {
-  const { queryState, updateQueryState, dialogAction, openDialog, closeDialog } = useSkiSpecsUrlState();
+  const { queryState, updateQueryState, dialogAction, editingId, openDialog, openEditDialog, closeDialog } =
+    useSkiSpecsUrlState();
   const { specs, pagination, isLoading, error, refetch } = useSkiSpecs(queryState);
 
-  // Ref for focus management
+  // Refs for focus management
   const addButtonRef = React.useRef<HTMLButtonElement>(null);
 
   const handleSearchChange = React.useCallback(
@@ -74,9 +75,16 @@ export const SkiSpecGrid: React.FC = () => {
   }, [openDialog]);
 
   const handleDialogSuccess = React.useCallback(() => {
-    // Refetch the list after successful creation
+    // Refetch the list after successful creation or update
     refetch();
   }, [refetch]);
+
+  const handleEditClick = React.useCallback(
+    (id: string) => {
+      openEditDialog(id);
+    },
+    [openEditDialog]
+  );
 
   return (
     <>
@@ -119,7 +127,7 @@ export const SkiSpecGrid: React.FC = () => {
         <>
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {specs.map((spec) => (
-              <SkiSpecCard key={spec.id} spec={spec} />
+              <SkiSpecCard key={spec.id} spec={spec} onEdit={handleEditClick} />
             ))}
           </div>
 
@@ -129,11 +137,16 @@ export const SkiSpecGrid: React.FC = () => {
         </>
       )}
 
-      {/* Add Specification Dialog */}
+      {/* Unified Specification Dialog */}
       <SkiSpecFormDialog
-        open={dialogAction === "new"}
-        onOpenChange={(open) => (open ? openDialog() : closeDialog())}
-        mode="create"
+        open={dialogAction === "new" || dialogAction === "edit"}
+        onOpenChange={(open) => {
+          if (!open) {
+            closeDialog();
+          }
+        }}
+        mode={dialogAction === "edit" ? "edit" : "create"}
+        specId={editingId || undefined}
         onSuccess={handleDialogSuccess}
         triggerRef={addButtonRef}
       />
