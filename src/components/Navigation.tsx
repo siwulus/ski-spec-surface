@@ -24,7 +24,6 @@ interface NavigationItem {
 const navigationItems: NavigationItem[] = [
   { label: "Home", href: "/" },
   { label: "Ski Specs", href: "/ski-specs", requiresAuth: true },
-  { label: "Account", href: "/account", requiresAuth: true },
 ];
 
 export default function Navigation({ currentPath }: NavigationProps) {

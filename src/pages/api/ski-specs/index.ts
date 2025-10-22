@@ -64,7 +64,7 @@ export const GET: APIRoute = async ({ url, locals }) => {
     const validatedQuery = validation.data;
 
     // Step 5: Call service layer to retrieve ski specifications
-    const { data, total } = await skiSpecService.listSkiSpecs(userId, validatedQuery);
+    const { data, total } = await skiSpecService.listSkiSpecs(user?.id ?? "", validatedQuery);
 
     // Step 6: Calculate pagination metadata
     const totalPages = Math.ceil(total / validatedQuery.limit);
@@ -90,7 +90,7 @@ export const GET: APIRoute = async ({ url, locals }) => {
     // eslint-disable-next-line no-console
     console.error("Error in GET /api/ski-specs:", {
       error: error instanceof Error ? error.message : "Unknown error",
-      userId: locals.userId,
+      userId: locals.user?.id ?? "",
       timestamp: new Date().toISOString(),
     });
 
@@ -158,7 +158,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
 
     // Step 4: Create ski specification via service
     try {
-      const skiSpec = await skiSpecService.createSkiSpec(user.id, command);
+      const skiSpec = await skiSpecService.createSkiSpec(user?.id ?? "", command);
 
       // Step 5: Return success response
       return new Response(JSON.stringify(skiSpec), {

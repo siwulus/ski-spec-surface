@@ -6,17 +6,13 @@ import { SkiSpecService } from "@/lib/services/SkiSpecService";
 // Routes that should only be accessible to guests (not authenticated users)
 const GUEST_ONLY_ROUTES = ["/auth/login", "/auth/register"];
 
-// Public paths - Auth API endpoints & Server-Rendered Astro Pages
+// Public paths - Server-Rendered Astro Pages
 const PUBLIC_PATHS = [
   // Server-Rendered Astro Pages
   "/",
   "/auth/login",
   "/auth/register",
   "/auth/reset-password",
-  // Auth API endpoints
-  "/api/auth/login",
-  "/api/auth/register",
-  "/api/auth/reset-password",
 ];
 
 export const onRequest = defineMiddleware(async ({ locals, cookies, url, request, redirect }, next) => {
