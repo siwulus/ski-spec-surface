@@ -1,4 +1,5 @@
 # Specyfikacja Techniczna Systemu Uwierzytelniania
+
 ## Ski Surface Spec Extension
 
 **Wersja dokumentu:** 1.1
@@ -138,11 +139,12 @@ System uwierzytelniania wprowadza nowe strony oraz modyfikuje istniejące elemen
   - Wywołanie `supabase.auth.signInWithPassword({ email, password })`
   - Po sukcesie: przekierowanie przez `window.location.href` (wymusza pełne przeładowanie + odświeżenie middleware)
 - **Schema Zod:**
+
 ```typescript
 const LoginSchema = z.object({
-  email: z.string().email('Nieprawidłowy format adresu email'),
-  password: z.string().min(6, 'Hasło musi mieć minimum 6 znaków'),
-  rememberMe: z.boolean().optional()
+  email: z.string().email("Nieprawidłowy format adresu email"),
+  password: z.string().min(6, "Hasło musi mieć minimum 6 znaków"),
+  rememberMe: z.boolean().optional(),
 });
 ```
 
@@ -184,20 +186,24 @@ const LoginSchema = z.object({
   - Przekierowanie do `/ski-specs`
   - Opcjonalnie: weryfikacja emaila (jeśli włączona w Supabase)
 - **Schema Zod:**
+
 ```typescript
-const RegisterSchema = z.object({
-  email: z.string().email('Nieprawidłowy format adresu email'),
-  password: z.string()
-    .min(8, 'Hasło musi mieć minimum 8 znaków')
-    .regex(/[A-Z]/, 'Hasło musi zawierać wielką literę')
-    .regex(/[a-z]/, 'Hasło musi zawierać małą literę')
-    .regex(/[0-9]/, 'Hasło musi zawierać cyfrę'),
-  confirmPassword: z.string(),
-  acceptTerms: z.boolean().refine(val => val === true, 'Musisz zaakceptować regulamin')
-}).refine(data => data.password === data.confirmPassword, {
-  message: 'Hasła nie są identyczne',
-  path: ['confirmPassword']
-});
+const RegisterSchema = z
+  .object({
+    email: z.string().email("Nieprawidłowy format adresu email"),
+    password: z
+      .string()
+      .min(8, "Hasło musi mieć minimum 8 znaków")
+      .regex(/[A-Z]/, "Hasło musi zawierać wielką literę")
+      .regex(/[a-z]/, "Hasło musi zawierać małą literę")
+      .regex(/[0-9]/, "Hasło musi zawierać cyfrę"),
+    confirmPassword: z.string(),
+    acceptTerms: z.boolean().refine((val) => val === true, "Musisz zaakceptować regulamin"),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Hasła nie są identyczne",
+    path: ["confirmPassword"],
+  });
 ```
 
 **C. ResetPasswordForm.tsx**
@@ -218,9 +224,10 @@ const RegisterSchema = z.object({
   - Wyświetlenie komunikatu sukcesu (nawet jeśli email nie istnieje w systemie - security best practice)
   - Informacja o sprawdzeniu skrzynki email
 - **Schema Zod:**
+
 ```typescript
 const ResetPasswordSchema = z.object({
-  email: z.string().email('Nieprawidłowy format adresu email')
+  email: z.string().email("Nieprawidłowy format adresu email"),
 });
 ```
 
@@ -244,18 +251,22 @@ const ResetPasswordSchema = z.object({
   - Po wprowadzeniu nowego hasła: `supabase.auth.updateUser({ password: newPassword })`
   - Po sukcesie → przekierowanie do `/auth/login` z toastem "Hasło zostało zmienione"
 - **Schema Zod:**
+
 ```typescript
-const UpdatePasswordSchema = z.object({
-  password: z.string()
-    .min(8, 'Hasło musi mieć minimum 8 znaków')
-    .regex(/[A-Z]/, 'Hasło musi zawierać wielką literę')
-    .regex(/[a-z]/, 'Hasło musi zawierać małą literę')
-    .regex(/[0-9]/, 'Hasło musi zawierać cyfrę'),
-  confirmPassword: z.string()
-}).refine(data => data.password === data.confirmPassword, {
-  message: 'Hasła nie są identyczne',
-  path: ['confirmPassword']
-});
+const UpdatePasswordSchema = z
+  .object({
+    password: z
+      .string()
+      .min(8, "Hasło musi mieć minimum 8 znaków")
+      .regex(/[A-Z]/, "Hasło musi zawierać wielką literę")
+      .regex(/[a-z]/, "Hasło musi zawierać małą literę")
+      .regex(/[0-9]/, "Hasło musi zawierać cyfrę"),
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Hasła nie są identyczne",
+    path: ["confirmPassword"],
+  });
 ```
 
 #### 1.2.2 Komponenty nawigacji i layoutu
@@ -267,18 +278,18 @@ const UpdatePasswordSchema = z.object({
   - Dodanie logiki dynamicznej widoczności elementów menu w zależności od stanu autentykacji
   - Dodanie `UserMenu` (dropdown z avatarem) dla zalogowanych użytkowników
 - **Nowa struktura:**
+
 ```typescript
 // Stan niezalogowany:
-const unauthenticatedItems = [
-  { label: "Home", href: "/" }
-];
+const unauthenticatedItems = [{ label: "Home", href: "/" }];
 
 // Stan zalogowany:
 const authenticatedItems = [
   { label: "Home", href: "/" },
-  { label: "Ski Specs", href: "/ski-specs" }
+  { label: "Ski Specs", href: "/ski-specs" },
 ];
 ```
+
 - **Logika:**
   - Odczyt stanu autentykacji z Supabase Auth context (custom hook `useAuth`)
   - Warunkowe renderowanie elementów menu
@@ -312,6 +323,7 @@ const authenticatedItems = [
   - Dodanie warunkowego renderowania dla zalogowanych/niezalogowanych użytkowników
   - Przekazanie informacji o stanie autentykacji do komponentu Navigation
 - **Nowa struktura:**
+
 ```astro
 ---
 // Odczyt sesji z context.locals.session (dodany w middleware)
@@ -325,19 +337,19 @@ const isAuthenticated = !!session;
       <Logo />
       <Navigation currentPath={currentPath} isAuthenticated={isAuthenticated} client:load />
     </div>
-    {isAuthenticated && (
-      <UserMenu userEmail={session.user.email} client:load />
-    )}
-    {!isAuthenticated && (
-      <>
-        <Button asChild>
-          <a href="/auth/login">Zaloguj się</a>
-        </Button>
-        <Button variant="outline" asChild>
-          <a href="/auth/register">Zarejestruj się</a>
-        </Button>
-      </>
-    )}
+    {isAuthenticated && <UserMenu userEmail={session.user.email} client:load />}
+    {
+      !isAuthenticated && (
+        <>
+          <Button asChild>
+            <a href="/auth/login">Zaloguj się</a>
+          </Button>
+          <Button variant="outline" asChild>
+            <a href="/auth/register">Zarejestruj się</a>
+          </Button>
+        </>
+      )
+    }
   </div>
 </header>
 ```
@@ -357,6 +369,7 @@ const isAuthenticated = !!session;
   - Interceptor dodający Bearer token do requestów
   - Interceptor odpowiedzi przechwytujący 401
 - **Logika:**
+
 ```typescript
 const handleUnauthorized = (originalUrl: string) => {
   const redirectTo = encodeURIComponent(originalUrl);
@@ -381,6 +394,7 @@ const handleUnauthorized = (originalUrl: string) => {
     - ✓/✗ Mała litera
     - ✓/✗ Cyfra
 - **Algorytm siły:**
+
 ```typescript
 const calculateStrength = (password: string): number => {
   let strength = 0;
@@ -402,6 +416,7 @@ const calculateStrength = (password: string): number => {
   - Subskrypcja zmian sesji Supabase
   - Udostępnienie informacji o użytkowniku
 - **Interfejs:**
+
 ```typescript
 interface UseAuthReturn {
   user: User | null;
@@ -415,6 +430,7 @@ const useAuth = (): UseAuthReturn => {
   // implementacja
 };
 ```
+
 - **Implementacja:**
   - Wykorzystanie `supabase.auth.getSession()` przy montowaniu
   - Subskrypcja `supabase.auth.onAuthStateChange()` dla reaktywności
@@ -427,16 +443,14 @@ const useAuth = (): UseAuthReturn => {
   - Udostępnienie klienta Supabase dla komponentów React
   - Zapewnienie poprawnej konfiguracji klienta
 - **Implementacja:**
+
 ```typescript
-import { createClient } from '@supabase/supabase-js';
-import type { Database } from '@/db/database.types';
+import { createClient } from "@supabase/supabase-js";
+import type { Database } from "@/db/database.types";
 
 export const useSupabaseClient = () => {
-  const supabase = useMemo(() =>
-    createClient<Database>(
-      import.meta.env.PUBLIC_SUPABASE_URL,
-      import.meta.env.PUBLIC_SUPABASE_KEY
-    ),
+  const supabase = useMemo(
+    () => createClient<Database>(import.meta.env.PUBLIC_SUPABASE_URL, import.meta.env.PUBLIC_SUPABASE_KEY),
     []
   );
 
@@ -473,15 +487,15 @@ Mapowanie kodów błędów Supabase Auth na przyjazne komunikaty:
 
 ```typescript
 const authErrorMessages: Record<string, string> = {
-  'invalid_credentials': 'Nieprawidłowy email lub hasło',
-  'email_not_confirmed': 'Email nie został potwierdzony. Sprawdź swoją skrzynkę pocztową.',
-  'user_already_exists': 'Ten adres email jest już zarejestrowany',
-  'weak_password': 'Hasło jest zbyt słabe. Użyj silniejszego hasła.',
-  'over_email_send_rate_limit': 'Zbyt wiele prób wysłania emaila. Spróbuj ponownie później.',
-  'invalid_grant': 'Link resetujący hasło wygasł lub jest nieprawidłowy',
-  'refresh_token_not_found': 'Sesja wygasła. Zaloguj się ponownie.',
+  invalid_credentials: "Nieprawidłowy email lub hasło",
+  email_not_confirmed: "Email nie został potwierdzony. Sprawdź swoją skrzynkę pocztową.",
+  user_already_exists: "Ten adres email jest już zarejestrowany",
+  weak_password: "Hasło jest zbyt słabe. Użyj silniejszego hasła.",
+  over_email_send_rate_limit: "Zbyt wiele prób wysłania emaila. Spróbuj ponownie później.",
+  invalid_grant: "Link resetujący hasło wygasł lub jest nieprawidłowy",
+  refresh_token_not_found: "Sesja wygasła. Zaloguj się ponownie.",
   // domyślny:
-  'default': 'Wystąpił błąd. Spróbuj ponownie.'
+  default: "Wystąpił błąd. Spróbuj ponownie.",
 };
 ```
 
@@ -592,6 +606,7 @@ const authErrorMessages: Record<string, string> = {
 **Plik:** `src/middleware/index.ts`
 
 **Obecna implementacja (mock):**
+
 ```typescript
 export const onRequest = defineMiddleware((context, next) => {
   context.locals.skiSpecService = new SkiSpecService(supabaseClient);
@@ -610,35 +625,31 @@ import { SkiSpecService } from "@/lib/services/SkiSpecService";
 
 // Whitelist tras publicznych (nie wymagających autentykacji)
 const PUBLIC_ROUTES = [
-  '/',
-  '/auth/login',
-  '/auth/register',
-  '/auth/reset-password',
-  '/auth/update-password',
-  '/api/health',
-  '/404'
+  "/",
+  "/auth/login",
+  "/auth/register",
+  "/auth/reset-password",
+  "/auth/update-password",
+  "/api/health",
+  "/404",
 ];
 
 // Trasy tylko dla niezalogowanych (redirect do /ski-specs jeśli zalogowany)
-const GUEST_ONLY_ROUTES = ['/auth/login', '/auth/register'];
+const GUEST_ONLY_ROUTES = ["/auth/login", "/auth/register"];
 
 export const onRequest = defineMiddleware(async (context, next) => {
   // 1. Utworzenie Server-Side Supabase Client z obsługą cookies
-  const supabase = createServerClient<Database>(
-    import.meta.env.SUPABASE_URL,
-    import.meta.env.SUPABASE_KEY,
-    {
-      cookies: {
-        get: (key) => context.cookies.get(key)?.value,
-        set: (key, value, options) => {
-          context.cookies.set(key, value, options);
-        },
-        remove: (key, options) => {
-          context.cookies.delete(key, options);
-        },
+  const supabase = createServerClient<Database>(import.meta.env.SUPABASE_URL, import.meta.env.SUPABASE_KEY, {
+    cookies: {
+      get: (key) => context.cookies.get(key)?.value,
+      set: (key, value, options) => {
+        context.cookies.set(key, value, options);
       },
-    }
-  );
+      remove: (key, options) => {
+        context.cookies.delete(key, options);
+      },
+    },
+  });
 
   // 2. Odczyt sesji użytkownika
   const {
@@ -658,13 +669,13 @@ export const onRequest = defineMiddleware(async (context, next) => {
 
   // 5. Obsługa przekierowań i ochrony tras
   const currentPath = context.url.pathname;
-  const isPublicRoute = PUBLIC_ROUTES.some(route => currentPath === route || currentPath.startsWith(route));
+  const isPublicRoute = PUBLIC_ROUTES.some((route) => currentPath === route || currentPath.startsWith(route));
   const isGuestOnlyRoute = GUEST_ONLY_ROUTES.includes(currentPath);
   const isAuthenticated = !!session;
 
   // 5a. Zalogowany użytkownik próbuje wejść na /login lub /register
   if (isAuthenticated && isGuestOnlyRoute) {
-    return Response.redirect(new URL('/ski-specs', context.url));
+    return Response.redirect(new URL("/ski-specs", context.url));
   }
 
   // 5b. Niezalogowany użytkownik próbuje wejść na chronioną trasę
@@ -752,20 +763,17 @@ interface ImportMeta {
 ```typescript
 import { createServerClient } from "@supabase/ssr";
 
-const supabase = createServerClient<Database>(
-  supabaseUrl,
-  supabaseKey,
-  {
-    cookies: {
-      get: (key) => context.cookies.get(key)?.value,
-      set: (key, value, options) => context.cookies.set(key, value, options),
-      remove: (key, options) => context.cookies.delete(key, options),
-    },
-  }
-);
+const supabase = createServerClient<Database>(supabaseUrl, supabaseKey, {
+  cookies: {
+    get: (key) => context.cookies.get(key)?.value,
+    set: (key, value, options) => context.cookies.set(key, value, options),
+    remove: (key, options) => context.cookies.delete(key, options),
+  },
+});
 ```
 
 **Użycie:**
+
 - W middleware Astro
 - W API routes (server endpoints)
 - Dostęp do sesji użytkownika po stronie serwera
@@ -776,13 +784,11 @@ const supabase = createServerClient<Database>(
 ```typescript
 import { createClient } from "@supabase/supabase-js";
 
-const supabase = createClient<Database>(
-  import.meta.env.PUBLIC_SUPABASE_URL,
-  import.meta.env.PUBLIC_SUPABASE_KEY
-);
+const supabase = createClient<Database>(import.meta.env.PUBLIC_SUPABASE_URL, import.meta.env.PUBLIC_SUPABASE_KEY);
 ```
 
 **Użycie:**
+
 - W komponentach React (formularze logowania, rejestracji, itp.)
 - Do wywołań auth (signIn, signUp, signOut, resetPassword)
 - Do subskrypcji zmian stanu autentykacji (onAuthStateChange)
@@ -797,6 +803,7 @@ Większość operacji uwierzytelniania jest obsługiwana bezpośrednio przez Sup
 - **Plik:** `src/pages/api/auth/session.ts`
 - **Metoda:** GET
 - **Odpowiedź:**
+
 ```typescript
 {
   user: {
@@ -807,7 +814,9 @@ Większość operacji uwierzytelniania jest obsługiwana bezpośrednio przez Sup
   isAuthenticated: boolean;
 }
 ```
+
 - **Implementacja:**
+
 ```typescript
 import type { APIRoute } from "astro";
 
@@ -815,10 +824,10 @@ export const GET: APIRoute = async ({ locals }) => {
   const { session } = locals;
 
   if (!session?.user) {
-    return new Response(
-      JSON.stringify({ user: null, isAuthenticated: false }),
-      { status: 200, headers: { "Content-Type": "application/json" } }
-    );
+    return new Response(JSON.stringify({ user: null, isAuthenticated: false }), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    });
   }
 
   return new Response(
@@ -840,6 +849,7 @@ export const GET: APIRoute = async ({ locals }) => {
 - **Plik:** `src/pages/api/auth/logout.ts`
 - **Metoda:** POST
 - **Implementacja:**
+
 ```typescript
 import type { APIRoute } from "astro";
 
@@ -851,10 +861,10 @@ export const POST: APIRoute = async ({ locals, cookies }) => {
 
   // Supabase SSR automatycznie czyści cookies przez funkcje set/remove
 
-  return new Response(
-    JSON.stringify({ success: true }),
-    { status: 200, headers: { "Content-Type": "application/json" } }
-  );
+  return new Response(JSON.stringify({ success: true }), {
+    status: 200,
+    headers: { "Content-Type": "application/json" },
+  });
 };
 ```
 
@@ -875,22 +885,22 @@ export interface AuthError {
 }
 
 export const mapSupabaseAuthError = (error: any): AuthError => {
-  const code = error?.code || error?.error_code || 'unknown_error';
+  const code = error?.code || error?.error_code || "unknown_error";
 
   const errorMessages: Record<string, string> = {
-    'invalid_credentials': 'Nieprawidłowy email lub hasło',
-    'email_not_confirmed': 'Email nie został potwierdzony. Sprawdź swoją skrzynkę pocztową.',
-    'user_already_exists': 'Ten adres email jest już zarejestrowany',
-    'weak_password': 'Hasło jest zbyt słabe. Użyj silniejszego hasła.',
-    'over_email_send_rate_limit': 'Zbyt wiele prób wysłania emaila. Spróbuj ponownie później.',
-    'invalid_grant': 'Link resetujący hasło wygasł lub jest nieprawidłowy',
-    'refresh_token_not_found': 'Sesja wygasła. Zaloguj się ponownie.',
-    'email_provider_disabled': 'Logowanie przez email jest obecnie niedostępne',
-    'validation_failed': 'Dane formularza są nieprawidłowe',
+    invalid_credentials: "Nieprawidłowy email lub hasło",
+    email_not_confirmed: "Email nie został potwierdzony. Sprawdź swoją skrzynkę pocztową.",
+    user_already_exists: "Ten adres email jest już zarejestrowany",
+    weak_password: "Hasło jest zbyt słabe. Użyj silniejszego hasła.",
+    over_email_send_rate_limit: "Zbyt wiele prób wysłania emaila. Spróbuj ponownie później.",
+    invalid_grant: "Link resetujący hasło wygasł lub jest nieprawidłowy",
+    refresh_token_not_found: "Sesja wygasła. Zaloguj się ponownie.",
+    email_provider_disabled: "Logowanie przez email jest obecnie niedostępne",
+    validation_failed: "Dane formularza są nieprawidłowe",
   };
 
   return {
-    message: errorMessages[code] || 'Wystąpił nieoczekiwany błąd. Spróbuj ponownie.',
+    message: errorMessages[code] || "Wystąpił nieoczekiwany błąd. Spróbuj ponownie.",
     code,
   };
 };
@@ -899,11 +909,13 @@ export const mapSupabaseAuthError = (error: any): AuthError => {
 #### 2.4.2 Rate limiting i security
 
 **Zabezpieczenia na poziomie Supabase:**
+
 - Rate limiting dla wywołań auth (domyślnie w Supabase)
 - Email verification (opcjonalnie włączone w ustawieniach projektu Supabase)
 - Captcha dla rejestracji (opcjonalnie przez Supabase turnstile/recaptcha integration)
 
 **Dodatkowe zabezpieczenia aplikacji:**
+
 - Middleware sprawdza sesję przy każdym żądaniu
 - Ochrona CSRF przez SameSite cookies
 - HttpOnly cookies zapobiegają kradzieży tokenów przez XSS
@@ -913,11 +925,13 @@ export const mapSupabaseAuthError = (error: any): AuthError => {
 #### 2.5.1 Zmiana trybu renderowania dla stron auth
 
 Wszystkie strony uwierzytelniania muszą być renderowane po stronie serwera (SSR), ponieważ:
+
 - Sprawdzają sesję w middleware
 - Wykonują przekierowania po stronie serwera
 - Muszą obsługiwać cookies
 
 **Konfiguracja w astro.config.mjs:**
+
 ```javascript
 export default defineConfig({
   output: "server", // już ustawione - OK
@@ -945,20 +959,22 @@ const isAuthenticated = !!session;
     <h1>Ski Surface Spec Extension</h1>
     <p>...</p>
     <div class="cta-buttons">
-      {isAuthenticated ? (
-        <Button asChild>
-          <a href="/ski-specs">Przejdź do specyfikacji</a>
-        </Button>
-      ) : (
-        <>
+      {
+        isAuthenticated ? (
           <Button asChild>
-            <a href="/auth/register">Zarejestruj się</a>
+            <a href="/ski-specs">Przejdź do specyfikacji</a>
           </Button>
-          <Button variant="outline" asChild>
-            <a href="/auth/login">Zaloguj się</a>
-          </Button>
-        </>
-      )}
+        ) : (
+          <>
+            <Button asChild>
+              <a href="/auth/register">Zarejestruj się</a>
+            </Button>
+            <Button variant="outline" asChild>
+              <a href="/auth/login">Zaloguj się</a>
+            </Button>
+          </>
+        )
+      }
     </div>
   </section>
 </Layout>
@@ -975,6 +991,7 @@ const isAuthenticated = !!session;
 **A. Email Authentication**
 
 W panelu Supabase → Authentication → Providers → Email:
+
 - **Enable Email provider:** Włączone
 - **Confirm email:** Opcjonalnie (zalecane dla produkcji, wyłączone dla dev)
 - **Secure email change:** Włączone
@@ -983,6 +1000,7 @@ W panelu Supabase → Authentication → Providers → Email:
 **B. Email Templates**
 
 Dostosowanie szablonów emaili w Supabase → Authentication → Email Templates:
+
 - **Confirm signup:** Email potwierdzający rejestrację
 - **Invite user:** Email z zaproszeniem
 - **Magic Link:** Email z linkiem do logowania (jeśli używane)
@@ -993,17 +1011,20 @@ Dostosowanie szablonów emaili w Supabase → Authentication → Email Templates
 **C. Password Requirements**
 
 W Supabase → Authentication → Policies:
+
 - **Minimum password length:** 8 znaków (zalecane)
 
 **D. Rate Limiting**
 
 Domyślnie Supabase ma wbudowane rate limiting:
+
 - Maksymalna liczba requestów auth na IP
 - Ochrona przed brute-force
 
 **E. Redirect URLs (Allowed)**
 
 W Supabase → Authentication → URL Configuration → Redirect URLs:
+
 ```
 http://localhost:3000/auth/update-password (dev)
 https://yourdomain.com/auth/update-password (prod)
@@ -1117,6 +1138,7 @@ USING (
 #### 3.2.1 Cykl życia sesji
 
 **1. Utworzenie sesji (Login/Register)**
+
 - Użytkownik wypełnia formularz logowania/rejestracji w komponencie React
 - Wywołanie client-side Supabase: `supabase.auth.signInWithPassword()` lub `supabase.auth.signUp()`
 - Supabase zwraca access token i refresh token
@@ -1124,6 +1146,7 @@ USING (
 - Przeładowanie strony lub redirect (`window.location.href = '/ski-specs'`)
 
 **2. Weryfikacja sesji (Middleware)**
+
 - Przy każdym żądaniu middleware odczytuje cookies
 - Utworzenie server-side Supabase client z cookies
 - Wywołanie `supabase.auth.getSession()` → weryfikacja i odświeżenie tokenów
@@ -1131,11 +1154,13 @@ USING (
 - Jeśli sesja nieważna → przekierowanie do `/login`
 
 **3. Odświeżanie sesji (Automatic)**
+
 - Supabase automatycznie odświeża access token przed wygaśnięciem używając refresh token
 - Middleware przy każdym żądaniu odświeża tokeny jeśli to konieczne
 - Nowe tokeny zapisywane w cookies
 
 **4. Zakończenie sesji (Logout)**
+
 - Użytkownik klika "Wyloguj" w `UserMenu`
 - Wywołanie client-side: `supabase.auth.signOut()`
 - Supabase usuwa cookies
@@ -1144,6 +1169,7 @@ USING (
 #### 3.2.2 Persistent sessions vs Session-only
 
 **Domyślna konfiguracja (Persistent):**
+
 - Refresh token ma długi czas życia (30 dni)
 - Użytkownik pozostaje zalogowany nawet po zamknięciu przeglądarki
 - Access token odświeżany automatycznie
@@ -1151,13 +1177,17 @@ USING (
 **Opcjonalnie - Session-only (checkbox "Zapamiętaj mnie"):**
 
 Jeśli użytkownik NIE zaznaczy "Zapamiętaj mnie":
+
 ```typescript
 // W LoginForm.tsx po successful login:
 if (!rememberMe) {
   // Zmiana persistence storage na 'session' (tylko dla bieżącej sesji przeglądarki)
-  await supabase.auth.updateUser({}, {
-    data: { session_persistence: 'session' }
-  });
+  await supabase.auth.updateUser(
+    {},
+    {
+      data: { session_persistence: "session" },
+    }
+  );
 }
 ```
 
@@ -1168,12 +1198,14 @@ if (!rememberMe) {
 #### 3.3.1 Access Token i Refresh Token
 
 **Access Token (JWT):**
+
 - Krótki czas życia: 1 godzina (domyślnie w Supabase)
 - Zawiera claims: `user_id`, `email`, `role`, `exp` (expiration)
 - Używany do autoryzacji requestów API
 - Przekazywany w header: `Authorization: Bearer <access_token>`
 
 **Refresh Token:**
+
 - Długi czas życia: 30 dni (domyślnie w Supabase)
 - Używany tylko do uzyskania nowego access token
 - Przechowywany jako httpOnly cookie (bezpieczny)
@@ -1184,25 +1216,27 @@ if (!rememberMe) {
 Supabase SDK automatycznie zarządza odświeżaniem tokenów:
 
 **Po stronie klienta (React):**
+
 ```typescript
 // W useAuth hook lub na poziomie app
 useEffect(() => {
-  const { data: { subscription } } = supabase.auth.onAuthStateChange(
-    (event, session) => {
-      if (event === 'TOKEN_REFRESHED') {
-        console.log('Token odświeżony automatycznie');
-      }
-      if (event === 'SIGNED_OUT') {
-        // Przekierowanie do login
-      }
+  const {
+    data: { subscription },
+  } = supabase.auth.onAuthStateChange((event, session) => {
+    if (event === "TOKEN_REFRESHED") {
+      console.log("Token odświeżony automatycznie");
     }
-  );
+    if (event === "SIGNED_OUT") {
+      // Przekierowanie do login
+    }
+  });
 
   return () => subscription.unsubscribe();
 }, []);
 ```
 
 **Po stronie serwera (Middleware):**
+
 - `createServerClient` z cookies adapter automatycznie odświeża tokeny
 - Przy każdym żądaniu sprawdza czy access token nie wygasł
 - Jeśli wygasł, używa refresh token do uzyskania nowego
@@ -1211,15 +1245,18 @@ useEffect(() => {
 #### 3.3.3 Bezpieczeństwo tokenów
 
 **HttpOnly Cookies:**
+
 - Tokeny przechowywane jako httpOnly cookies
 - JavaScript nie ma dostępu (ochrona przed XSS)
 - Cookies wysyłane automatycznie z każdym żądaniem
 
 **Secure Cookies (HTTPS):**
+
 - W produkcji: `secure: true` (tylko HTTPS)
 - W dev (localhost): `secure: false`
 
 **SameSite:**
+
 - `sameSite: 'lax'` - ochrona przed CSRF
 - Cookies wysyłane tylko dla tego samego origin
 
@@ -1228,6 +1265,7 @@ useEffect(() => {
 #### 3.4.1 Aktualizacja SkiSpecService
 
 **Obecna implementacja:**
+
 ```typescript
 // src/lib/services/SkiSpecService.ts
 export class SkiSpecService {
@@ -1259,6 +1297,7 @@ async getSkiSpec(userId: string, specId: string): Promise<SkiSpecDTO | null> {
 ```
 
 **Po włączeniu RLS:**
+
 - RLS na poziomie bazy danych dodatkowo weryfikuje dostęp
 - Podwójna warstwa bezpieczeństwa: application-level (serwis) + database-level (RLS)
 
@@ -1271,10 +1310,7 @@ export const GET: APIRoute = async ({ locals }) => {
   const { userId } = locals;
 
   if (!userId) {
-    return new Response(
-      JSON.stringify({ error: 'Unauthorized' }),
-      { status: 401 }
-    );
+    return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 });
   }
 
   // Kontynuacja jeśli zalogowany
@@ -1290,6 +1326,7 @@ Jednak w większości przypadków middleware już przekieruje niezalogowanych u�
 **Scenariusz:** Użytkownik nie logował się przez 30 dni, refresh token wygasł.
 
 **Obsługa:**
+
 1. Middleware próbuje odświeżyć sesję → błąd
 2. `session` w locals = null
 3. Middleware przekierowuje do `/login?redirectTo=...&error=session_expired`
@@ -1298,6 +1335,7 @@ Jednak w większości przypadków middleware już przekieruje niezalogowanych u�
 #### 3.5.2 Jednoczesne sesje (multiple devices)
 
 Supabase pozwala na wiele jednoczesnych sesji:
+
 - Użytkownik może być zalogowany na wielu urządzeniach
 - Każde urządzenie ma własną parę tokenów
 - Wylogowanie na jednym urządzeniu nie wylogowuje z innych (chyba że używamy `signOut({ scope: 'global' })`)
@@ -1309,6 +1347,7 @@ Supabase pozwala na wiele jednoczesnych sesji:
 Jeśli włączona weryfikacja emaila w Supabase:
 
 **Flow:**
+
 1. Rejestracja → `supabase.auth.signUp()`
 2. Supabase wysyła email z linkiem weryfikacyjnym
 3. Użytkownik NIE jest automatycznie zalogowany
@@ -1318,22 +1357,23 @@ Jeśli włączona weryfikacja emaila w Supabase:
 7. Logowanie działa normalnie
 
 **W komponencie RegisterForm:**
+
 ```typescript
 const { data, error } = await supabase.auth.signUp({
   email,
   password,
   options: {
-    emailRedirectTo: `${window.location.origin}/auth/login?verified=true`
-  }
+    emailRedirectTo: `${window.location.origin}/auth/login?verified=true`,
+  },
 });
 
 if (data?.user && !data.session) {
   // Email verification włączona
-  toast.success('Sprawdź swoją skrzynkę pocztową i kliknij link weryfikacyjny');
+  toast.success("Sprawdź swoją skrzynkę pocztową i kliknij link weryfikacyjny");
   // NIE przekierowujemy do /ski-specs
 } else if (data?.session) {
   // Email verification wyłączona - automatyczne logowanie
-  window.location.href = '/ski-specs';
+  window.location.href = "/ski-specs";
 }
 ```
 
@@ -1454,11 +1494,13 @@ Etap 10 (Dokumentacja) - na końcu
 ### 4.3 Priorytety i MVP Auth
 
 **Must-have dla MVP:**
+
 - Etapy 1-6 (bez 7)
 - Etap 8 (basic error handling)
 - Podstawowe testy z Etapu 9
 
 **Nice-to-have (można odłożyć):**
+
 - Etap 7 (API endpoints) - niepotrzebne jeśli wszystko działa przez client-side Supabase
 - Email verification - można włączyć później
 - "Zapamiętaj mnie" checkbox - można pominąć (domyślnie persistent sessions)
@@ -1518,39 +1560,47 @@ Etap 10 (Dokumentacja) - na końcu
 ### 6.1 Zidentyfikowane ryzyka
 
 **Ryzyko 1: Problemy z cookies w różnych przeglądarkach**
+
 - **Mitygacja:** Testowanie na Chrome, Firefox, Safari, Edge
 - **Fallback:** Dokumentacja known issues, ewentualne dostosowanie strategii cookies
 
 **Ryzyko 2: Rate limiting Supabase Auth w dev (zbyt wiele prób podczas testów)**
+
 - **Mitygacja:** Używanie różnych emailów dla testów, czyszczenie bazy między testami
 - **Fallback:** Czekanie lub kontakt z supportem Supabase
 
 **Ryzyko 3: Konflikty między server-side a client-side Supabase clients**
+
 - **Mitygacja:** Jasne rozdzielenie odpowiedzialności (middleware = server, formularze = client)
 - **Fallback:** Dokładne czytanie dokumentacji @supabase/ssr
 
 **Ryzyko 4: Problemy z przekierowaniami w SSR (Astro)**
+
 - **Mitygacja:** Testowanie różnych scenariuszy przekierowań
 - **Fallback:** Użycie meta refresh lub JavaScript redirect jako backup
 
 **Ryzyko 5: Email delivery issues (spam filters)**
+
 - **Mitygacja:** Konfiguracja SPF/DKIM w Supabase (dla custom domain)
 - **Fallback:** Użycie Supabase default sender na początku
 
 ### 6.2 Plan testowania
 
 **Unit tests:**
+
 - Zod schemas walidacji
 - Helpery (mapowanie błędów)
 - Custom hooks (useAuth, useSupabaseClient)
 
 **Integration tests:**
+
 - Flow rejestracji (end-to-end)
 - Flow logowania
 - Flow resetowania hasła
 - Middleware przekierowania
 
 **Manual QA:**
+
 - Wszystkie user flows z sekcji 1.5
 - Cross-browser testing
 - Responsive design testing
@@ -1597,6 +1647,7 @@ Po zatwierdzeniu tej specyfikacji:
 ### 7.3 Kontakt i pytania
 
 W razie pytań lub potrzeby wyjaśnienia szczegółów specyfikacji:
+
 - Konsultacja z dokumentacją Supabase Auth: https://supabase.com/docs/guides/auth
 - Konsultacja z dokumentacją Astro middleware: https://docs.astro.build/en/guides/middleware/
 - Konsultacja z dokumentacją @supabase/ssr: https://supabase.com/docs/guides/auth/server-side-rendering
@@ -1613,6 +1664,7 @@ Status: Gotowa do implementacji
 ## Historia zmian
 
 ### Wersja 1.1 (2025-10-21)
+
 - Zmiana routingu: dodanie prefiksu `/auth/` do wszystkich stron uwierzytelniania (`/login` → `/auth/login`, `/register` → `/auth/register`, `/reset-password` → `/auth/reset-password`, `/update-password` → `/auth/update-password`)
 - Usunięcie strony `/account` i całej funkcjonalności zarządzania kontem dla zalogowanych użytkowników
 - Zmiana hasła dostępna tylko przez proces "Zapomniałem hasła"

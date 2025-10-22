@@ -153,6 +153,7 @@ _Security Note: This response is returned both when the spec doesn't exist AND w
    LIMIT 1
    ```
 2. **Delete Query**: Remove the specification
+
    ```sql
    DELETE FROM ski_specs
    WHERE id = $1 AND user_id = $2

@@ -116,12 +116,12 @@ Aplikacja jest zbudowana w oparciu o Astro 5 (strony `.astro`) z wyspami React 1
 - **Główny cel**: Przeglądanie, filtrowanie, tworzenie/edycja/usuwanie specyfikacji oraz wybór do porównania.
 - **Kluczowe informacje do wyświetlenia**: nazwa, długość, tip/waist/tail, radius, weight, surface_area, relative_weight, liczba notatek.
 - **Kluczowe komponenty widoku**:
-  - Toolbar (React island): `search` (debounce 300 ms), `sort_by`, `sort_order`, `page`, `limit` zsynchronizowane z URL; przyciski „Dodaj”, „Import”, „Eksport CSV”, „Porównaj”.
+  - Header z przyciskiem CTA „Dodaj specyfikację" w prawym górnym rogu (primary button, wyróżniony wizualnie).
+  - Toolbar (React island): `search` (debounce 300 ms), `sort_by`, `sort_order`, `page`, `limit` zsynchronizowane z URL; przyciski „Import", „Eksport CSV", „Porównaj".
   - Lista (kartyna gridzie) z checkboxami wyboru do porównania (max 4), akcje: szczegóły, edycja, usuń.
-  - Modal Create/Edit sterowany URL-em: `?modal=create|edit&id=`; potwierdzenie porzucenia zmian; toasty.
-  - Modal Import (duży): upload CSV, podsumowanie (summary), zakładki „Zaimportowane”/„Błędy”.
+  - Modal Import (duży): upload CSV, podsumowanie (summary), zakładki „Zaimportowane"/„Błędy".
 - **UX, dostępność i bezpieczeństwo**:
-  - Empty state (US-016) z CTA „Dodaj pierwszą specyfikację”.
+  - Empty state (US-016) z CTA „Dodaj pierwszą specyfikację".
   - Mapowanie błędów API: 400/422 → pola, 409 (konflikt nazwy) → `name`, ogólne → toast.
   - Eksport: `GET /api/ski-specs/export` z blokadą przycisku i nazwą pliku z `Content-Disposition`.
   - Import: komunikaty dla 413/415 i błędów CSV; po zamknięciu modala odświeżenie listy.
@@ -129,7 +129,80 @@ Aplikacja jest zbudowana w oparciu o Astro 5 (strony `.astro`) z wyspami React 1
 - **Parametry API i URL**:
   - `GET /api/ski-specs?page&limit&sort_by&sort_order&search` (domyślnie `created_at desc`).
   - Wybór do porównania trzymany wyłącznie w URL `/compare?ids=…`.
-- **Mapowanie US**: US-005/006/007/008, US-013/014, US-015/016/017.
+- **Mapowanie US**: US-005 (dodawanie - przycisk CTA otwiera modal), US-006/007/008, US-013/014, US-015/016/017.
+
+### Widok: Dodawanie nowej specyfikacji
+
+- **Ścieżka widoku**: `/ski-specs/new` (odzwierciedlone w URL bez przeładowania strony)
+- **Dostępność**: Wymaga autentykacji
+- **Główny cel**: Umożliwienie użytkownikowi dodania nowej specyfikacji narty z pełnym zestawem parametrów technicznych i opcjonalnym opisem.
+- **Kluczowe informacje do wprowadzenia**:
+  - Nazwa (wymagane, unikalna dla użytkownika, max 255 znaków)
+  - Opis (opcjonalne, wielowierszowe, max 2000 znaków)
+  - Długość [cm] (wymagane, wartość całkowita, 100-250)
+  - Szerokość tip [mm] (wymagane, wartość całkowita, 50-250, tip ≥ waist)
+  - Szerokość waist [mm] (wymagane, wartość całkowita, 50-250, waist ≤ tip i tail)
+  - Szerokość tail [mm] (wymagane, wartość całkowita, 50-250, tail ≥ waist)
+  - Promień [m] (wymagane, wartość całkowita, 1-30)
+  - Waga [g] (wymagane, wartość całkowita, 500-3000)
+- **Kluczowe komponenty widoku**:
+  - Dialog/Modal (shadcn/ui Dialog component) wyzwalany przyciskiem CTA z widoku listy.
+  - Formularz (React island) z React Hook Form + Zod walidacją po stronie klienta.
+  - Pola numeryczne typu integer z wyświetlanymi jednostkami (cm, mm, m, g).
+  - Pole opisu (textarea) z licznikiem pozostałych znaków (2000 - current length).
+  - Przyciski akcji: „Zapisz" (primary), „Anuluj" (secondary).
+  - Toast notifications dla sukcesu i błędów.
+  - Po zapisie: automatyczne obliczenie surface_area i relative_weight przez API.
+- **UX, dostępność i bezpieczeństwo**:
+  - Otwarcie modala: kliknięcie przycisku CTA w prawym górnym rogu listy → URL zmienia się na `/ski-specs/new` → modal otwiera się bez przeładowania strony (React state + history.pushState).
+  - Zamknięcie modala: „Anuluj", ESC, kliknięcie poza modalem → jeśli są niezapisane zmiany: confirm dialog „Czy na pewno chcesz odrzucić zmiany?" → URL wraca do `/ski-specs`.
+  - Walidacja real-time dla wszystkich pól (RHF + Zod):
+    - Sprawdzenie relacji tip ≥ waist ≤ tail.
+    - Sprawdzenie zakresów min/max dla wszystkich wartości numerycznych.
+    - Sprawdzenie maksymalnej długości opisu (2000 znaków).
+  - Mapowanie błędów API:
+    - 400/422 (validation errors) → wyświetlenie błędów przy odpowiednich polach formularza (aria-invalid, aria-describedby).
+    - 409 (conflict - nazwa już istnieje) → błąd przy polu `name`.
+    - Ogólne błędy (500, network errors) → toast z możliwością ponowienia.
+  - Po sukcesie (201):
+    - Toast z komunikatem „Specyfikacja została dodana".
+    - Zamknięcie modala.
+    - Odświeżenie listy specyfikacji (refetch lub dodanie nowego elementu do cache).
+    - URL wraca do `/ski-specs`.
+  - A11y:
+    - Focus trap w modalу (focus pozostaje w dialogu po otwarciu).
+    - Focus management: po otwarciu focus na pierwszym polu formularza; po zamknięciu focus wraca na przycisk CTA.
+    - ARIA: `role="dialog"`, `aria-labelledby` (tytuł modala), `aria-describedby` (opis formularza).
+    - ARIA dla pól: `aria-invalid`, `aria-describedby` dla komunikatów błędów, `aria-required` dla wymaganych pól.
+    - Klawiaturowa nawigacja: TAB, SHIFT+TAB, ESC (zamknięcie), ENTER (submit).
+    - Widoczny focus indicator dla wszystkich interaktywnych elementów.
+- **Mapowanie US**: US-005 (Dodawanie nowej specyfikacji), US-015 (walidacja), US-017 (błędy sieciowe).
+
+### Widok: Edycja specyfikacji
+
+- **Ścieżka widoku**: `/ski-specs/:id/edit` (odzwierciedlone w URL bez przeładowania strony)
+- **Dostępność**: Wymaga autentykacji
+- **Główny cel**: Umożliwienie użytkownikowi edycji istniejącej specyfikacji narty.
+- **Kluczowe informacje do wyświetlenia**: Wszystkie pola specyfikacji wypełnione aktualnymi danymi.
+- **Kluczowe komponenty widoku**:
+  - Dialog/Modal (shadcn/ui Dialog component) - ten sam komponent co w widoku dodawania, ale w trybie edycji.
+  - Formularz (React island) z React Hook Form + Zod walidacją, wypełniony danymi do edycji.
+  - Wszystkie te same komponenty i walidacje co w widoku dodawania.
+- **UX, dostępność i bezpieczeństwo**:
+  - Otwarcie modala: kliknięcie „Edytuj" z listy lub ze szczegółów → URL zmienia się na `/ski-specs/:id/edit` → modal otwiera się z danymi specyfikacji.
+  - Walidacja i mapowanie błędów: identyczne jak w widoku dodawania.
+  - Po sukcesie (200):
+    - Toast z komunikatem „Specyfikacja została zaktualizowana".
+    - Zamknięcie modala.
+    - Odświeżenie danych (lista lub widok szczegółów).
+    - URL wraca do poprzedniego widoku (`/ski-specs` lub `/ski-specs/:id`).
+  - A11y: identyczne wymagania jak w widoku dodawania.
+- **Parametry API**:
+  - `PUT /api/ski-specs/:id` z body typu `UpdateSkiSpecCommand` (identyczny z `CreateSkiSpecCommand`).
+  - Response 200: `SkiSpecDTO` z przeliczonymi wartościami.
+- **Parametry URL**:
+  - `/ski-specs/:id/edit` (client-side routing).
+- **Mapowanie US**: US-006 (Edycja specyfikacji), US-015 (walidacja), US-017 (błędy sieciowe).
 
 ### Widok: Szczegóły specyfikacji
 
@@ -196,12 +269,26 @@ Aplikacja jest zbudowana w oparciu o Astro 5 (strony `.astro`) z wyspami React 1
 
 2. **Dodanie nowej specyfikacji**
 
-- `/ski-specs` → „Dodaj” (URL: `?modal=create`) → formularz → POST `/api/ski-specs` → toast sukcesu → zamknięcie modala → odświeżenie listy.
+- `/ski-specs` → kliknięcie przycisku CTA „Dodaj specyfikację" (prawy górny róg).
+- URL zmienia się na `/ski-specs/new` bez przeładowania strony.
+- Otwiera się Dialog/Modal z formularzem dodawania specyfikacji.
+- Użytkownik wypełnia wszystkie wymagane pola numeryczne typu integer (nazwa, długość, tip, waist, tail, promień, waga) i opcjonalnie opis.
+- Pole opisu z licznikiem pozostałych znaków.
+- Walidacja real-time: relacja tip ≥ waist ≤ tail, zakresy min/max, max długość opisu.
+- Kliknięcie „Zapisz" → POST `/api/ski-specs` → 201 → toast sukcesu „Specyfikacja została dodana".
+- Zamknięcie modala → URL wraca do `/ski-specs` → odświeżenie listy (nowa specyfikacja widoczna).
+- Alternatywnie: „Anuluj"/ESC/kliknięcie poza modalem → confirm dialog jeśli są niezapisane zmiany → zamknięcie → URL wraca do `/ski-specs`.
 
 3. **Edycja i usuwanie specyfikacji**
 
-- Z listy lub ze szczegółów → „Edytuj” (URL: `?modal=edit&id=`) → PUT `/api/ski-specs/{id}` → toast → odświeżenie widoku.
-- „Usuń” → confirm → DELETE `/api/ski-specs/{id}` → 204 → toast → powrót/odświeżenie listy.
+- Z listy lub ze szczegółów → kliknięcie „Edytuj".
+- URL zmienia się na `/ski-specs/:id/edit` bez przeładowania strony.
+- Otwiera się Dialog/Modal z formularzem edycji, wypełnionym aktualnymi danymi specyfikacji.
+- Użytkownik edytuje pola (wszystkie te same walidacje co przy dodawaniu).
+- Kliknięcie „Zapisz" → PUT `/api/ski-specs/{id}` → 200 → toast sukcesu „Specyfikacja została zaktualizowana".
+- Zamknięcie modala → URL wraca do poprzedniego widoku (`/ski-specs` lub `/ski-specs/:id`) → odświeżenie danych.
+- Alternatywnie: „Anuluj"/ESC → confirm dialog jeśli są niezapisane zmiany → zamknięcie.
+- **Usuwanie**: „Usuń" → confirm dialog → DELETE `/api/ski-specs/{id}` → 204 → toast → powrót/odświeżenie listy.
 
 4. **Przegląd szczegółów i notatek**
 
@@ -288,7 +375,7 @@ Aplikacja jest zbudowana w oparciu o Astro 5 (strony `.astro`) z wyspami React 1
     - Niezalogowany: `Home`
     - Zalogowany: `Home`, `Ski Specs`
   - Prawa strona:
-    - Niezalogowany: przycisk "Log in" → `/auth/login`, przycisk "Register"  → `/auth/register`
+    - Niezalogowany: przycisk "Log in" → `/auth/login`, przycisk "Register" → `/auth/register`
     - Zalogowany: User dropdown (avatar + email) z opcja "Logout"
   - Sticky header
   - Aktywny link wyróżniony wizualnie (`aria-current="page"`).
@@ -296,17 +383,29 @@ Aplikacja jest zbudowana w oparciu o Astro 5 (strony `.astro`) z wyspami React 1
 - **UserDropdownMenu** (React):
   - Dropdown pod avatarem użytkownika (komponent z shadcn/ui).
   - Opcja "Wyloguj" → wywołanie akcji wylogowania + redirect do `/`.
-  
 - **ProtectedRoute/ClientGuard**: przechwytuje 401 i przekierowuje z `redirectTo`.
 - **SkiSpecToolbar**: kontrolki `search/sort_by/sort_order/limit` zsynchronizowane z URL; debounce 300 ms dla `search`.
 - **SkiSpecPagination**: kontrolka do paginacji zsynchronizowana z URL;
 - **SkiSpecGrid**: responsywny grid cart z checkboxami do porównania, akcjami elementów i prezentacją jednostek.
-- **SkiSpecFormModal**: jeden modal dla Create/Edit sterowany URL-em; walidacje RHF+Zod; mapowanie błędów 400/422/409; confirm on close z niewysłanymi zmianami.
+- **SkiSpecFormDialog** (React):
+  - Dialog/Modal (shadcn/ui Dialog component) dla dodawania i edycji specyfikacji.
+  - Sterowany URL-em: `/ski-specs/new` (tryb create) lub `/ski-specs/:id/edit` (tryb edit).
+  - Client-side routing bez przeładowania strony (React state + history.pushState).
+  - Formularz z React Hook Form + Zod walidacją.
+  - Komponenty formularza:
+    - `Input` dla nazwy (text).
+    - `Textarea` dla opisu z licznikiem znaków.
+    - `NumberInput` dla pól numerycznych typu integer (length, tip, waist, tail, radius, weight) z wyświetlanymi jednostkami.
+  - Walidacje RHF+Zod: relacja tip ≥ waist ≤ tail, zakresy min/max, max długość opisu.
+  - Mapowanie błędów API: 400/422 → pola, 409 (konflikt nazwy) → pole `name`, ogólne → toast.
+  - Confirm dialog przy zamknięciu z niezapisanymi zmianami.
+  - Focus trap i focus management (powrót na CTA button po zamknięciu).
+  - ARIA: `role="dialog"`, `aria-labelledby`, `aria-describedby`, `aria-invalid`, `aria-required`.
 - **ImportModal**: upload CSV (multipart), podsumowanie (summary)
 - **ExportButton**: obsługa `GET /export`, blokada w trakcie pobierania, odczyt nazwy z `Content-Disposition`.
 - **CompareTable**: 2–4 kolumny, wybór kolumny bazowej, sortowanie per wiersz, wyróżnienie `surface_area` i `relative_weight`
 - **NotesList**: paginacja `limit=50`, „Pokaż więcej", formularze dodawania/edycji, confirm delete, aktualizacja licznika po mutacjach.
-- **NumberInputLocalized**: akceptacja `,` i `.`; wewnętrzna normalizacja do kropki; prezentacja według locale; walidacje zakresów zgodnych z API.
+- **NumberInput**: pola dla wartości całkowitych (integer) zgodnie z API; wyświetlanie jednostek (cm, mm, m, g); walidacje zakresów zgodnych z API.
 - **DateTimeLocalized**: wyświetlanie dat/czasów w locale strony.
 - **Toast/Alert/ConfirmDialog**: komunikaty sukcesu/błędu, potwierdzenia czynności destrukcyjnych.
 - **ErrorBoundary**: fallback UI dla błędów nieprzechwyconych lokalnie.
