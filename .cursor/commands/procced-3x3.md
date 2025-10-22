@@ -1,5 +1,5 @@
-Implement the plan.
-Follow this execution pattern:
+Execute the plan.
+During executing the plan follow the pattern:
 
 1. Implement up to **three steps** from the implementation plan.
    Briefly **summarize what was done** and **outline the next three planned actions**.
@@ -7,4 +7,4 @@ Follow this execution pattern:
 
 2. If feedback is provided, **apply any requested changes** to the already executed steps.
 
-3. If there are still remaining steps in the plan, **repeat the process**.
+3. If there are still remaining steps in the plan goto 1, **repeat the process**.

@@ -1,14 +1,14 @@
 import * as React from "react";
 import type { ListSkiSpecsQuery } from "@/types/api.types";
-import { SkiSpecCard } from "@/components/SkiSpecCard";
-import { SkiSpecGridSkeleton } from "@/components/SkiSpecGridSkeleton";
-import { SkiSpecToolbar } from "@/components/SkiSpecToolbar";
-import { SkiSpecPagination } from "@/components/SkiSpecPagination";
+import { SkiSpecCard } from "@/components/ski-specs/SkiSpecCard";
+import { SkiSpecGridSkeleton } from "@/components/ski-specs/SkiSpecGridSkeleton";
+import { SkiSpecToolbar } from "@/components/ski-specs/SkiSpecToolbar";
+import { SkiSpecPagination } from "@/components/ski-specs/SkiSpecPagination";
 import { SkiSpecFormDialog } from "@/components/ski-specs/SkiSpecFormDialog";
 import { Button } from "@/components/ui/button";
 import { PlusIcon } from "lucide-react";
-import { useSkiSpecs } from "./hooks/useSkiSpecs";
-import { useSkiSpecsUrlState } from "./hooks/useSkiSpecsUrlState";
+import { useSkiSpecs } from "../hooks/useSkiSpecs";
+import { useSkiSpecsUrlState } from "../hooks/useSkiSpecsUrlState";
 
 interface EmptyStateProps {
   onAddClick: () => void;
