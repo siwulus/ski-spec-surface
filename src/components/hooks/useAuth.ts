@@ -1,5 +1,5 @@
 import type { Database } from "@/db/database.types";
-import { post } from "@/lib/utils/httpClient";
+import { skiSpecHttpClient } from "@/lib/utils/SkiSpecHttpClient";
 import { LogoutResponseSchema } from "@/types/api.types";
 import { createBrowserClient } from "@supabase/ssr";
 import type { AuthError, User } from "@supabase/supabase-js";
@@ -177,7 +177,7 @@ export const useAuth = (): UseAuthReturn => {
   const signOut = async (): Promise<AuthResult> => {
     try {
       // Call server-side logout API to clear server session
-      await post("/api/auth/logout", LogoutResponseSchema, null);
+      await skiSpecHttpClient.post("/api/auth/logout", LogoutResponseSchema, null);
 
       // Call client-side Supabase signOut to clear local session
       const { error } = await supabase.auth.signOut();

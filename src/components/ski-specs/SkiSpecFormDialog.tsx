@@ -1,11 +1,10 @@
-import React, { useRef, useState, useEffect } from "react";
+import { useSkiSpecMutation } from "@/components/hooks/useSkiSpecMutation";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import type { CreateSkiSpecCommand, SkiSpecDTO, UpdateSkiSpecCommand } from "@/types/api.types";
+import { Loader2 } from "lucide-react";
+import React, { useEffect, useState } from "react";
 import { SkiSpecForm } from "./SkiSpecForm";
 import { UnsavedChangesDialog } from "./UnsavedChangesDialog";
-import { useSkiSpecMutation } from "@/components/hooks/useSkiSpecMutation";
-import { useFocusTrap } from "@/components/hooks/useFocusTrap";
-import { Loader2 } from "lucide-react";
-import type { CreateSkiSpecCommand, SkiSpecDTO } from "@/types/api.types";
 
 /**
  * Props for the main dialog component
@@ -19,64 +18,45 @@ export interface SkiSpecFormDialogProps {
   mode: "create" | "edit";
   /** Spec ID for edit mode */
   specId?: string;
-  /** Success callback with created/updated spec */
-  onSuccess?: (spec: SkiSpecDTO) => void;
-  /** Ref to the trigger button for focus return */
-  triggerRef?: React.RefObject<HTMLButtonElement | null>;
 }
 
 /**
  * Main dialog container for creating and editing ski specifications
  * Handles URL sync, form submission, and unsaved changes
  */
-export const SkiSpecFormDialog: React.FC<SkiSpecFormDialogProps> = ({
-  open,
-  onOpenChange,
-  mode,
-  specId,
-  onSuccess,
-  triggerRef,
-}) => {
-  const dialogRef = useRef<HTMLDivElement>(null);
+export const SkiSpecFormDialog: React.FC<SkiSpecFormDialogProps> = ({ open, onOpenChange, mode, specId }) => {
   const [showUnsavedDialog, setShowUnsavedDialog] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
-  const [initialData, setInitialData] = useState<SkiSpecDTO | undefined>();
-
-  // Focus management
-  useFocusTrap(dialogRef, open, triggerRef);
+  const [editData, setEditData] = useState<SkiSpecDTO | undefined>();
 
   // API mutation hook
-  const { createSkiSpec, updateSkiSpec, getSkiSpec, isSubmitting, apiErrors } = useSkiSpecMutation((spec) => {
-    // On success
-    setHasUnsavedChanges(false);
-    onOpenChange(false);
-    onSuccess?.(spec);
-  });
+  const { createSkiSpec, updateSkiSpec, getSkiSpec, isSubmitting, apiErrors } = useSkiSpecMutation();
 
   // Fetch initial data when dialog opens in edit mode
   useEffect(() => {
     if (open && mode === "edit" && specId) {
       getSkiSpec(specId)
-        .then(setInitialData)
+        .then(setEditData)
         .catch((error) => {
           // eslint-disable-next-line no-console
           console.error("Failed to fetch ski spec:", error);
-          setInitialData(undefined);
+          setEditData(undefined);
         });
     } else if (!open) {
       // Reset initial data when dialog closes
-      setInitialData(undefined);
+      setEditData(undefined);
     }
   }, [open, mode, specId, getSkiSpec]);
 
   // Handle form submission
-  const handleSubmit = async (data: CreateSkiSpecCommand) => {
+  const handleCreateUpdateSubmit = async (data: CreateSkiSpecCommand | UpdateSkiSpecCommand) => {
     try {
       if (mode === "edit" && specId) {
         await updateSkiSpec(specId, data);
       } else {
         await createSkiSpec(data);
       }
+      onOpenChange(false);
     } catch (error) {
       // Error already handled in useSkiSpecMutation
       // eslint-disable-next-line no-console
@@ -85,7 +65,7 @@ export const SkiSpecFormDialog: React.FC<SkiSpecFormDialogProps> = ({
   };
 
   // Handle cancel - check for unsaved changes
-  const handleCancel = () => {
+  const handleCreateUpdateCancel = () => {
     if (hasUnsavedChanges) {
       setShowUnsavedDialog(true);
     } else {
@@ -115,14 +95,13 @@ export const SkiSpecFormDialog: React.FC<SkiSpecFormDialogProps> = ({
   };
 
   // Determine if we should show content or loading state
-  const isLoading = mode === "edit" && !initialData;
-  const showContent = mode === "create" || (mode === "edit" && initialData);
+  const isLoading = mode === "edit" && !editData;
+  const showContent = mode === "create" || (mode === "edit" && editData);
 
   return (
     <>
-      <Dialog open={open} onOpenChange={handleOpenChange}>
+      <Dialog open={open} onOpenChange={handleOpenChange} modal={true}>
         <DialogContent
-          ref={dialogRef}
           className="max-w-2xl max-h-[90vh] overflow-y-auto"
           aria-labelledby="dialog-title"
           aria-describedby={isLoading ? undefined : "dialog-description"}
@@ -148,19 +127,19 @@ export const SkiSpecFormDialog: React.FC<SkiSpecFormDialogProps> = ({
               {showContent && (
                 <SkiSpecForm
                   key={mode === "edit" ? specId : "new"}
-                  onSubmit={handleSubmit}
-                  onCancel={handleCancel}
+                  onSubmit={handleCreateUpdateSubmit}
+                  onCancel={handleCreateUpdateCancel}
                   defaultValues={
-                    mode === "edit" && initialData
+                    mode === "edit" && editData
                       ? {
-                          name: initialData.name,
-                          description: initialData.description,
-                          length: initialData.length,
-                          tip: initialData.tip,
-                          waist: initialData.waist,
-                          tail: initialData.tail,
-                          radius: initialData.radius,
-                          weight: initialData.weight,
+                          name: editData.name,
+                          description: editData.description,
+                          length: editData.length,
+                          tip: editData.tip,
+                          waist: editData.waist,
+                          tail: editData.tail,
+                          radius: editData.radius,
+                          weight: editData.weight,
                         }
                       : undefined
                   }

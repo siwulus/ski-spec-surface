@@ -2,7 +2,8 @@ import { useState, useEffect, useCallback } from "react";
 import { toast } from "sonner";
 import type { PaginationMeta, SkiSpecDTO, SkiSpecListResponse } from "@/types/api.types";
 import { SkiSpecListResponseSchema } from "@/types/api.types";
-import { buildUrl, get, HttpClientError } from "@/lib/utils/httpClient";
+import { skiSpecHttpClient, HttpClientError } from "@/lib/utils/SkiSpecHttpClient";
+import { buildUrl } from "@/lib/utils/http";
 
 interface UseSkiSpecsOptions {
   page?: number;
@@ -29,7 +30,7 @@ const fetchSkiSpecs = async (options: UseSkiSpecsOptions): Promise<SkiSpecListRe
     search: options.search,
   });
 
-  return await get(url, SkiSpecListResponseSchema);
+  return await skiSpecHttpClient.get(url, SkiSpecListResponseSchema);
 };
 
 export const useSkiSpecs = (options: UseSkiSpecsOptions = {}): UseSkiSpecsReturn => {

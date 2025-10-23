@@ -2,16 +2,18 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
 import type { SkiSpecDTO } from "@/types/api.types";
-import { Pencil, Radius, Weight } from "lucide-react";
+import { Pencil, Radius, Weight, Trash2 } from "lucide-react";
 import * as React from "react";
 import { SpecValue } from "./SpecValue";
 
 interface SkiSpecCardProps {
   spec: SkiSpecDTO;
   onEdit?: (id: string) => void;
+  onDelete?: (id: string) => void;
+  isInProgress?: boolean;
 }
 
-export const SkiSpecCard: React.FC<SkiSpecCardProps> = ({ spec, onEdit }) => {
+export const SkiSpecCard: React.FC<SkiSpecCardProps> = ({ spec, onEdit, onDelete, isInProgress }) => {
   return (
     <Card>
       <CardHeader>
@@ -137,9 +139,27 @@ export const SkiSpecCard: React.FC<SkiSpecCardProps> = ({ spec, onEdit }) => {
           <span className="text-sm text-muted-foreground">
             {spec.notes_count} {spec.notes_count === 1 ? "note" : "notes"}
           </span>
-          <Button variant="ghost" size="sm" aria-label={`Edit ${spec.name}`} onClick={() => onEdit?.(spec.id)}>
-            <Pencil className="h-4 w-4" />
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              aria-label={`Edit ${spec.name}`}
+              onClick={() => onEdit?.(spec.id)}
+              disabled={isInProgress}
+            >
+              <Pencil className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              aria-label={`Delete ${spec.name}`}
+              onClick={() => onDelete?.(spec.id)}
+              disabled={isInProgress}
+              className="text-destructive hover:text-destructive hover:bg-destructive/10"
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
       </CardFooter>
     </Card>

@@ -5,7 +5,7 @@
 Aplikacja jest zbudowana w oparciu o Astro 5 (strony `.astro`) z wyspami React 19 dla sekcji interaktywnych, Tailwind 4 oraz komponenty shadcn/ui. Wszystkie trasy są chronione globalnie przez middleware w `src/middleware/index.ts` (whitelist: `/auth/login`, `/auth/register`, `/api/health`) oraz dodatkowy klientowy guard, który przechwytuje odpowiedzi 401 i przekierowuje na `/login?redirectTo=…`. Autentykacja opiera się o Supabase (JWT Bearer) korzystające z sesji przeglądarkowej.
 
 - **Główne strony**: `/auth/login`, `/auth/register`, `/ski-specs`, `/ski-specs/:id`, `/compare?ids=…`, `/account`.
-- **Interaktywność**: formularze (RHF+Zod), tabela/siatka, sekcja notatek, modal Create/Edit, modal Import, tabela porównania.
+- **Interaktywność**: formularze (RHF+Zod), tabela/siatka, sekcja notatek, modal Create/Edit, modal Import, AlertDialog usuwania, tabela porównania.
 - **Formaty i lokalizacja**: wartości numeryczne wyświetlane z jednostkami; liczby akceptują przecinek i kropkę (wewnętrzna normalizacja do kropki); daty i czasy zgodne z lokalizacją strony.
 - **Dostępność (a11y)**: ARIA w formularzach (aria-invalid/aria-describedby), focus management w modalach, kontrast WCAG AA, klawiaturowa nawigacja; komponenty shadcn/ui.
 - **Bezpieczeństwo**: ochrona tras, przechwytywanie 401, nieujawnianie danych przy błędach; confirm dialog dla operacji destrukcyjnych.
@@ -204,6 +204,59 @@ Aplikacja jest zbudowana w oparciu o Astro 5 (strony `.astro`) z wyspami React 1
   - Query parameters: `action=edit`, `id=<uuid>` (client-side routing).
 - **Mapowanie US**: US-006 (Edycja specyfikacji), US-015 (walidacja), US-017 (błędy sieciowe).
 
+### Widok: Usuwanie specyfikacji
+
+- **Ścieżka widoku**: Akcja dostępna z listy (`/ski-specs`) lub ze szczegółów (`/ski-specs/:id`) przez przycisk „Usuń"
+- **Dostępność**: Wymaga autentykacji
+- **Główny cel**: Umożliwienie użytkownikowi trwałego usunięcia specyfikacji narty wraz ze wszystkimi powiązanymi notatkami.
+- **Kluczowe komponenty widoku**:
+  - Przycisk „Usuń" dostępny w dwóch miejscach:
+    - W menu akcji każdej karty specyfikacji na liście (`/ski-specs`)
+    - W sekcji akcji w widoku szczegółów specyfikacji (`/ski-specs/:id`)
+  - AlertDialog/ConfirmDialog (shadcn/ui AlertDialog component) - modal potwierdzenia.
+  - Toast notification dla komunikatów sukcesu i błędów.
+- **UX, dostępność i bezpieczeństwo**:
+  - Wywołanie akcji usuwania: kliknięcie przycisku „Usuń" → otwarcie AlertDialog z komunikatem potwierdzenia.
+  - Treść dialogu potwierdzenia:
+    - Tytuł: „Czy na pewno chcesz usunąć tę specyfikację?"
+    - Treść: „Ta operacja jest nieodwracalna. Specyfikacja **[nazwa specyfikacji]** oraz wszystkie powiązane notatki ([liczba] notatek) zostaną trwale usunięte."
+    - Przyciski: „Anuluj" (secondary, domyślny focus), „Usuń" (destructive/danger, czerwony).
+  - Po kliknięciu „Anuluj" lub ESC: zamknięcie dialogu bez żadnej akcji.
+  - Po kliknięciu „Usuń": wywołanie `DELETE /api/ski-specs/{id}`.
+  - Obsługa odpowiedzi:
+    - **204 (sukces)**:
+      - Toast z komunikatem: „Specyfikacja została usunięta"
+      - Jeśli usuwanie z listy: odświeżenie listy (refetch lub usunięcie elementu z cache)
+      - Jeśli usuwanie ze szczegółów: przekierowanie do `/ski-specs` + odświeżenie listy
+    - **400 (Invalid UUID)**:
+      - Toast z komunikatem: „Nieprawidłowy identyfikator specyfikacji"
+      - Pozostanie w aktualnym widoku
+    - **404 (Not Found)**:
+      - Toast z komunikatem: „Specyfikacja nie została znaleziona (możliwe że została już usunięta)"
+      - Odświeżenie listy lub przekierowanie do `/ski-specs`
+    - **401 (Unauthorized)**:
+      - Przechwytywane globalnie → redirect do `/auth/login?redirectTo=...`
+    - **Błędy sieciowe/500**:
+      - Toast z komunikatem: „Nie udało się usunąć specyfikacji. Spróbuj ponownie."
+      - Pozostanie w aktualnym widoku z możliwością ponowienia operacji
+  - Przyciski usuwania są wyraźnie oznaczone wizualnie (ikona kosza, kolor danger/destructive).
+  - Operacja DELETE jest nieodwracalna - brak funkcji cofania (zgodnie z PRD US-007).
+  - A11y:
+    - Przycisk „Usuń": `aria-label="Usuń specyfikację [nazwa]"` dla kontekstu
+    - AlertDialog: `role="alertdialog"`, `aria-labelledby` (tytuł), `aria-describedby` (treść ostrzeżenia)
+    - Focus trap w dialogu (focus pozostaje w alertdialog po otwarciu)
+    - Focus management: po otwarciu focus na przycisku „Anuluj" (bezpieczna opcja); po zamknięciu focus wraca na przycisk „Usuń" który wywołał dialog
+    - Klawiaturowa nawigacja: TAB, SHIFT+TAB, ESC (anulowanie), ENTER (potwierdzenie jeśli focus na „Usuń")
+    - Widoczny focus indicator dla wszystkich interaktywnych elementów
+  - Cascade delete: usunięcie specyfikacji automatycznie usuwa wszystkie powiązane notatki (zgodnie z API spec i PRD US-007).
+- **Parametry API**:
+  - `DELETE /api/ski-specs/{id}`
+  - Response 204: Brak body, specyfikacja usunięta pomyślnie
+  - Response 400: `ApiErrorResponse` - Invalid UUID format
+  - Response 401: Unauthorized
+  - Response 404: `ApiErrorResponse` - Specyfikacja nie znaleziona
+- **Mapowanie US**: US-007 (Usuwanie specyfikacji), US-015 (komunikaty błędów), US-017 (błędy sieciowe).
+
 ### Widok: Szczegóły specyfikacji
 
 - **Ścieżka widoku**: `/ski-specs/:id`
@@ -213,7 +266,8 @@ Aplikacja jest zbudowana w oparciu o Astro 5 (strony `.astro`) z wyspami React 1
 - **Kluczowe komponenty widoku**:
   - Sekcja parametrów z jednostkami i wyróżnieniem `surface_area` i `relative_weight`.
   - Opis: wyświetlany jako osobna sekcja; edycja poprzez modal Edit specyfikacji.
-  - Notatki (React island): lista (sort: najnowsze na górze), paginacja `limit=50` z „Pokaż więcej” (page++), formularz Dodaj/Edytuj, akcja Usuń z potwierdzeniem.
+  - Przyciski akcji specyfikacji: „Edytuj" (otwiera modal edycji), „Usuń" (otwiera AlertDialog potwierdzenia), „Powrót do listy".
+  - Notatki (React island): lista (sort: najnowsze na górze), paginacja `limit=50` z „Pokaż więcej" (page++), formularz Dodaj/Edytuj, akcja Usuń z potwierdzeniem.
   - Licznik notatek aktualizowany po mutacjach (odświeżenie od strony 1 po dodaniu/edycji/usunięciu).
 - **UX, dostępność i bezpieczeństwo**:
   - Błędy walidacji notatek (1–2000 znaków) mapowane do pól; toasty.
@@ -288,7 +342,16 @@ Aplikacja jest zbudowana w oparciu o Astro 5 (strony `.astro`) z wyspami React 1
 - Kliknięcie „Zapisz" → PUT `/api/ski-specs/{id}` → 200 → toast sukcesu „Specyfikacja została zaktualizowana".
 - Zamknięcie modala → parametry `action` i `id` usuwane z URL, powrót do poprzedniego widoku (`/ski-specs` lub `/ski-specs/:id`) → odświeżenie danych.
 - Alternatywnie: „Anuluj"/ESC → confirm dialog jeśli są niezapisane zmiany → zamknięcie.
-- **Usuwanie**: „Usuń" → confirm dialog → DELETE `/api/ski-specs/{id}` → 204 → toast → powrót/odświeżenie listy.
+- **Usuwanie**:
+  - Z listy lub ze szczegółów → kliknięcie przycisku „Usuń".
+  - Otwarcie AlertDialog z komunikatem potwierdzenia wyświetlającym nazwę specyfikacji i liczbę powiązanych notatek.
+  - Ostrzeżenie o nieodwracalności operacji (cascade delete - specyfikacja + wszystkie notatki).
+  - Użytkownik klika „Anuluj" (ESC) → zamknięcie dialogu bez akcji.
+  - LUB użytkownik klika „Usuń" → DELETE `/api/ski-specs/{id}` → 204.
+  - Toast sukcesu: „Specyfikacja została usunięta".
+  - Jeśli usuwanie z listy: odświeżenie listy (usunięcie elementu z widoku).
+  - Jeśli usuwanie ze szczegółów: przekierowanie do `/ski-specs` + odświeżenie listy.
+  - Obsługa błędów (404/400/network) → toasty z komunikatami.
 
 4. **Przegląd szczegółów i notatek**
 
@@ -407,7 +470,15 @@ Aplikacja jest zbudowana w oparciu o Astro 5 (strony `.astro`) z wyspami React 1
 - **NotesList**: paginacja `limit=50`, „Pokaż więcej", formularze dodawania/edycji, confirm delete, aktualizacja licznika po mutacjach.
 - **NumberInput**: pola dla wartości całkowitych (integer) zgodnie z API; wyświetlanie jednostek (cm, mm, m, g); walidacje zakresów zgodnych z API.
 - **DateTimeLocalized**: wyświetlanie dat/czasów w locale strony.
-- **Toast/Alert/ConfirmDialog**: komunikaty sukcesu/błędu, potwierdzenia czynności destrukcyjnych.
+- **Toast**: komunikaty sukcesu/błędu (sonner/shadcn-ui).
+- **DeleteConfirmDialog** (React):
+  - AlertDialog (shadcn/ui AlertDialog component) dla potwierdzenia usuwania specyfikacji.
+  - Props: `specName: string`, `noteCount: number`, `onConfirm: () => void`, `onCancel: () => void`, `isOpen: boolean`.
+  - Treść wyświetla nazwę specyfikacji oraz liczbę powiązanych notatek.
+  - Komunikat ostrzegawczy o nieodwracalności operacji.
+  - Przyciski: „Anuluj" (secondary, domyślny focus), „Usuń" (destructive/danger).
+  - Focus trap i A11y: `role="alertdialog"`, `aria-labelledby`, `aria-describedby`, focus management.
+  - Używany w `SkiSpecGrid` (lista) i widoku szczegółów specyfikacji.
 - **ErrorBoundary**: fallback UI dla błędów nieprzechwyconych lokalnie.
 - **ResetPasswordForm** (React):
   - Formularz żądania resetu hasła na `/auth/reset-password`

@@ -9,6 +9,9 @@ import { Button } from "@/components/ui/button";
 import { PlusIcon } from "lucide-react";
 import { useSkiSpecs } from "../hooks/useSkiSpecs";
 import { useSkiSpecsUrlState } from "../hooks/useSkiSpecsUrlState";
+import { useSkiSpecMutation } from "../hooks/useSkiSpecMutation";
+import { toast } from "sonner";
+import { DeleteSkiSpecDialog } from "./DeleteSkiSpecDialog";
 
 interface EmptyStateProps {
   onAddClick: () => void;
@@ -32,6 +35,12 @@ export const SkiSpecGrid: React.FC = () => {
 
   // Refs for focus management
   const addButtonRef = React.useRef<HTMLButtonElement>(null);
+
+  // Delete state and mutation
+  const [isDeletingDialogOpen, setIsDeletingDialogOpen] = React.useState<boolean>(false);
+  const [deletingSpecId, setDeletingSpecId] = React.useState<string | null>(null);
+
+  const { deleteSkiSpec, isSubmitting } = useSkiSpecMutation();
 
   const handleSearchChange = React.useCallback(
     (search: string) => {
@@ -74,17 +83,31 @@ export const SkiSpecGrid: React.FC = () => {
     openDialog();
   }, [openDialog]);
 
-  const handleDialogSuccess = React.useCallback(() => {
-    // Refetch the list after successful creation or update
-    refetch();
-  }, [refetch]);
-
   const handleEditClick = React.useCallback(
     (id: string) => {
       openEditDialog(id);
     },
     [openEditDialog]
   );
+
+  const handleDeleteClick = React.useCallback((id: string) => {
+    setDeletingSpecId(id);
+    setIsDeletingDialogOpen(true);
+  }, []);
+
+  const handleDeleteConfirm = React.useCallback(async () => {
+    if (!deletingSpecId) return;
+    try {
+      await deleteSkiSpec(deletingSpecId);
+      setDeletingSpecId(null);
+      refetch();
+    } catch (error) {
+      toast.error("Error deleting specification", {
+        description: error instanceof Error ? error.message : "Unknown error",
+      });
+      // Error already handled in useSkiSpecMutation
+    }
+  }, [deletingSpecId, deleteSkiSpec, refetch]);
 
   return (
     <>
@@ -127,7 +150,13 @@ export const SkiSpecGrid: React.FC = () => {
         <>
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {specs.map((spec) => (
-              <SkiSpecCard key={spec.id} spec={spec} onEdit={handleEditClick} />
+              <SkiSpecCard
+                key={spec.id}
+                spec={spec}
+                onEdit={handleEditClick}
+                onDelete={handleDeleteClick}
+                isInProgress={isSubmitting}
+              />
             ))}
           </div>
 
@@ -143,12 +172,19 @@ export const SkiSpecGrid: React.FC = () => {
         onOpenChange={(open) => {
           if (!open) {
             closeDialog();
+            refetch();
           }
         }}
         mode={dialogAction === "edit" ? "edit" : "create"}
         specId={editingId || undefined}
-        onSuccess={handleDialogSuccess}
-        triggerRef={addButtonRef}
+      />
+
+      {/* Delete Confirmation Dialog */}
+      <DeleteSkiSpecDialog
+        open={isDeletingDialogOpen}
+        onOpenChange={setIsDeletingDialogOpen}
+        onConfirm={handleDeleteConfirm}
+        isInProgress={isSubmitting}
       />
     </>
   );
