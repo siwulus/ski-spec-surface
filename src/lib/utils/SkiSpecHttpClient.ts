@@ -213,6 +213,35 @@ export class SkiSpecHttpClient {
   delete<T>(url: string, schema: ZodType<T>, headers?: Record<string, string>): Effect.Effect<T, SkiSpecError> {
     return this.fetchWithValidation(url, schema, { method: "DELETE", headers });
   }
+
+  /**
+   * Convenience method for DELETE requests that return 204 No Content.
+   *
+   * Handles the common case where DELETE endpoints return an empty response body.
+   * No schema validation is performed as there is no content to validate.
+   *
+   * @param url - URL to delete
+   * @param headers - Optional additional headers
+   * @returns Effect that succeeds with void or fails with typed error
+   */
+  deleteNoContent(url: string, headers?: Record<string, string>): Effect.Effect<void, SkiSpecError> {
+    return pipe(
+      this.fetchEffect(url, { method: "DELETE", headers }),
+      Effect.flatMap((response) =>
+        Match.value(response.ok).pipe(
+          Match.when(true, () => Effect.succeed(undefined)),
+          Match.when(false, () =>
+            pipe(
+              parseJsonPromise(() => response.json()),
+              Effect.flatMap((errorData) => Effect.fail(this.mapHttpStatusToError(response, errorData)))
+            )
+          ),
+          Match.exhaustive
+        )
+      ),
+      withErrorLogging
+    );
+  }
 }
 
 /**

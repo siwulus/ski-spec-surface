@@ -113,8 +113,7 @@ export const useSkiSpecMutation = () => {
           setIsSubmitting(true);
           setApiErrors({});
         }),
-        Effect.flatMap(() => skiSpecHttpClient.delete(`/api/ski-specs/${id}`, SkiSpecDTOSchema)),
-        Effect.map(() => undefined),
+        Effect.flatMap(() => skiSpecHttpClient.deleteNoContent(`/api/ski-specs/${id}`)),
         Effect.tap(() =>
           Effect.sync(() => {
             showSuccess("Success", "Specification has been deleted");
