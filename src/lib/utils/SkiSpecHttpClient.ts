@@ -1,54 +1,86 @@
+import { parseJsonPromise, parseJsonResponse } from "@/lib/utils/zod";
+import type { ApiErrorResponse, ValidationErrorDetail } from "@/types/api.types";
+import {
+  AuthenticationError,
+  AuthorizationError,
+  ConflictError,
+  NetworkError,
+  NotFoundError,
+  UnexpectedError,
+  ValidationError,
+  type SkiSpecError,
+} from "@/types/error.types";
+import { Effect, Match, pipe } from "effect";
 import type { ZodType } from "zod";
+import { withErrorLogging } from "./error";
 
 /**
- * HTTP client error with additional context
- */
-export class HttpClientError extends Error {
-  constructor(
-    message: string,
-    public status?: number,
-    public code?: string,
-    public details?: unknown
-  ) {
-    super(message);
-    this.name = "HttpClientError";
-  }
-}
-
-/**
- * HTTP client class for making validated API requests
- * Uses Zod schemas for response validation
+ * HTTP client class for making validated API requests with Effect-based error handling.
+ *
+ * Returns Effect.Effect<T, SkiSpecError> for all operations, enabling:
+ * - Type-safe error handling with discriminated unions
+ * - Railway-oriented programming patterns
+ * - Composable error handling pipelines
+ *
+ * All errors are mapped to specific SkiSpecError types based on HTTP status codes.
  */
 export class SkiSpecHttpClient {
   /**
-   * Generic HTTP client with Zod validation
-   * Fetches data from an API endpoint and validates the response against a Zod schema
+   * Map HTTP status code and error response to appropriate SkiSpecError.
    *
-   * @param url - The URL to fetch from
-   * @param schema - Zod schema to validate the response against
-   * @param options - Fetch options (method, body, headers, credentials)
-   * @returns Validated response data
-   * @throws HttpClientError if request fails or validation fails
+   * @param response - Fetch Response object
+   * @param errorData - Parsed error response from API
+   * @returns Appropriate SkiSpecError based on status code
    */
-  private async fetchWithValidation<T>(url: string, schema: ZodType<T>, options: RequestInit = {}): Promise<T> {
-    try {
-      // Make the request
-      const response = await fetch(url, this.buildRequestConfig(options));
-      return this.buildResponse(response, schema);
-    } catch (error) {
-      // Re-throw HttpClientError as-is
-      if (error instanceof HttpClientError) {
-        throw error;
+  private mapHttpStatusToError(response: Response, errorData: unknown): SkiSpecError {
+    const status = response.status;
+    const apiError = errorData as ApiErrorResponse;
+    const message = apiError?.error || response.statusText || "Request failed";
+
+    switch (status) {
+      case 400:
+      case 422: {
+        // Validation error - extract details if present
+        const details: ValidationErrorDetail[] = apiError?.details || [];
+        return new ValidationError(message, details, {
+          context: { status, url: response.url },
+        });
       }
-      // Wrap other errors (network errors, etc.)
-      if (error instanceof Error) {
-        throw new HttpClientError(error.message, undefined, "NETWORK_ERROR");
-      }
-      // Unknown error
-      throw new HttpClientError("An unknown error occurred");
+
+      case 401:
+        return new AuthenticationError(message, {
+          context: { status, url: response.url },
+        });
+
+      case 403:
+        return new AuthorizationError(message, {
+          context: { status, url: response.url },
+        });
+
+      case 404:
+        return new NotFoundError(message, {
+          context: { status, url: response.url },
+        });
+
+      case 409:
+        return new ConflictError(message, {
+          code: apiError?.code,
+          context: { status, url: response.url },
+        });
+
+      default:
+        return new UnexpectedError(message, {
+          context: { status, url: response.url, code: apiError?.code },
+        });
     }
   }
 
+  /**
+   * Build request configuration with default headers and JSON body handling.
+   *
+   * @param options - Fetch RequestInit options
+   * @returns Complete RequestInit configuration
+   */
   private buildRequestConfig(options: RequestInit = {}): RequestInit {
     const { method = "GET", body, headers = {}, credentials = "include", ...rest } = options;
 
@@ -69,77 +101,135 @@ export class SkiSpecHttpClient {
     return config;
   }
 
-  private async buildResponse<T>(response: Response, schema: ZodType<T>): Promise<T> {
-    if (!response.ok) {
-      let errorData;
-      try {
-        errorData = await response.json();
-      } catch {
-        throw new HttpClientError(response.statusText || "Request failed", response.status);
-      }
-
-      throw new HttpClientError(
-        errorData.error || errorData.message || "Request failed",
-        response.status,
-        errorData.code,
-        errorData.details
-      );
-    }
-    const data = await response.json();
-    const validationResult = schema.safeParse(data);
-
-    if (!validationResult.success) {
-      throw new HttpClientError(
-        "Response validation failed",
-        undefined,
-        "VALIDATION_ERROR",
-        validationResult.error.issues
-      );
-    }
-
-    return validationResult.data;
+  private fetchEffect(url: string, options: RequestInit = {}): Effect.Effect<Response, SkiSpecError> {
+    return Effect.tryPromise({
+      try: () => fetch(url, this.buildRequestConfig(options)),
+      catch: (error) =>
+        new NetworkError("Network request failed", {
+          cause: error instanceof Error ? error : undefined,
+          context: {
+            url,
+            method: options.method || "GET",
+          },
+        }),
+    });
   }
 
   /**
-   * Convenience method for GET requests
+   * Core fetch method with validation and error handling.
+   *
+   * Effect pipeline:
+   * 1. Make HTTP request (handle network errors)
+   * 2. Parse response JSON (handle parse errors)
+   * 3. Check HTTP status (map to typed errors)
+   * 4. Validate response schema (handle validation errors)
+   * 5. Return validated data
+   *
+   * @param url - URL to fetch from
+   * @param schema - Zod schema to validate response
+   * @param options - Fetch options
+   * @returns Effect with validated data or typed error
    */
-  async get<T>(url: string, schema: ZodType<T>, headers?: Record<string, string>): Promise<T> {
+  private fetchWithValidation<T>(
+    url: string,
+    schema: ZodType<T>,
+    options: RequestInit = {}
+  ): Effect.Effect<T, SkiSpecError> {
+    // Step 1: Make HTTP request
+    return pipe(
+      this.fetchEffect(url, options),
+      Effect.flatMap((response) =>
+        Match.value(response.ok).pipe(
+          Match.when(true, () => parseJsonResponse(response, schema)),
+          Match.when(false, () =>
+            pipe(
+              parseJsonPromise(() => response.json()),
+              Effect.flatMap((errorData) => Effect.fail(this.mapHttpStatusToError(response, errorData)))
+            )
+          ),
+          Match.exhaustive
+        )
+      ),
+      withErrorLogging
+    );
+  }
+
+  /**
+   * Convenience method for GET requests.
+   *
+   * @param url - URL to fetch from
+   * @param schema - Zod schema to validate response
+   * @param headers - Optional additional headers
+   * @returns Effect with validated data or typed error
+   */
+  get<T>(url: string, schema: ZodType<T>, headers?: Record<string, string>): Effect.Effect<T, SkiSpecError> {
     return this.fetchWithValidation(url, schema, { method: "GET", headers });
   }
 
   /**
-   * Convenience method for POST requests
+   * Convenience method for POST requests.
+   *
+   * @param url - URL to post to
+   * @param schema - Zod schema to validate response
+   * @param body - Request body (will be JSON stringified)
+   * @param headers - Optional additional headers
+   * @returns Effect with validated data or typed error
    */
-  async post<T>(
+  post<T>(
     url: string,
     schema: ZodType<T>,
-    body: BodyInit | null | undefined,
+    body: BodyInit | null | Record<string, unknown>,
     headers?: Record<string, string>
-  ): Promise<T> {
-    return this.fetchWithValidation(url, schema, { method: "POST", body, headers });
+  ): Effect.Effect<T, SkiSpecError> {
+    return this.fetchWithValidation(url, schema, { method: "POST", body: body as BodyInit, headers });
   }
 
   /**
-   * Convenience method for PUT requests
+   * Convenience method for PUT requests.
+   *
+   * @param url - URL to put to
+   * @param schema - Zod schema to validate response
+   * @param body - Request body (will be JSON stringified)
+   * @param headers - Optional additional headers
+   * @returns Effect with validated data or typed error
    */
-  async put<T>(
+  put<T>(
     url: string,
     schema: ZodType<T>,
-    body: BodyInit | null | undefined,
+    body: BodyInit | null | Record<string, unknown>,
     headers?: Record<string, string>
-  ): Promise<T> {
-    return this.fetchWithValidation(url, schema, { method: "PUT", body, headers });
+  ): Effect.Effect<T, SkiSpecError> {
+    return this.fetchWithValidation(url, schema, { method: "PUT", body: body as BodyInit, headers });
   }
 
   /**
-   * Convenience method for DELETE requests
+   * Convenience method for DELETE requests.
+   *
+   * @param url - URL to delete
+   * @param schema - Zod schema to validate response
+   * @param headers - Optional additional headers
+   * @returns Effect with validated data or typed error
    */
-  async delete<T>(url: string, schema: ZodType<T>, headers?: Record<string, string>): Promise<T> {
+  delete<T>(url: string, schema: ZodType<T>, headers?: Record<string, string>): Effect.Effect<T, SkiSpecError> {
     return this.fetchWithValidation(url, schema, { method: "DELETE", headers });
   }
 }
 
 /**
- * Default instance of SkiSpecHttpClient for use across the application
+ * Default instance of SkiSpecHttpClient for use across the application.
+ *
+ * Usage:
+ * ```typescript
+ * import { skiSpecHttpClient } from "@/lib/utils/SkiSpecHttpClient";
+ *
+ * const effect = skiSpecHttpClient.get("/api/ski-specs", SkiSpecListResponseSchema);
+ *
+ * pipe(
+ *   effect,
+ *   Effect.tap((data) => Effect.sync(() => console.log(data))),
+ *   Effect.tapError((error) => Effect.sync(() => handleError(error))),
+ *   Effect.runPromise
+ * );
+ * ```
  */
 export const skiSpecHttpClient = new SkiSpecHttpClient();

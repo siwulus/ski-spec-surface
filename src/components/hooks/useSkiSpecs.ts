@@ -1,9 +1,11 @@
-import { useState, useEffect, useCallback } from "react";
-import { toast } from "sonner";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import type { PaginationMeta, SkiSpecDTO, SkiSpecListResponse } from "@/types/api.types";
 import { SkiSpecListResponseSchema } from "@/types/api.types";
-import { skiSpecHttpClient, HttpClientError } from "@/lib/utils/SkiSpecHttpClient";
+import { skiSpecHttpClient } from "@/lib/utils/SkiSpecHttpClient";
+import { Effect, pipe } from "effect";
 import { buildUrl } from "@/lib/utils/http";
+import type { SkiSpecError } from "@/types/error.types";
+import { useErrorHandler } from "./useErrorHandler";
 
 interface UseSkiSpecsOptions {
   page?: number;
@@ -21,73 +23,60 @@ interface UseSkiSpecsReturn {
   refetch: () => Promise<void>;
 }
 
-const fetchSkiSpecs = async (options: UseSkiSpecsOptions): Promise<SkiSpecListResponse> => {
-  const url = buildUrl("/api/ski-specs", {
-    page: options.page ?? 1,
-    limit: options.limit ?? 100,
-    sort_by: options.sort_by ?? "created_at",
-    sort_order: options.sort_order ?? "desc",
-    search: options.search,
-  });
-
-  return await skiSpecHttpClient.get(url, SkiSpecListResponseSchema);
-};
+const fetchSkiSpecs = (options: UseSkiSpecsOptions): Effect.Effect<SkiSpecListResponse, SkiSpecError> =>
+  pipe(
+    Effect.sync(() =>
+      buildUrl("/api/ski-specs", {
+        page: options.page ?? 1,
+        limit: options.limit ?? 100,
+        sort_by: options.sort_by ?? "created_at",
+        sort_order: options.sort_order ?? "desc",
+        search: options.search,
+      })
+    ),
+    Effect.flatMap((url) => skiSpecHttpClient.get(url, SkiSpecListResponseSchema))
+  );
 
 export const useSkiSpecs = (options: UseSkiSpecsOptions = {}): UseSkiSpecsReturn => {
   const [specs, setSpecs] = useState<SkiSpecDTO[] | null>(null);
   const [pagination, setPagination] = useState<PaginationMeta | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<Error | null>(null);
-
+  const { showError } = useErrorHandler();
+  const optionsMemo = useMemo(
+    () => ({
+      page: options.page ?? 1,
+      limit: options.limit ?? 100,
+      sort_by: options.sort_by ?? "created_at",
+      sort_order: options.sort_order ?? "desc",
+      search: options.search,
+    }),
+    [options.page, options.limit, options.sort_by, options.sort_order, options.search]
+  );
   const loadSpecs = useCallback(async () => {
-    try {
-      setIsLoading(true);
-      setError(null);
-      const data = await fetchSkiSpecs({
-        page: options.page,
-        limit: options.limit,
-        sort_by: options.sort_by,
-        sort_order: options.sort_order,
-        search: options.search,
-      });
-      setSpecs(data.data);
-      setPagination(data.pagination);
-    } catch (err) {
-      const error = err as Error;
-      setError(error);
-
-      // Handle specific HTTP errors
-      if (err instanceof HttpClientError) {
-        if (err.status === 401) {
-          toast.error("Authentication required", {
-            description: "Please log in to view ski specifications",
-          });
-          return;
-        }
-
-        if (err.code === "VALIDATION_ERROR") {
-          toast.error("Invalid response format", {
-            description: "The server returned unexpected data",
-          });
-          return;
-        }
-
-        if (err.code === "NETWORK_ERROR") {
-          toast.error("Network error", {
-            description: "Please check your internet connection and try again",
-          });
-          return;
-        }
-      }
-
-      // Generic error fallback
-      toast.error("Failed to load ski specifications", {
-        description: error.message || "Please try again later",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  }, [options.page, options.limit, options.sort_by, options.sort_order, options.search]);
+    await pipe(
+      Effect.sync(() => {
+        setIsLoading(true);
+        setError(null);
+      }),
+      Effect.flatMap(() => fetchSkiSpecs(optionsMemo)),
+      Effect.tap(({ data, pagination }) =>
+        Effect.sync(() => {
+          setSpecs(data);
+          setPagination(pagination);
+          setIsLoading(false);
+        })
+      ),
+      Effect.catchAll((err) =>
+        Effect.sync(() => {
+          setError(err);
+          showError(err);
+          setIsLoading(false);
+        })
+      ),
+      Effect.runPromise
+    );
+  }, [optionsMemo, showError]);
 
   useEffect(() => {
     loadSpecs();

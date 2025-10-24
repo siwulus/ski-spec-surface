@@ -17,10 +17,10 @@
  * - Type-safe validation pipeline
  */
 
+import type { ValidationErrorDetail } from "@/types/api.types";
+import { InvalidJsonError, ValidationError } from "@/types/error.types";
 import { Effect, pipe } from "effect";
 import type { z } from "zod";
-import { ValidationError, InvalidJsonError } from "@/types/error.types";
-import type { ValidationErrorDetail } from "@/types/api.types";
 
 // ============================================================================
 // Internal Utilities
@@ -131,17 +131,30 @@ export const parseJsonBody = <T>(
   schema: z.ZodSchema<T>
 ): Effect.Effect<T, InvalidJsonError | ValidationError> => {
   return pipe(
-    Effect.tryPromise({
-      try: () => request.json() as Promise<unknown>,
-      catch: (error) =>
-        new InvalidJsonError("Invalid request body", {
-          cause: error instanceof Error ? error : undefined,
-        }),
-    }),
+    parseJsonPromise(() => request.json()),
     Effect.flatMap((body) => parseWithSchema(schema, body))
   );
 };
 
+export const parseJsonResponse = <T>(
+  response: Response,
+  schema: z.ZodSchema<T>
+): Effect.Effect<T, InvalidJsonError | ValidationError> => {
+  return pipe(
+    parseJsonPromise(() => response.json()),
+    Effect.flatMap((body) => parseWithSchema(schema, body))
+  );
+};
+
+export const parseJsonPromise = (promise: () => Promise<unknown>): Effect.Effect<unknown, InvalidJsonError> => {
+  return Effect.tryPromise({
+    try: promise,
+    catch: (error) =>
+      new InvalidJsonError("Invalid request body", {
+        cause: error instanceof Error ? error : undefined,
+      }),
+  });
+};
 /**
  * Type for query parameter coercion function.
  * Converts string-based query params to appropriate types (numbers, booleans, etc.).
