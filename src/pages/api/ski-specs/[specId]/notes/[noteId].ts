@@ -1,10 +1,10 @@
+import { getUserIdEffect } from "@/lib/utils/auth";
+import { catchAllSkiSpecErrors } from "@/lib/utils/error";
+import { parseJsonBody, parseWithSchema } from "@/lib/utils/zod";
+import { UpdateNoteCommandSchema } from "@/types/api.types";
 import type { APIRoute } from "astro";
 import { Effect, pipe } from "effect";
 import { z } from "zod";
-import { UpdateNoteCommandSchema } from "@/types/api.types";
-import { parseWithSchema, parseJsonBody } from "@/lib/utils/zod";
-import { catchAllSkiSpecErrors } from "@/lib/utils/error";
-import { AuthenticationError } from "@/types/error.types";
 
 export const prerender = false;
 
@@ -19,16 +19,6 @@ const UuidParamsSchema = z.object({
   specId: z.string().uuid("Invalid ski specification ID format"),
   noteId: z.string().uuid("Invalid note ID format"),
 });
-
-/**
- * Validates and extracts user ID from locals.
- * Transitional helper - will be refactored to use Effect.Option later.
- *
- * @param user - User object from middleware (can be nullish)
- * @returns Effect that succeeds with user ID or fails with AuthenticationError
- */
-const getUserIdEffect = (user: { id: string } | null | undefined): Effect.Effect<string, AuthenticationError> =>
-  user?.id ? Effect.succeed(user.id) : Effect.fail(new AuthenticationError("User not authenticated"));
 
 /**
  * Validates UUID path parameters for specId and noteId.
@@ -54,7 +44,7 @@ const validateNoteParams = (specId: string | undefined, noteId: string | undefin
  *
  * Response: NoteDTO (200) or ApiErrorResponse (4xx/5xx)
  *
- * Authentication: User must be authenticated (validated via getUserIdEffect)
+ * Authentication: User must be authenticated
  * Authorization: User can only access notes for their own specifications
  *
  * Security: Returns 404 for both non-existent resources and unauthorized access
@@ -107,7 +97,7 @@ export const GET: APIRoute = async ({ params, locals }) => {
  * Request body: UpdateNoteCommand (content: string)
  * Response: NoteDTO (200) or ApiErrorResponse (4xx/5xx)
  *
- * Authentication: User must be authenticated (validated via getUserIdEffect)
+ * Authentication: User must be authenticated
  * Authorization: User can only update notes from their own specifications
  *
  * Features:
@@ -180,7 +170,7 @@ export const PUT: APIRoute = async ({ params, request, locals }) => {
  * Request body: None
  * Response: 204 No Content (success) or ApiErrorResponse (4xx/5xx)
  *
- * Authentication: User must be authenticated (validated via getUserIdEffect)
+ * Authentication: User must be authenticated
  * Authorization: User can only delete notes from their own specifications
  *
  * Features:

@@ -1,10 +1,10 @@
+import { getUserIdEffect } from "@/lib/utils/auth";
+import { catchAllSkiSpecErrors } from "@/lib/utils/error";
+import { parseJsonBody, parseWithSchema } from "@/lib/utils/zod";
+import { UpdateSkiSpecCommandSchema } from "@/types/api.types";
 import type { APIRoute } from "astro";
 import { Effect, pipe } from "effect";
 import { z } from "zod";
-import { UpdateSkiSpecCommandSchema } from "@/types/api.types";
-import { parseWithSchema, parseJsonBody } from "@/lib/utils/zod";
-import { catchAllSkiSpecErrors } from "@/lib/utils/error";
-import { AuthenticationError } from "@/types/error.types";
 
 export const prerender = false;
 
@@ -18,16 +18,6 @@ export const prerender = false;
 const UuidParamSchema = z.object({
   id: z.string().uuid("Invalid UUID format"),
 });
-
-/**
- * Validates and extracts user ID from locals.
- * Transitional helper - will be refactored to use Effect.Option later.
- *
- * @param user - User object from middleware (can be nullish)
- * @returns Effect that succeeds with user ID or fails with AuthenticationError
- */
-const getUserIdEffect = (user: { id: string } | null | undefined): Effect.Effect<string, AuthenticationError> =>
-  user?.id ? Effect.succeed(user.id) : Effect.fail(new AuthenticationError("User not authenticated"));
 
 /**
  * Validates UUID path parameter.
@@ -49,7 +39,7 @@ const validateUuidParam = (id: string | undefined) =>
  * Path params: id (UUID)
  * Response: SkiSpecDTO (200) or ApiErrorResponse (4xx/5xx)
  *
- * Authentication: User must be authenticated (validated via getUserIdEffect)
+ * Authentication: User must be authenticated
  * Authorization: User can only retrieve their own specifications
  *
  * Security: Returns 404 for both non-existent specs and specs owned by other users
@@ -100,7 +90,7 @@ export const GET: APIRoute = async ({ params, locals }) => {
  * Request body: UpdateSkiSpecCommand (validated with Zod)
  * Response: SkiSpecDTO (200) or ApiErrorResponse (4xx/5xx)
  *
- * Authentication: User must be authenticated (validated via getUserIdEffect)
+ * Authentication: User must be authenticated
  * Authorization: User can only update their own specifications
  *
  * Features:
@@ -155,7 +145,7 @@ export const PUT: APIRoute = async ({ params, request, locals }) => {
  * Path params: id (UUID)
  * Response: 204 No Content or ApiErrorResponse (4xx/5xx)
  *
- * Authentication: User must be authenticated (validated via getUserIdEffect)
+ * Authentication: User must be authenticated
  * Authorization: User can only delete their own specifications
  *
  * Security: Returns 404 for both non-existent specs and specs owned by other users

@@ -1,30 +1,20 @@
-import type { APIRoute } from "astro";
-import { Effect, pipe } from "effect";
+import { getUserIdEffect } from "@/lib/utils/auth";
+import { catchAllSkiSpecErrors } from "@/lib/utils/error";
+import { parseJsonBody, parseQueryParams, type QueryCoercer } from "@/lib/utils/zod";
 import {
   CreateSkiSpecCommandSchema,
   ListSkiSpecsQuerySchema,
-  type SkiSpecListResponse,
   type PaginationMeta,
+  type SkiSpecListResponse,
 } from "@/types/api.types";
-import { parseQueryParams, parseJsonBody, type QueryCoercer } from "@/lib/utils/zod";
-import { catchAllSkiSpecErrors } from "@/lib/utils/error";
-import { AuthenticationError } from "@/types/error.types";
+import type { APIRoute } from "astro";
+import { Effect, pipe } from "effect";
 
 export const prerender = false;
 
 // ============================================================================
 // Local Helpers
 // ============================================================================
-
-/**
- * Validates and extracts user ID from locals.
- * Transitional helper - will be refactored to use Effect.Option later.
- *
- * @param user - User object from middleware (can be nullish)
- * @returns Effect that succeeds with user ID or fails with AuthenticationError
- */
-const getUserIdEffect = (user: { id: string } | null | undefined): Effect.Effect<string, AuthenticationError> =>
-  user?.id ? Effect.succeed(user.id) : Effect.fail(new AuthenticationError("User not authenticated"));
 
 /**
  * Coercion function for list query parameters.
@@ -54,7 +44,7 @@ const coerceListQuery: QueryCoercer = (params) => {
  * Query parameters: page, limit, sort_by, sort_order, search (all optional with defaults)
  * Response: SkiSpecListResponse (200) or ApiErrorResponse (4xx/5xx)
  *
- * Authentication: User must be authenticated (validated via getUserIdEffect)
+ * Authentication: User must be authenticated
  */
 export const GET: APIRoute = async ({ url, locals }) => {
   const { user, skiSpecService } = locals;
@@ -117,7 +107,7 @@ export const GET: APIRoute = async ({ url, locals }) => {
  * Request body: CreateSkiSpecCommand (validated with Zod)
  * Response: SkiSpecDTO (201) or ApiErrorResponse (4xx/5xx)
  *
- * Authentication: User must be authenticated (validated via getUserIdEffect)
+ * Authentication: User must be authenticated
  */
 export const POST: APIRoute = async ({ request, locals }) => {
   const { user, skiSpecService } = locals;

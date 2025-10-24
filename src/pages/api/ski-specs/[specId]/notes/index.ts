@@ -1,15 +1,15 @@
-import type { APIRoute } from "astro";
-import { Effect, pipe } from "effect";
-import { z } from "zod";
+import { getUserIdEffect } from "@/lib/utils/auth";
+import { catchAllSkiSpecErrors } from "@/lib/utils/error";
+import { parseJsonBody, parseQueryParams, parseWithSchema, type QueryCoercer } from "@/lib/utils/zod";
 import {
   CreateNoteCommandSchema,
   ListNotesQuerySchema,
   type NoteListResponse,
   type PaginationMeta,
 } from "@/types/api.types";
-import { parseWithSchema, parseJsonBody, parseQueryParams, type QueryCoercer } from "@/lib/utils/zod";
-import { catchAllSkiSpecErrors } from "@/lib/utils/error";
-import { AuthenticationError } from "@/types/error.types";
+import type { APIRoute } from "astro";
+import { Effect, pipe } from "effect";
+import { z } from "zod";
 
 export const prerender = false;
 
@@ -23,16 +23,6 @@ export const prerender = false;
 const UuidParamSchema = z.object({
   specId: z.string().uuid("Invalid UUID format"),
 });
-
-/**
- * Validates and extracts user ID from locals.
- * Transitional helper - will be refactored to use Effect.Option later.
- *
- * @param user - User object from middleware (can be nullish)
- * @returns Effect that succeeds with user ID or fails with AuthenticationError
- */
-const getUserIdEffect = (user: { id: string } | null | undefined): Effect.Effect<string, AuthenticationError> =>
-  user?.id ? Effect.succeed(user.id) : Effect.fail(new AuthenticationError("User not authenticated"));
 
 /**
  * Validates UUID path parameter.
@@ -69,7 +59,7 @@ const coerceListNotesQuery: QueryCoercer = (params) => {
  * Query parameters: page, limit (optional with defaults)
  * Response: NoteListResponse (200) or ApiErrorResponse (4xx/5xx)
  *
- * Authentication: User must be authenticated (validated via getUserIdEffect)
+ * Authentication: User must be authenticated
  * Authorization: User can only view notes for their own specifications
  *
  * Features:
@@ -146,7 +136,7 @@ export const GET: APIRoute = async ({ params, url, locals }) => {
  * Request body: CreateNoteCommand (validated with Zod)
  * Response: NoteDTO (201) or ApiErrorResponse (4xx/5xx)
  *
- * Authentication: User must be authenticated (validated via getUserIdEffect)
+ * Authentication: User must be authenticated
  * Authorization: User can only add notes to their own specifications
  *
  * Features:
