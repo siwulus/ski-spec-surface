@@ -1,0 +1,360 @@
+---
+alwaysApply: false
+---
+# Functional Programming with EffectJS
+
+## Core Principles
+
+**EffectJS is the first-class solution for error handling and composable logic in this codebase.**
+
+Use the **Either Monad pattern** (Railway-Oriented Programming):
+
+- Operations flow on the success track until an error occurs
+- Errors automatically propagate through the failure track
+- No try-catch blocks or thrown exceptions
+
+## When to Use Effect
+
+✅ **Required**:
+- API routes (`src/pages/api/**`)
+- Service layer methods (`src/lib/services/**`)
+- Complex business logic with multiple error paths
+- Database operations via Supabase
+
+⚠️ **Optional**:
+
+- Simple utility functions with no error handling
+- Pure calculations without side effects
+
+## Error Type System
+
+All errors are defined in `@/types/error.types.ts`. Use these typed errors:
+
+```typescript
+import type {
+  ValidationError,
+  AuthenticationError,
+  AuthorizationError,
+  NotFoundError,
+  DatabaseError,
+  ExternalServiceError,
+  BusinessRuleError,
+  ConfigurationError,
+  RateLimitError,
+  ConflictError,
+  UnknownError
+} from '@/types/error.types';
+```
+
+### Creating Typed Errors
+
+```typescript
+import { Effect, Data } from 'effect';
+
+// Define error class
+class ValidationError extends Data.TaggedError('ValidationError')<{
+  message: string;
+  field?: string;
+}> {}
+
+// Use in Effect
+const validateEmail = (email: string): Effect.Effect<string, ValidationError> =>
+  email.includes('@')
+    ? Effect.succeed(email)
+    : Effect.fail(new ValidationError({
+        message: 'Invalid email',
+        field: 'email'
+      }));
+```
+
+## Piped Composition Style
+
+**Always use pipe for composing operations:**
+
+```typescript
+import { Effect, pipe } from 'effect';
+
+// ✅ Good: Piped style (Railway-Oriented)
+const createSkiSpec = (userId: string, command: CreateSkiSpecCommand) =>
+  pipe(
+    validateCommand(command),
+    Effect.flatMap((validated) => calculateMetrics(validated)),
+    Effect.flatMap((withMetrics) => saveToDatabase(userId, withMetrics)),
+    Effect.map((entity) => toDTO(entity)),
+    Effect.catchAll(handleErrors)
+  );
+
+// ❌ Bad: Nested style
+const createSkiSpec = (userId: string, command: CreateSkiSpecCommand) =>
+  validateCommand(command).pipe(
+    Effect.flatMap((validated) =>
+      calculateMetrics(validated).pipe(
+        Effect.flatMap((withMetrics) =>
+          saveToDatabase(userId, withMetrics)
+        )
+      )
+    )
+  );
+```
+
+## Error Handling Utilities
+
+Use utilities from `@/lib/utils/error.ts`:
+
+### Comprehensive Error Catching
+
+```typescript
+import { catchAllSkiSpecErrors } from '@/lib/utils/error';
+
+const result = await pipe(
+  performOperation(),
+  catchAllSkiSpecErrors(),
+  Effect.runPromise
+);
+```
+
+### Specific Error Handling
+
+```typescript
+import { Effect } from 'effect';
+
+const result = await pipe(
+  performOperation(),
+  Effect.catchTag('ValidationError', (error) =>
+    Effect.succeed({ error: error.message, code: 'VALIDATION_ERROR' })
+  ),
+  Effect.catchTag('NotFoundError', (error) =>
+    Effect.succeed({ error: 'Resource not found', code: 'NOT_FOUND' })
+  ),
+  Effect.runPromise
+);
+```
+
+### Wrapping External Libraries
+
+```typescript
+import { wrapErrorEffect } from '@/lib/utils/error';
+
+// Wrap Supabase calls
+const fetchUser = (id: string) =>
+  wrapErrorEffect(
+    () => supabase.from('users').select('*').eq('id', id).single(),
+    (error) => new DatabaseError({
+      message: 'Failed to fetch user',
+      cause: error
+    })
+  );
+```
+
+### Error Logging
+
+```typescript
+import { withErrorLogging } from '@/lib/utils/error';
+
+const result = await pipe(
+  performOperation(),
+  withErrorLogging('Operation failed'),
+  Effect.runPromise
+);
+```
+
+## API Route Pattern
+
+**Standard structure for API routes:**
+
+```typescript
+import { Effect, pipe } from 'effect';
+import type { APIContext } from 'astro';
+
+export async function POST({ request, locals }: APIContext) {
+  const { userId, skiSpecService } = locals;
+
+  return pipe(
+    Effect.tryPromise({
+      try: () => request.json(),
+      catch: (error) => new ValidationError({
+        message: 'Invalid JSON body'
+      })
+    }),
+    Effect.flatMap((body) =>
+      skiSpecService.createSkiSpec(userId, body)
+    ),
+    Effect.map((data) =>
+      new Response(JSON.stringify(data), { status: 201 })
+    ),
+    catchAllSkiSpecErrors(),
+    Effect.runPromise
+  );
+}
+```
+
+## Service Layer Pattern
+
+**Service methods return Effect:**
+
+```typescript
+import { Effect, pipe } from 'effect';
+
+class SkiSpecService {
+  createSkiSpec(
+    userId: string,
+    command: CreateSkiSpecCommand
+  ): Effect.Effect<SkiSpecDTO, ValidationError | DatabaseError> {
+    return pipe(
+      this.validateCommand(command),
+      Effect.flatMap((validated) =>
+        this.calculateMetrics(validated)
+      ),
+      Effect.flatMap((withMetrics) =>
+        this.insertToDatabase(userId, withMetrics)
+      ),
+      Effect.map((entity) => this.toDTO(entity))
+    );
+  }
+
+  private validateCommand(
+    command: CreateSkiSpecCommand
+  ): Effect.Effect<CreateSkiSpecCommand, ValidationError> {
+    const result = CreateSkiSpecCommandSchema.safeParse(command);
+    return result.success
+      ? Effect.succeed(result.data)
+      : Effect.fail(new ValidationError({
+          message: 'Invalid input',
+          details: result.error.errors
+        }));
+  }
+}
+```
+
+## Common Patterns
+
+### Conditional Logic
+
+```typescript
+// ✅ Use Effect.if or Effect.flatMap
+const checkPermission = (user: User) =>
+  Effect.if(user.role === 'admin', {
+    onTrue: () => Effect.succeed(user),
+    onFalse: () => Effect.fail(new AuthorizationError({
+      message: 'Insufficient permissions'
+    }))
+  });
+```
+
+### Parallel Operations
+
+```typescript
+import { Effect } from 'effect';
+
+// Run multiple Effects in parallel
+const loadData = (id: string) =>
+  Effect.all([
+    fetchUser(id),
+    fetchSpecs(id),
+    fetchNotes(id)
+  ], { concurrency: 'unbounded' });
+```
+
+### Sequential with Context
+
+```typescript
+// Pass context through the pipeline
+const processRequest = (command: Command) =>
+  pipe(
+    Effect.succeed({ command, timestamp: Date.now() }),
+    Effect.flatMap((ctx) =>
+      pipe(
+        validate(ctx.command),
+        Effect.map((validated) => ({ ...ctx, validated }))
+      )
+    ),
+    Effect.flatMap((ctx) =>
+      pipe(
+        process(ctx.validated),
+        Effect.map((result) => ({ ...ctx, result }))
+      )
+    )
+  );
+```
+
+## Anti-Patterns
+
+❌ **Avoid these patterns:**
+
+```typescript
+// ❌ Don't use try-catch
+try {
+  const result = await someOperation();
+} catch (error) {
+  return new Response(JSON.stringify({ error }), { status: 500 });
+}
+
+// ✅ Use Effect
+pipe(
+  someOperation(),
+  Effect.catchAll((error) =>
+    Effect.succeed(new Response(...))
+  ),
+  Effect.runPromise
+);
+
+// ❌ Don't throw errors
+if (!user) {
+  throw new Error('User not found');
+}
+
+// ✅ Use Effect.fail
+if (!user) {
+  return Effect.fail(new NotFoundError({ message: 'User not found' }));
+}
+
+// ❌ Don't nest if-else
+if (condition1) {
+  if (condition2) {
+    return result;
+  } else {
+    return error;
+  }
+} else {
+  return otherError;
+}
+
+// ✅ Use pipe and flatMap
+pipe(
+  checkCondition1(),
+  Effect.flatMap(() => checkCondition2()),
+  Effect.map(() => result)
+);
+```
+
+## Type Signatures
+
+Always provide explicit Effect type signatures:
+
+```typescript
+// ✅ Explicit types
+const operation = (): Effect.Effect<
+  SuccessType,
+  ErrorType1 | ErrorType2
+> => { ... };
+
+// ❌ Implicit types
+const operation = () => { ... };
+```
+
+## Migration Strategy
+
+When updating existing code:
+
+1. **Identify error paths** in current implementation
+2. **Define typed errors** from `@/types/error.types.ts`
+3. **Convert to Effect** using pipe composition
+4. **Replace try-catch** with Effect.catchTag
+5. **Update tests** to use Effect.runPromise
+
+## Resources
+
+- [EffectJS Documentation](https://effect.website/)
+- [Railway-Oriented Programming](https://fsharpforfunandprofit.com/rop/)
+- Project error types: `@/types/error.types.ts`
+- Project error utilities: `@/lib/utils/error.ts`

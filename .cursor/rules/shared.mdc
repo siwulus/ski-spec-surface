@@ -35,18 +35,33 @@ When introducing changes to the project, always follow the directory structure b
 
 When modifying the directory structure, always update this section.
 
-## Coding practices
+## Code Style Guidelines
 
-### Guidelines for clean code
+### Functional Programming with EffectJS
 
-- Use feedback from linters to improve the code when making changes.
-- Prioritize error handling and edge cases.
-- Handle errors and edge cases at the beginning of functions.
-- Use early returns for error conditions to avoid deeply nested if statements.
-- Place the happy path last in the function for improved readability.
-- Avoid unnecessary else statements; use if-return pattern instead.
-- Use guard clauses to handle preconditions and invalid states early.
-- Implement proper error logging and user-friendly error messages.
-- Consider using custom error types or error factories for consistent error handling.
-- Use arrow function notation where it is possible
-- Use `@/*` for imports (e.g., `@/types/api.types`), do not use relative paths.
+**Primary error handling approach** - Use EffectJS for all API routes, service methods, and complex logic:
+
+- Use `pipe()` for composing operations (Railway-Oriented Programming)
+- Use `Effect.flatMap()` for operations that return Effect
+- Use `Effect.map()` for transformations
+- Use `Effect.catchTag()` or `catchAllSkiSpecErrors()` for error handling
+- No try-catch blocks or thrown exceptions
+- Always provide explicit type signatures: `Effect.Effect<SuccessType, ErrorType>`
+
+See architectural pattern #2 above and `.cursor/rules/functional-programming.mdc` for details.
+
+### General
+
+- Use arrow function notation where possible
+- **When not using Effect**: Prioritize error handling and edge cases at the beginning of functions
+- **When not using Effect**: Use early returns for error conditions (avoid nested if statements)
+- Place the happy path last in functions
+- Avoid unnecessary `else` statements (use if-return pattern)
+- Use guard clauses for preconditions and invalid states
+
+### TypeScript
+
+- **Path alias**: Use `@/*` for imports (e.g., `@/types/api.types`)
+- **Type safety**: Leverage TypeScript strict mode (extends `astro/tsconfigs/strict`)
+- **Explicit types**: Always define return types for functions
+- **No `any`**: Avoid `any` type; use `unknown` for uncertain types

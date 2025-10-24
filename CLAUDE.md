@@ -11,6 +11,7 @@ Ski Surface Spec Extension is a web application for ski-tour and freeride enthus
 - **Runtime**: Node.js 22 with pnpm (≥10.18)
 - **Framework**: Astro 5 (SSR mode) with React 19 for interactive components
 - **Language**: TypeScript 5
+- **Error Handling**: EffectJS (Either Monad / Railway-Oriented Programming)
 - **Styling**: Tailwind CSS 4 with Shadcn/ui components
 - **Backend**: Supabase (PostgreSQL + Auth)
 - **Package Manager**: pnpm
@@ -96,14 +97,79 @@ const { skiSpecService, userId } = locals;
 const result = await skiSpecService.createSkiSpec(userId, command);
 ```
 
-#### 2. Data Flow: Entity → DTO → Command/Query
+#### 2. Functional Programming with EffectJS (Railway-Oriented Programming)
+
+**EffectJS is the first-class solution for error handling in this codebase.**
+
+Use the Either Monad pattern (Railway-Oriented Programming):
+
+- Operations flow on the success track until an error occurs
+- Errors automatically propagate through the failure track
+- No try-catch blocks or thrown exceptions
+
+**Required usage**:
+
+- All API routes (`src/pages/api/**`)
+- All service layer methods (`src/lib/services/**`)
+- Complex business logic with multiple error paths
+- Database operations via Supabase
+
+**Error type system**:
+
+- Custom typed errors defined in `src/types/error.types.ts`
+- Error handling utilities in `src/lib/utils/error.ts`
+- Use `catchAllSkiSpecErrors()`, `wrapErrorEffect()`, `withErrorLogging()`
+
+**Example (API route with Effect)**:
+
+```typescript
+import { Effect, pipe } from "effect";
+
+export async function POST({ request, locals }: APIContext) {
+  return pipe(
+    Effect.tryPromise(() => request.json()),
+    Effect.flatMap((body) => locals.skiSpecService.createSkiSpec(locals.userId, body)),
+    Effect.map((data) => new Response(JSON.stringify(data), { status: 201 })),
+    catchAllSkiSpecErrors(),
+    Effect.runPromise
+  );
+}
+```
+
+**Example (Service method with Effect)**:
+
+```typescript
+createSkiSpec(
+  userId: string,
+  command: CreateSkiSpecCommand
+): Effect.Effect<SkiSpecDTO, ValidationError | DatabaseError> {
+  return pipe(
+    this.validateCommand(command),
+    Effect.flatMap((validated) => this.calculateMetrics(validated)),
+    Effect.flatMap((withMetrics) => this.insertToDatabase(userId, withMetrics)),
+    Effect.map((entity) => this.toDTO(entity))
+  );
+}
+```
+
+**Key patterns**:
+
+- Use `pipe()` for composing operations (not nested `.pipe()`)
+- Use `Effect.flatMap()` for operations that return Effect
+- Use `Effect.map()` for transformations
+- Use `Effect.catchTag()` for specific error handling
+- Always provide explicit type signatures: `Effect.Effect<SuccessType, ErrorType>`
+
+See `.cursor/rules/functional-programming.mdc` for comprehensive patterns and examples.
+
+#### 3. Data Flow: Entity → DTO → Command/Query
 
 - **Entities** (`db.types.ts`): Database table representations
 - **DTOs** (`api.types.ts`): Data Transfer Objects for API responses (e.g., `SkiSpecDTO` includes `notes_count`)
 - **Commands** (`api.types.ts`): Input for create/update operations (e.g., `CreateSkiSpecCommand`)
 - **Queries** (`api.types.ts`): Validated query parameters (e.g., `ListSkiSpecsQuery`)
 
-#### 3. Zod Validation
+#### 4. Zod Validation
 
 Every API type has a corresponding Zod schema for runtime validation:
 
@@ -118,28 +184,30 @@ Compile-time type checks ensure schemas match types:
 expectTypeOf<z.infer<typeof Schema>>().toEqualTypeOf<Type>();
 ```
 
-#### 4. API Route Structure
+#### 5. API Route Structure
 
 All API routes follow this pattern:
 
-1. Extract data (body/query params) from request
-2. Validate with Zod schema
-3. Call service layer method
-4. Return typed response or `ApiErrorResponse`
+1. Extract data (body/query params) from request (using `Effect.tryPromise`)
+2. Validate with Zod schema (in service layer methods)
+3. Call service layer method (returns `Effect`)
+4. Map to HTTP response
+5. Handle all errors with `catchAllSkiSpecErrors()`
+6. Execute with `Effect.runPromise`
 
 **Example** (`src/pages/api/ski-specs/index.ts`):
 
 - `GET /api/ski-specs` - List with pagination, sorting, search
 - `POST /api/ski-specs` - Create new specification
 
-#### 5. Supabase Integration
+#### 6. Supabase Integration
 
 - **Client initialization**: `src/db/supabase.client.ts` creates typed client
 - **Middleware injection**: `src/middleware/index.ts` adds client to `context.locals.supabase`
 - **Type safety**: Use `SupabaseClient` type from `src/db/supabase.client.ts`, NOT from `@supabase/supabase-js`
 - **Access pattern**: Always use `context.locals.supabase` in routes, never import client directly
 
-#### 6. Authentication
+#### 7. Authentication
 
 Authentication is implemented using Supabase Auth in the middleware:
 
@@ -149,7 +217,7 @@ Authentication is implemented using Supabase Auth in the middleware:
 - **Public Paths**: `/`, `/auth/login`, `/auth/register`, `/auth/reset-password`
 - **Access Pattern**: User object is available via `context.locals.user` in all routes
 
-#### 7. Component Architecture
+#### 8. Component Architecture
 
 - **Astro components** (`.astro`): For static content, layouts, pages
 - **React components** (`.tsx`): Only when interactivity is needed
@@ -159,7 +227,7 @@ Authentication is implemented using Supabase Auth in the middleware:
   - **Never use Next.js directives** like `"use client"` (this is Astro + React, not Next.js)
   - Optimize with `React.memo()`, `useCallback`, `useMemo`, `useTransition`
 
-#### 8. Shadcn/ui Components
+#### 9. Shadcn/ui Components
 
 This project uses Shadcn/ui components located in `src/components/ui/`. To install additional components:
 
@@ -213,11 +281,24 @@ The `SkiSpecService` implements these algorithms:
 
 ## Code Style Guidelines
 
+### Functional Programming with EffectJS
+
+**Primary error handling approach** - Use EffectJS for all API routes, service methods, and complex logic:
+
+- Use `pipe()` for composing operations (Railway-Oriented Programming)
+- Use `Effect.flatMap()` for operations that return Effect
+- Use `Effect.map()` for transformations
+- Use `Effect.catchTag()` or `catchAllSkiSpecErrors()` for error handling
+- No try-catch blocks or thrown exceptions
+- Always provide explicit type signatures: `Effect.Effect<SuccessType, ErrorType>`
+
+See architectural pattern #2 above and `.cursor/rules/functional-programming.mdc` for details.
+
 ### General
 
 - Use arrow function notation where possible
-- Prioritize error handling and edge cases at the beginning of functions
-- Use early returns for error conditions (avoid nested if statements)
+- **When not using Effect**: Prioritize error handling and edge cases at the beginning of functions
+- **When not using Effect**: Use early returns for error conditions (avoid nested if statements)
 - Place the happy path last in functions
 - Avoid unnecessary `else` statements (use if-return pattern)
 - Use guard clauses for preconditions and invalid states
