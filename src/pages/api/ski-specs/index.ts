@@ -1,13 +1,51 @@
 import type { APIRoute } from "astro";
+import { Effect, pipe } from "effect";
 import {
   CreateSkiSpecCommandSchema,
   ListSkiSpecsQuerySchema,
-  type ApiErrorResponse,
   type SkiSpecListResponse,
   type PaginationMeta,
 } from "@/types/api.types";
+import { parseQueryParams, parseJsonBody, type QueryCoercer } from "@/lib/utils/zod";
+import { catchAllSkiSpecErrors } from "@/lib/utils/error";
+import { AuthenticationError, ConflictError, DatabaseError } from "@/types/error.types";
 
 export const prerender = false;
+
+// ============================================================================
+// Local Helpers
+// ============================================================================
+
+/**
+ * Validates and extracts user ID from locals.
+ * Transitional helper - will be refactored to use Effect.Option later.
+ *
+ * @param user - User object from middleware (can be nullish)
+ * @returns Effect that succeeds with user ID or fails with AuthenticationError
+ */
+const getUserIdEffect = (user: { id: string } | null | undefined): Effect.Effect<string, AuthenticationError> =>
+  user?.id ? Effect.succeed(user.id) : Effect.fail(new AuthenticationError("User not authenticated"));
+
+/**
+ * Coercion function for list query parameters.
+ * Converts string query params to appropriate types for Zod validation.
+ */
+const coerceListQuery: QueryCoercer = (params) => {
+  const page = params.get("page");
+  const limit = params.get("limit");
+
+  return {
+    page: page ? parseInt(page, 10) : undefined,
+    limit: limit ? parseInt(limit, 10) : undefined,
+    sort_by: params.get("sort_by") || undefined,
+    sort_order: params.get("sort_order") || undefined,
+    search: params.get("search") || undefined,
+  };
+};
+
+// ============================================================================
+// API Route Handlers
+// ============================================================================
 
 /**
  * GET /api/ski-specs
@@ -16,93 +54,68 @@ export const prerender = false;
  * Query parameters: page, limit, sort_by, sort_order, search (all optional with defaults)
  * Response: SkiSpecListResponse (200) or ApiErrorResponse (4xx/5xx)
  *
- * Authentication: Handled by middleware (userId provided in locals)
+ * Authentication: User must be authenticated (validated via getUserIdEffect)
  */
 export const GET: APIRoute = async ({ url, locals }) => {
-  try {
-    // Step 1: Get authenticated user ID from middleware
-    const { user, skiSpecService } = locals;
+  const { user, skiSpecService } = locals;
 
-    // Step 2: Extract query parameters from URL
-    const rawQuery = {
-      page: url.searchParams.get("page"),
-      limit: url.searchParams.get("limit"),
-      sort_by: url.searchParams.get("sort_by"),
-      sort_order: url.searchParams.get("sort_order"),
-      search: url.searchParams.get("search"),
-    };
+  const program = pipe(
+    // Step 1: Validate user authentication
+    getUserIdEffect(user),
+    // Step 2: Parse and validate query parameters
+    Effect.flatMap((userId) =>
+      pipe(
+        parseQueryParams(url.searchParams, ListSkiSpecsQuerySchema, coerceListQuery),
+        Effect.map((query) => ({ userId, query }))
+      )
+    ),
 
-    // Step 3: Coerce string parameters to appropriate types
-    const parsedQuery = {
-      page: rawQuery.page ? parseInt(rawQuery.page, 10) : undefined,
-      limit: rawQuery.limit ? parseInt(rawQuery.limit, 10) : undefined,
-      sort_by: rawQuery.sort_by || undefined,
-      sort_order: rawQuery.sort_order || undefined,
-      search: rawQuery.search || undefined,
-    };
+    // Step 3: Fetch ski specifications from service layer
+    Effect.flatMap(({ userId, query }) =>
+      pipe(
+        Effect.tryPromise({
+          try: () => skiSpecService.listSkiSpecs(userId, query),
+          catch: (error) =>
+            new DatabaseError("Failed to fetch ski specifications", {
+              cause: error instanceof Error ? error : undefined,
+              operation: "listSkiSpecs",
+              table: "ski_specs",
+            }),
+        }),
+        Effect.map((result) => ({ ...result, query }))
+      )
+    ),
 
-    // Step 4: Validate query parameters with Zod schema
-    const validation = ListSkiSpecsQuerySchema.safeParse(parsedQuery);
+    // Step 4: Build success response with pagination metadata
+    Effect.map(({ data, total, query }) => {
+      const totalPages = Math.ceil(total / query.limit);
+      const pagination: PaginationMeta = {
+        page: query.page,
+        limit: query.limit,
+        total,
+        total_pages: totalPages,
+      };
 
-    if (!validation.success) {
-      const details = validation.error.issues.map((err) => ({
-        field: err.path.join("."),
-        message: err.message,
-      }));
+      const response: SkiSpecListResponse = {
+        data,
+        pagination,
+      };
 
-      return new Response(
-        JSON.stringify({
-          error: "Invalid query parameters",
-          code: "VALIDATION_ERROR",
-          details,
-          timestamp: new Date().toISOString(),
-        } satisfies ApiErrorResponse),
-        { status: 400, headers: { "Content-Type": "application/json" } }
-      );
-    }
+      return new Response(JSON.stringify(response), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      });
+    }),
 
-    const validatedQuery = validation.data;
+    // Step 5: Handle all errors consistently with structured logging
+    catchAllSkiSpecErrors({
+      endpoint: "/api/ski-specs",
+      method: "GET",
+      userId: user?.id,
+    })
+  );
 
-    // Step 5: Call service layer to retrieve ski specifications
-    const { data, total } = await skiSpecService.listSkiSpecs(user?.id ?? "", validatedQuery);
-
-    // Step 6: Calculate pagination metadata
-    const totalPages = Math.ceil(total / validatedQuery.limit);
-    const pagination: PaginationMeta = {
-      page: validatedQuery.page,
-      limit: validatedQuery.limit,
-      total,
-      total_pages: totalPages,
-    };
-
-    // Step 7: Build and return success response
-    const response: SkiSpecListResponse = {
-      data,
-      pagination,
-    };
-
-    return new Response(JSON.stringify(response), {
-      status: 200,
-      headers: { "Content-Type": "application/json" },
-    });
-  } catch (error) {
-    // Step 8: Handle unexpected errors
-    // eslint-disable-next-line no-console
-    console.error("Error in GET /api/ski-specs:", {
-      error: error instanceof Error ? error.message : "Unknown error",
-      userId: locals.user?.id ?? "",
-      timestamp: new Date().toISOString(),
-    });
-
-    return new Response(
-      JSON.stringify({
-        error: "An unexpected error occurred while fetching ski specifications",
-        code: "INTERNAL_ERROR",
-        timestamp: new Date().toISOString(),
-      } satisfies ApiErrorResponse),
-      { status: 500, headers: { "Content-Type": "application/json" } }
-    );
-  }
+  return Effect.runPromise(program);
 };
 
 /**
@@ -112,93 +125,65 @@ export const GET: APIRoute = async ({ url, locals }) => {
  * Request body: CreateSkiSpecCommand (validated with Zod)
  * Response: SkiSpecDTO (201) or ApiErrorResponse (4xx/5xx)
  *
- * Authentication: Handled by middleware (userId provided in locals)
+ * Authentication: User must be authenticated (validated via getUserIdEffect)
  */
 export const POST: APIRoute = async ({ request, locals }) => {
-  try {
-    // Step 1: Get authenticated user ID from middleware
-    const { user, skiSpecService } = locals;
+  const { user, skiSpecService } = locals;
 
-    // Step 2: Parse request body
-    let body: unknown;
-    try {
-      body = await request.json();
-    } catch {
-      return new Response(
-        JSON.stringify({
-          error: "Invalid request body",
-          code: "INVALID_JSON",
-          timestamp: new Date().toISOString(),
-        } satisfies ApiErrorResponse),
-        { status: 400, headers: { "Content-Type": "application/json" } }
-      );
-    }
+  const program = pipe(
+    // Step 1: Validate user authentication
+    getUserIdEffect(user),
 
-    // Step 3: Validate input with Zod schema
-    const validationResult = CreateSkiSpecCommandSchema.safeParse(body);
+    // Step 2: Parse and validate JSON request body
+    Effect.flatMap((userId) =>
+      pipe(
+        parseJsonBody(request, CreateSkiSpecCommandSchema),
+        Effect.map((command) => ({ userId, command }))
+      )
+    ),
 
-    if (!validationResult.success) {
-      const details = validationResult.error.issues.map((err) => ({
-        field: err.path.join("."),
-        message: err.message,
-      }));
+    // Step 3: Create ski specification via service layer
+    Effect.flatMap(({ userId, command }) =>
+      Effect.tryPromise({
+        try: () => skiSpecService.createSkiSpec(userId, command),
+        catch: (error: unknown) => {
+          // Transform specific database errors to appropriate SkiSpecError types
+          const dbError = error as { code?: string };
 
-      return new Response(
-        JSON.stringify({
-          error: "Validation failed",
-          code: "VALIDATION_ERROR",
-          details,
-          timestamp: new Date().toISOString(),
-        } satisfies ApiErrorResponse),
-        { status: 400, headers: { "Content-Type": "application/json" } }
-      );
-    }
+          // UNIQUE constraint violation (duplicate name)
+          if (dbError?.code === "23505") {
+            return new ConflictError("Specification with this name already exists", {
+              code: "DUPLICATE_NAME",
+              conflictingField: "name",
+              resourceType: "ski_spec",
+            });
+          }
 
-    const command = validationResult.data;
+          // Generic database error
+          return new DatabaseError("Failed to create specification", {
+            cause: error instanceof Error ? error : undefined,
+            operation: "createSkiSpec",
+            table: "ski_specs",
+          });
+        },
+      })
+    ),
 
-    // Step 4: Create ski specification via service
-    try {
-      const skiSpec = await skiSpecService.createSkiSpec(user?.id ?? "", command);
-
-      // Step 5: Return success response
+    // Step 4: Build success response
+    Effect.map((skiSpec) => {
       return new Response(JSON.stringify(skiSpec), {
         status: 201,
         headers: { "Content-Type": "application/json" },
       });
-    } catch (error: unknown) {
-      // Handle database errors
-      const dbError = error as { code?: string };
-      if (dbError?.code === "23505") {
-        // UNIQUE constraint violation
-        return new Response(
-          JSON.stringify({
-            error: "Specification with this name already exists",
-            code: "DUPLICATE_NAME",
-            timestamp: new Date().toISOString(),
-          } satisfies ApiErrorResponse),
-          { status: 409, headers: { "Content-Type": "application/json" } }
-        );
-      }
+    }),
 
-      // Generic database error
-      return new Response(
-        JSON.stringify({
-          error: "Failed to create specification",
-          code: "DATABASE_ERROR",
-          timestamp: new Date().toISOString(),
-        } satisfies ApiErrorResponse),
-        { status: 500, headers: { "Content-Type": "application/json" } }
-      );
-    }
-  } catch {
-    // Catch-all for unexpected errors
-    return new Response(
-      JSON.stringify({
-        error: "Internal server error",
-        code: "INTERNAL_ERROR",
-        timestamp: new Date().toISOString(),
-      } satisfies ApiErrorResponse),
-      { status: 500, headers: { "Content-Type": "application/json" } }
-    );
-  }
+    // Step 5: Handle all errors consistently with structured logging
+    catchAllSkiSpecErrors({
+      endpoint: "/api/ski-specs",
+      method: "POST",
+      userId: user?.id,
+    })
+  );
+
+  return Effect.runPromise(program);
 };

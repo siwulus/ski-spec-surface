@@ -1,7 +1,8 @@
 /// <reference types="astro/client" />
 
 import type { SkiSpecService } from "@/lib/services/SkiSpecService";
-import type { User } from "@supabase/supabase-js";
+import type { SupabaseClient, User } from "@supabase/supabase-js";
+import type { Database } from "@/db/database.types";
 
 declare global {
   namespace App {
