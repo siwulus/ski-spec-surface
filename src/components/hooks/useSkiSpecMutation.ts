@@ -1,284 +1,137 @@
-import { useState, useCallback } from "react";
-import type { CreateSkiSpecCommand, UpdateSkiSpecCommand, SkiSpecDTO, ApiErrorResponse } from "@/types/api.types";
-import { toast } from "sonner";
+import { skiSpecHttpClient } from "@/lib/utils/SkiSpecHttpClient";
+import type { CreateSkiSpecCommand, SkiSpecDTO, UpdateSkiSpecCommand } from "@/types/api.types";
+import { SkiSpecDTOSchema } from "@/types/api.types";
+import { Effect, pipe } from "effect";
+import { useCallback, useState } from "react";
+import { useErrorHandler } from "./useErrorHandler";
 
 /**
- * Custom hook for handling ski spec CRUD API calls
+ * Custom hook for handling ski spec CRUD API calls with EffectJS
+ *
+ * Uses Effect-based HTTP client for type-safe, composable error handling.
+ * All errors are handled via useErrorHandler for consistent UX.
  *
  * @returns CRUD functions, loading state, and API errors
  */
 export const useSkiSpecMutation = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [apiErrors, setApiErrors] = useState<Record<string, string>>({});
+  const { showError, showSuccess } = useErrorHandler();
 
-  const createSkiSpec = useCallback(async (data: CreateSkiSpecCommand): Promise<SkiSpecDTO> => {
-    setIsSubmitting(true);
-    setApiErrors({});
+  const createSkiSpec = useCallback(
+    async (data: CreateSkiSpecCommand): Promise<SkiSpecDTO> => {
+      return await pipe(
+        Effect.sync(() => {
+          setIsSubmitting(true);
+          setApiErrors({});
+        }),
+        Effect.flatMap(() => skiSpecHttpClient.post("/api/ski-specs", SkiSpecDTOSchema, data)),
+        Effect.tap(() =>
+          Effect.sync(() => {
+            showSuccess("Success", "Specification has been added");
+            setIsSubmitting(false);
+          })
+        ),
+        Effect.tapError((err) =>
+          Effect.sync(() => {
+            const fieldErrors = showError(err, {
+              redirectOnAuth: true,
+              redirectTo: "/ski-specs",
+            });
+            setApiErrors(fieldErrors);
+            setIsSubmitting(false);
+          })
+        ),
+        Effect.runPromise
+      );
+    },
+    [showError, showSuccess]
+  );
 
-    try {
-      const response = await fetch("/api/ski-specs", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(data),
-      });
+  const updateSkiSpec = useCallback(
+    async (id: string, data: UpdateSkiSpecCommand): Promise<SkiSpecDTO> => {
+      return await pipe(
+        Effect.sync(() => {
+          setIsSubmitting(true);
+          setApiErrors({});
+        }),
+        Effect.flatMap(() => skiSpecHttpClient.put(`/api/ski-specs/${id}`, SkiSpecDTOSchema, data)),
+        Effect.tap(() =>
+          Effect.sync(() => {
+            showSuccess("Success", "Specification has been updated");
+            setIsSubmitting(false);
+          })
+        ),
+        Effect.tapError((err) =>
+          Effect.sync(() => {
+            const fieldErrors = showError(err, {
+              redirectOnAuth: true,
+              redirectTo: "/ski-specs",
+            });
+            setApiErrors(fieldErrors);
+            setIsSubmitting(false);
+          })
+        ),
+        Effect.runPromise
+      );
+    },
+    [showError, showSuccess]
+  );
 
-      if (!response.ok) {
-        // Handle validation errors (400/422)
-        if (response.status === 400 || response.status === 422) {
-          const error: ApiErrorResponse = await response.json();
-          const fieldErrors: Record<string, string> = {};
+  const getSkiSpec = useCallback(
+    async (id: string): Promise<SkiSpecDTO> => {
+      return await pipe(
+        Effect.sync(() => {
+          setIsSubmitting(true);
+          setApiErrors({});
+        }),
+        Effect.flatMap(() => skiSpecHttpClient.get(`/api/ski-specs/${id}`, SkiSpecDTOSchema)),
+        Effect.tap(() =>
+          Effect.sync(() => {
+            setIsSubmitting(false);
+          })
+        ),
+        Effect.tapError((err) =>
+          Effect.sync(() => {
+            showError(err, {
+              redirectOnAuth: true,
+              redirectTo: "/ski-specs",
+            });
+            setIsSubmitting(false);
+          })
+        ),
+        Effect.runPromise
+      );
+    },
+    [showError]
+  );
 
-          error.details?.forEach((detail) => {
-            fieldErrors[detail.field] = detail.message;
-          });
-
-          setApiErrors(fieldErrors);
-
-          toast.error("Validation Error", {
-            description: "Please check the entered data.",
-          });
-
-          throw new Error("Validation failed");
-        }
-
-        // Handle conflict error (409)
-        if (response.status === 409) {
-          setApiErrors({
-            name: "A specification with this name already exists",
-          });
-
-          toast.error("Name Already Exists", {
-            description: "A specification with this name already exists. Choose a different name.",
-          });
-
-          throw new Error("Conflict");
-        }
-
-        // Handle unauthorized error (401)
-        if (response.status === 401) {
-          toast.error("Session Expired", {
-            description: "Please log in again.",
-          });
-
-          // Redirect to login
-          window.location.href = "/auth/login?redirectTo=/ski-specs";
-          throw new Error("Unauthorized");
-        }
-
-        // Handle other errors
-        toast.error("Error", {
-          description: "Failed to create specification. Please try again.",
-        });
-
-        throw new Error("Failed to create specification");
-      }
-
-      const spec: SkiSpecDTO = await response.json();
-
-      toast.success("Success", {
-        description: "Specification has been added",
-      });
-      return spec;
-    } finally {
-      setIsSubmitting(false);
-    }
-  }, []);
-
-  const updateSkiSpec = useCallback(async (id: string, data: UpdateSkiSpecCommand): Promise<SkiSpecDTO> => {
-    setIsSubmitting(true);
-    setApiErrors({});
-
-    try {
-      const response = await fetch(`/api/ski-specs/${id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(data),
-      });
-
-      if (!response.ok) {
-        // Handle validation errors (400/422)
-        if (response.status === 400 || response.status === 422) {
-          const error: ApiErrorResponse = await response.json();
-          const fieldErrors: Record<string, string> = {};
-
-          error.details?.forEach((detail) => {
-            fieldErrors[detail.field] = detail.message;
-          });
-
-          setApiErrors(fieldErrors);
-
-          toast.error("Validation Error", {
-            description: "Please check the entered data.",
-          });
-
-          throw new Error("Validation failed");
-        }
-
-        // Handle conflict error (409)
-        if (response.status === 409) {
-          setApiErrors({
-            name: "A specification with this name already exists",
-          });
-
-          toast.error("Name Already Exists", {
-            description: "A specification with this name already exists. Choose a different name.",
-          });
-
-          throw new Error("Conflict");
-        }
-
-        // Handle not found error (404)
-        if (response.status === 404) {
-          toast.error("Not Found", {
-            description: "Specification not found.",
-          });
-
-          throw new Error("Not found");
-        }
-
-        // Handle unauthorized error (401)
-        if (response.status === 401) {
-          toast.error("Session Expired", {
-            description: "Please log in again.",
-          });
-
-          // Redirect to login
-          window.location.href = "/auth/login?redirectTo=/ski-specs";
-          throw new Error("Unauthorized");
-        }
-
-        // Handle other errors
-        toast.error("Error", {
-          description: "Failed to update specification. Please try again.",
-        });
-
-        throw new Error("Failed to update specification");
-      }
-
-      const spec: SkiSpecDTO = await response.json();
-
-      toast.success("Success", {
-        description: "Specification has been updated",
-      });
-
-      return spec;
-    } finally {
-      setIsSubmitting(false);
-    }
-  }, []);
-
-  const getSkiSpec = useCallback(async (id: string): Promise<SkiSpecDTO> => {
-    setIsSubmitting(true);
-    setApiErrors({});
-
-    try {
-      const response = await fetch(`/api/ski-specs/${id}`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-
-      if (!response.ok) {
-        // Handle not found error (404)
-        if (response.status === 404) {
-          toast.error("Not Found", {
-            description: "Specification not found.",
-          });
-
-          throw new Error("Specification not found");
-        }
-
-        // Handle unauthorized error (401)
-        if (response.status === 401) {
-          toast.error("Session Expired", {
-            description: "Please log in again.",
-          });
-
-          // Redirect to login
-          window.location.href = "/auth/login?redirectTo=/ski-specs";
-          throw new Error("Unauthorized");
-        }
-
-        // Handle invalid UUID format (400)
-        if (response.status === 400) {
-          toast.error("Invalid ID", {
-            description: "Invalid specification ID format.",
-          });
-
-          throw new Error("Invalid ID format");
-        }
-
-        // Handle other errors
-        toast.error("Error", {
-          description: "Failed to fetch specification. Please try again.",
-        });
-
-        throw new Error("Failed to fetch specification");
-      }
-
-      const spec: SkiSpecDTO = await response.json();
-      return spec;
-    } finally {
-      setIsSubmitting(false);
-    }
-  }, []);
-
-  const deleteSkiSpec = useCallback(async (id: string): Promise<void> => {
-    setIsSubmitting(true);
-    setApiErrors({});
-
-    try {
-      const response = await fetch(`/api/ski-specs/${id}`, {
-        method: "DELETE",
-      });
-
-      if (!response.ok) {
-        // Handle invalid UUID format (400)
-        if (response.status === 400) {
-          toast.error("Invalid ID", {
-            description: "Invalid specification identifier",
-          });
-          throw new Error("Invalid UUID");
-        }
-
-        // Handle not found error (404)
-        if (response.status === 404) {
-          toast.error("Not Found", {
-            description: "Specification not found (it may have already been deleted)",
-          });
-          throw new Error("Not found");
-        }
-
-        // Handle unauthorized error (401)
-        if (response.status === 401) {
-          toast.error("Session Expired", {
-            description: "Please log in again.",
-          });
-          window.location.href = "/auth/login?redirectTo=/ski-specs";
-          throw new Error("Unauthorized");
-        }
-
-        // Handle other errors
-        toast.error("Error", {
-          description: "Failed to delete specification. Please try again.",
-        });
-        throw new Error("Failed to delete specification");
-      }
-
-      // 204 No Content - success
-      toast.success("Success", {
-        description: "Specification has been deleted",
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
-  }, []);
-
+  const deleteSkiSpec = useCallback(
+    async (id: string): Promise<void> => {
+      return await pipe(
+        Effect.sync(() => {
+          setIsSubmitting(true);
+          setApiErrors({});
+        }),
+        Effect.flatMap(() => skiSpecHttpClient.delete(`/api/ski-specs/${id}`, SkiSpecDTOSchema)),
+        Effect.map(() => undefined),
+        Effect.tap(() =>
+          Effect.sync(() => {
+            showSuccess("Success", "Specification has been deleted");
+            setIsSubmitting(false);
+          })
+        ),
+        Effect.tapError((err) =>
+          Effect.sync(() => {
+            showError(err, { redirectOnAuth: true, redirectTo: "/ski-specs" });
+            setIsSubmitting(false);
+          })
+        ),
+        Effect.runPromise
+      );
+    },
+    [showError, showSuccess]
+  );
   return {
     createSkiSpec,
     updateSkiSpec,
