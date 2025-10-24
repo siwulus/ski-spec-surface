@@ -1,3 +1,4 @@
+import { Effect, pipe } from "effect";
 import type { SupabaseClient } from "@/db/supabase.client";
 import type { Database } from "@/db/database.types";
 import type {
@@ -10,6 +11,13 @@ import type {
   NoteDTO,
   ListNotesQuery,
 } from "@/types/api.types";
+import {
+  NotFoundError,
+  ConflictError,
+  DatabaseError,
+  BusinessLogicError,
+  type SkiSpecError,
+} from "@/types/error.types";
 
 /**
  * Service class for managing ski specifications and notes.
@@ -55,17 +63,24 @@ export class SkiSpecService {
    *
    * @param weight - Ski weight in grams
    * @param surfaceArea - Ski surface area in cm²
-   * @returns Relative weight in g/cm²
+   * @returns Effect that succeeds with relative weight in g/cm² or fails with BusinessLogicError
    */
-  calculateRelativeWeight(weight: number, surfaceArea: number): number {
+  calculateRelativeWeight(weight: number, surfaceArea: number): Effect.Effect<number, BusinessLogicError> {
     if (surfaceArea === 0) {
-      throw new Error("Surface area cannot be zero");
+      return Effect.fail(
+        new BusinessLogicError("Surface area cannot be zero", {
+          code: "INVALID_SURFACE_AREA",
+          context: { weight, surfaceArea },
+        })
+      );
     }
 
     const relativeWeight = weight / surfaceArea;
 
     // Round to 2 decimal places
-    return Math.round(relativeWeight * 100) / 100;
+    const rounded = Math.round(relativeWeight * 100) / 100;
+
+    return Effect.succeed(rounded);
   }
 
   /**
@@ -91,56 +106,85 @@ export class SkiSpecService {
    *
    * @param userId - ID of the authenticated user
    * @param command - Validated ski specification data
-   * @returns Created ski specification with calculated fields
-   * @throws Error if creation fails
+   * @returns Effect that succeeds with created ski specification or fails with SkiSpecError
    */
-  async createSkiSpec(userId: string, command: CreateSkiSpecCommand): Promise<SkiSpecDTO> {
-    // Step 1: Calculate derived fields
-    const surfaceArea = this.calculateSurfaceArea({
-      length: command.length,
-      tip: command.tip,
-      waist: command.waist,
-      tail: command.tail,
-      radius: command.radius,
-    });
+  createSkiSpec(userId: string, command: CreateSkiSpecCommand): Effect.Effect<SkiSpecDTO, SkiSpecError> {
+    return pipe(
+      // Step 1: Calculate surface area (pure, always succeeds)
+      Effect.succeed(
+        this.calculateSurfaceArea({
+          length: command.length,
+          tip: command.tip,
+          waist: command.waist,
+          tail: command.tail,
+          radius: command.radius,
+        })
+      ),
 
-    const relativeWeight = this.calculateRelativeWeight(command.weight, surfaceArea);
-    const algorithmVersion = this.getCurrentAlgorithmVersion();
+      // Step 2: Calculate relative weight (can fail)
+      Effect.flatMap((surfaceArea) =>
+        pipe(
+          this.calculateRelativeWeight(command.weight, surfaceArea),
+          Effect.map((relativeWeight) => ({ surfaceArea, relativeWeight }))
+        )
+      ),
 
-    // Step 2: Prepare data for insertion
-    const insertData = {
-      user_id: userId,
-      name: command.name.trim(),
-      description: command.description?.trim() || null,
-      length: command.length,
-      tip: command.tip,
-      waist: command.waist,
-      tail: command.tail,
-      radius: command.radius,
-      weight: command.weight,
-      surface_area: surfaceArea,
-      relative_weight: relativeWeight,
-      algorithm_version: algorithmVersion,
-    };
+      // Step 3: Prepare insert data
+      Effect.map(({ surfaceArea, relativeWeight }) => ({
+        user_id: userId,
+        name: command.name.trim(),
+        description: command.description?.trim() || null,
+        length: command.length,
+        tip: command.tip,
+        waist: command.waist,
+        tail: command.tail,
+        radius: command.radius,
+        weight: command.weight,
+        surface_area: surfaceArea,
+        relative_weight: relativeWeight,
+        algorithm_version: this.getCurrentAlgorithmVersion(),
+      })),
 
-    // Step 3: Insert into database
-    const { data, error } = await this.supabase.from("ski_specs").insert(insertData).select().single();
+      // Step 4: Insert into database
+      Effect.flatMap((insertData) =>
+        Effect.tryPromise({
+          try: () => this.supabase.from("ski_specs").insert(insertData).select().single(),
+          catch: (error) =>
+            this.handleDatabaseError(error, {
+              operation: "createSkiSpec",
+              table: "ski_specs",
+              userId,
+            }),
+        })
+      ),
 
-    // Step 4: Handle errors
-    if (error) {
-      throw error;
-    }
+      // Step 5: Validate response data
+      Effect.flatMap(({ data, error }) => {
+        if (error) {
+          return Effect.fail(
+            this.handleDatabaseError(error, {
+              operation: "createSkiSpec",
+              table: "ski_specs",
+              userId,
+            })
+          );
+        }
 
-    if (!data) {
-      throw new Error("Failed to create ski specification");
-    }
+        if (!data) {
+          return Effect.fail(
+            new DatabaseError("Failed to create ski specification", {
+              operation: "createSkiSpec",
+              table: "ski_specs",
+            })
+          );
+        }
 
-    // Step 5: Return DTO with notes_count
-    // For a newly created spec, notes_count is always 0
-    return {
-      ...data,
-      notes_count: 0,
-    };
+        return Effect.succeed(data);
+      }),
+
+      // Step 6: Add notes_count (always 0 for new specs)
+      Effect.map((data) => ({ ...data, notes_count: 0 }))
+    );
   }
 
   /**
@@ -150,47 +194,62 @@ export class SkiSpecService {
    * 1. Queries the ski_specs table with filters for id and user_id
    * 2. Counts associated notes from ski_spec_notes table
    * 3. Returns the specification as a DTO with notes_count
-   * 4. Returns null if not found or user doesn't own the specification
+   * 4. Returns NotFoundError if not found or user doesn't own the specification
    *
    * @param userId - ID of the authenticated user
    * @param specId - UUID of the ski specification to retrieve
-   * @returns Ski specification with notes count, or null if not found
-   * @throws Error if database query fails
+   * @returns Effect that succeeds with ski specification or fails with SkiSpecError
    */
-  async getSkiSpec(userId: string, specId: string): Promise<SkiSpecDTO | null> {
-    // Query ski_specs with user ownership validation
-    const { data: spec, error: specError } = await this.supabase
-      .from("ski_specs")
-      .select("*")
-      .eq("id", specId)
-      .eq("user_id", userId)
-      .single();
+  getSkiSpec(userId: string, specId: string): Effect.Effect<SkiSpecDTO, SkiSpecError> {
+    return pipe(
+      // Step 1: Query ski spec with ownership validation
+      Effect.tryPromise({
+        try: () => this.supabase.from("ski_specs").select("*").eq("id", specId).eq("user_id", userId).single(),
+        catch: (error) =>
+          this.handleDatabaseError(error, {
+            operation: "getSkiSpec",
+            table: "ski_specs",
+            userId,
+            resourceId: specId,
+          }),
+      }),
 
-    // Handle not found case (PGRST116 is Supabase's "no rows returned" error)
-    if (specError?.code === "PGRST116") {
-      return null;
-    }
+      // Step 2: Handle PGRST116 (not found) error
+      Effect.flatMap(({ data, error }) => {
+        if (error?.code === "PGRST116") {
+          return Effect.fail(
+            new NotFoundError("Ski specification not found", {
+              resourceType: "ski_spec",
+              resourceId: specId,
+            })
+          );
+        }
 
-    // Handle other errors
-    if (specError) {
-      throw specError;
-    }
+        if (error) {
+          return Effect.fail(
+            this.handleDatabaseError(error, {
+              operation: "getSkiSpec",
+              table: "ski_specs",
+              userId,
+              resourceId: specId,
+            })
+          );
+        }
 
-    // Query notes count separately
-    const { count, error: countError } = await this.supabase
-      .from("ski_spec_notes")
-      .select("*", { count: "exact", head: true })
-      .eq("ski_spec_id", specId);
+        return Effect.succeed(data);
+      }),
 
-    if (countError) {
-      throw countError;
-    }
-
-    // Return DTO with notes_count
-    return {
-      ...spec,
-      notes_count: count ?? 0,
-    };
+      // Step 3: Get notes count
+      Effect.flatMap((spec) =>
+        pipe(
+          this.getNotesCount(specId),
+          Effect.map((notesCount) => ({
+            ...spec,
+            notes_count: notesCount,
+          }))
+        )
+      )
+    );
   }
 
   /**
@@ -206,27 +265,45 @@ export class SkiSpecService {
    *
    * @param userId - ID of the authenticated user
    * @param specId - ID of the ski specification to delete
-   * @throws Error with "not found" message if specification doesn't exist or user doesn't own it
-   * @throws Error for database errors
+   * @returns Effect that succeeds with void or fails with SkiSpecError
    */
-  async deleteSkiSpec(userId: string, specId: string): Promise<void> {
-    // Delete and check affected rows in single operation
-    const { error, count } = await this.supabase
-      .from("ski_specs")
-      .delete({ count: "exact" })
-      .eq("id", specId)
-      .eq("user_id", userId);
+  deleteSkiSpec(userId: string, specId: string): Effect.Effect<void, SkiSpecError> {
+    return pipe(
+      Effect.tryPromise({
+        try: () => this.supabase.from("ski_specs").delete({ count: "exact" }).eq("id", specId).eq("user_id", userId),
+        catch: (error) =>
+          this.handleDatabaseError(error, {
+            operation: "deleteSkiSpec",
+            table: "ski_specs",
+            userId,
+            resourceId: specId,
+          }),
+      }),
 
-    // Handle database errors
-    if (error) {
-      throw error;
-    }
+      Effect.flatMap(({ error, count }) => {
+        if (error) {
+          return Effect.fail(
+            this.handleDatabaseError(error, {
+              operation: "deleteSkiSpec",
+              table: "ski_specs",
+              userId,
+              resourceId: specId,
+            })
+          );
+        }
 
-    // If no rows affected, spec doesn't exist or user doesn't own it
-    // Return same error for both cases to prevent information disclosure
-    if (count === 0) {
-      throw new Error("Ski specification not found");
-    }
+        if (count === 0) {
+          return Effect.fail(
+            new NotFoundError("Ski specification not found", {
+              resourceType: "ski_spec",
+              resourceId: specId,
+            })
+          );
+        }
+
+        return Effect.succeed(undefined);
+      })
+    );
   }
 
   /**
@@ -242,63 +319,81 @@ export class SkiSpecService {
    *
    * @param userId - ID of the authenticated user
    * @param query - Validated query parameters (page, limit, sort_by, sort_order, search)
-   * @returns Object containing array of SkiSpecDTO and total count
-   * @throws Error if database query fails
+   * @returns Effect that succeeds with data and total count or fails with SkiSpecError
    */
-  async listSkiSpecs(userId: string, query: ListSkiSpecsQuery): Promise<{ data: SkiSpecDTO[]; total: number }> {
-    // Step 1: Build base query with user filter and count
-    let dbQuery = this.supabase.from("ski_specs").select("*", { count: "exact" }).eq("user_id", userId);
+  listSkiSpecs(
+    userId: string,
+    query: ListSkiSpecsQuery
+  ): Effect.Effect<{ data: SkiSpecDTO[]; total: number }, SkiSpecError> {
+    return pipe(
+      // Step 1: Build and execute query
+      Effect.tryPromise({
+        try: async () => {
+          let dbQuery = this.supabase.from("ski_specs").select("*", { count: "exact" }).eq("user_id", userId);
 
-    // Step 2: Apply search filter if provided
-    if (query.search) {
-      const searchTerm = query.search.trim();
-      if (searchTerm) {
-        dbQuery = dbQuery.or(`name.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%`);
-      }
-    }
+          // Apply search filter
+          if (query.search) {
+            const searchTerm = query.search.trim();
+            if (searchTerm) {
+              dbQuery = dbQuery.or(`name.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%`);
+            }
+          }
 
-    // Step 3: Apply sorting
-    dbQuery = dbQuery.order(query.sort_by, {
-      ascending: query.sort_order === "asc",
-    });
+          // Apply sorting
+          dbQuery = dbQuery.order(query.sort_by, {
+            ascending: query.sort_order === "asc",
+          });
 
-    // Step 4: Apply pagination
-    const offset = (query.page - 1) * query.limit;
-    dbQuery = dbQuery.range(offset, offset + query.limit - 1);
+          // Apply pagination
+          const offset = (query.page - 1) * query.limit;
+          dbQuery = dbQuery.range(offset, offset + query.limit - 1);
 
-    // Step 5: Execute query
-    const { data, error, count } = await dbQuery;
+          return dbQuery;
+        },
+        catch: (error) =>
+          this.handleDatabaseError(error, {
+            operation: "listSkiSpecs",
+            table: "ski_specs",
+            userId,
+          }),
+      }),
 
-    // Handle database errors
-    if (error) {
-      throw error;
-    }
-
-    // Step 6: Get notes count for each specification
-    // Note: Using separate queries for now (N+1 pattern)
-    // TODO: Optimize with aggregation in single query if performance becomes an issue
-    const specsWithNotes = await Promise.all(
-      (data || []).map(async (spec: Database["public"]["Tables"]["ski_specs"]["Row"]) => {
-        const { count: notesCount, error: countError } = await this.supabase
-          .from("ski_spec_notes")
-          .select("*", { count: "exact", head: true })
-          .eq("ski_spec_id", spec.id);
-
-        if (countError) {
-          throw countError;
+      // Step 2: Validate response
+      Effect.flatMap(({ data, error, count }) => {
+        if (error) {
+          return Effect.fail(
+            this.handleDatabaseError(error, {
+              operation: "listSkiSpecs",
+              table: "ski_specs",
+              userId,
+            })
+          );
         }
 
-        return {
-          ...spec,
-          notes_count: notesCount ?? 0,
-        } as SkiSpecDTO;
-      })
-    );
+        return Effect.succeed({ data: data || [], count: count ?? 0 });
+      }),
 
-    return {
-      data: specsWithNotes,
-      total: count ?? 0,
-    };
+      // Step 3: Attach notes count to each spec (parallel)
+      Effect.flatMap(({ data, count }) =>
+        pipe(
+          Effect.all(
+            data.map((spec) =>
+              pipe(
+                this.getNotesCount(spec.id),
+                Effect.map((notesCount) => ({
+                  ...spec,
+                  notes_count: notesCount,
+                }))
+              )
+            )
+          ),
+          Effect.map((specsWithNotes) => ({
+            data: specsWithNotes,
+            total: count,
+          }))
+        )
+      )
+    );
   }
 
   /**
@@ -314,108 +409,112 @@ export class SkiSpecService {
    * @param userId - ID of the authenticated user
    * @param specId - UUID of the ski specification to update
    * @param command - Validated ski specification update data
-   * @returns Updated ski specification with calculated fields and notes count
-   * @throws Error with "Specification not found" if spec doesn't exist or user doesn't own it
-   * @throws Error with "Name already exists" if new name conflicts with another spec
-   * @throws Error for database errors
+   * @returns Effect that succeeds with updated ski specification or fails with SkiSpecError
    */
-  async updateSkiSpec(userId: string, specId: string, command: UpdateSkiSpecCommand): Promise<SkiSpecDTO> {
-    // Step 1: Verify specification exists and user owns it
-    const { data: existing, error: fetchError } = await this.supabase
-      .from("ski_specs")
-      .select("*")
-      .eq("id", specId)
-      .eq("user_id", userId)
-      .single();
+  updateSkiSpec(
+    userId: string,
+    specId: string,
+    command: UpdateSkiSpecCommand
+  ): Effect.Effect<SkiSpecDTO, SkiSpecError> {
+    return pipe(
+      // Step 1: Verify spec exists and user owns it
+      this.verifySpecOwnership(userId, specId),
 
-    // Handle not found (PGRST116) or other fetch errors
-    if (fetchError?.code === "PGRST116" || !existing) {
-      throw new Error("Specification not found");
-    }
+      // Step 2: Check name uniqueness if name changed
+      Effect.flatMap((existing) =>
+        pipe(
+          this.checkNameUniqueness(userId, specId, command.name, existing.name),
+          Effect.map(() => existing)
+        )
+      ),
 
-    if (fetchError) {
-      throw fetchError;
-    }
+      // Step 3: Calculate derived fields
+      Effect.flatMap(() =>
+        pipe(
+          Effect.succeed(
+            this.calculateSurfaceArea({
+              length: command.length,
+              tip: command.tip,
+              waist: command.waist,
+              tail: command.tail,
+              radius: command.radius,
+            })
+          ),
+          Effect.flatMap((surfaceArea) =>
+            pipe(
+              this.calculateRelativeWeight(command.weight, surfaceArea),
+              Effect.map((relativeWeight) => ({ surfaceArea, relativeWeight }))
+            )
+          )
+        )
+      ),
 
-    // Step 2: Check name uniqueness (only if name changed)
-    const trimmedName = command.name.trim();
-    if (trimmedName !== existing.name) {
-      const { data: duplicate, error: duplicateError } = await this.supabase
-        .from("ski_specs")
-        .select("id")
-        .eq("user_id", userId)
-        .eq("name", trimmedName)
-        .neq("id", specId)
-        .maybeSingle();
+      // Step 4: Prepare update data
+      Effect.map(({ surfaceArea, relativeWeight }) => ({
+        name: command.name.trim(),
+        description: command.description?.trim() || null,
+        length: command.length,
+        tip: command.tip,
+        waist: command.waist,
+        tail: command.tail,
+        radius: command.radius,
+        weight: command.weight,
+        surface_area: surfaceArea,
+        relative_weight: relativeWeight,
+        algorithm_version: this.getCurrentAlgorithmVersion(),
+      })),
 
-      if (duplicateError) {
-        throw duplicateError;
-      }
+      // Step 5: Update in database
+      Effect.flatMap((updateData) =>
+        Effect.tryPromise({
+          try: () =>
+            this.supabase.from("ski_specs").update(updateData).eq("id", specId).eq("user_id", userId).select().single(),
+          catch: (error) =>
+            this.handleDatabaseError(error, {
+              operation: "updateSkiSpec",
+              table: "ski_specs",
+              userId,
+              resourceId: specId,
+            }),
+        })
+      ),
 
-      if (duplicate) {
-        throw new Error("Name already exists");
-      }
-    }
+      // Step 6: Validate response
+      Effect.flatMap(({ data, error }) => {
+        if (error) {
+          return Effect.fail(
+            this.handleDatabaseError(error, {
+              operation: "updateSkiSpec",
+              table: "ski_specs",
+              userId,
+              resourceId: specId,
+            })
+          );
+        }
 
-    // Step 3: Calculate derived fields
-    const surfaceArea = this.calculateSurfaceArea({
-      length: command.length,
-      tip: command.tip,
-      waist: command.waist,
-      tail: command.tail,
-      radius: command.radius,
-    });
+        if (!data) {
+          return Effect.fail(
+            new DatabaseError("Update failed", {
+              operation: "updateSkiSpec",
+              table: "ski_specs",
+            })
+          );
+        }
 
-    const relativeWeight = this.calculateRelativeWeight(command.weight, surfaceArea);
-    const algorithmVersion = this.getCurrentAlgorithmVersion();
+        return Effect.succeed(data);
+      }),
 
-    // Step 4: Prepare update data
-    const updateData = {
-      name: trimmedName,
-      description: command.description?.trim() || null,
-      length: command.length,
-      tip: command.tip,
-      waist: command.waist,
-      tail: command.tail,
-      radius: command.radius,
-      weight: command.weight,
-      surface_area: surfaceArea,
-      relative_weight: relativeWeight,
-      algorithm_version: algorithmVersion,
-    };
-
-    // Step 5: Update in database
-    const { data, error } = await this.supabase
-      .from("ski_specs")
-      .update(updateData)
-      .eq("id", specId)
-      .eq("user_id", userId)
-      .select()
-      .single();
-
-    if (error) {
-      throw error;
-    }
-
-    if (!data) {
-      throw new Error("Update failed");
-    }
-
-    // Step 6: Get notes count
-    const { count, error: countError } = await this.supabase
-      .from("ski_spec_notes")
-      .select("*", { count: "exact", head: true })
-      .eq("ski_spec_id", specId);
-
-    if (countError) {
-      throw countError;
-    }
-
-    // Step 7: Return DTO with notes_count
-    return {
-      ...data,
-      notes_count: count ?? 0,
-    };
+      // Step 7: Get notes count
+      Effect.flatMap((data) =>
+        pipe(
+          this.getNotesCount(specId),
+          Effect.map((notesCount) => ({
+            ...data,
+            notes_count: notesCount,
+          }))
+        )
+      )
+    );
   }
 
   /**
@@ -433,48 +532,94 @@ export class SkiSpecService {
    * @param userId - ID of the authenticated user
    * @param specId - UUID of the ski specification
    * @param command - Validated note creation data
-   * @returns Created note with all fields populated
-   * @throws Error with "Specification not found" if spec doesn't exist or user doesn't own it
-   * @throws Error for database errors
+   * @returns Effect that succeeds with created note or fails with SkiSpecError
    */
-  async createNote(userId: string, specId: string, command: CreateNoteCommand): Promise<NoteDTO> {
-    // Step 1: Verify specification exists and user owns it
-    const { data: spec, error: specError } = await this.supabase
-      .from("ski_specs")
-      .select("id")
-      .eq("id", specId)
-      .eq("user_id", userId)
-      .single();
+  createNote(userId: string, specId: string, command: CreateNoteCommand): Effect.Effect<NoteDTO, SkiSpecError> {
+    return pipe(
+      // Step 1: Verify specification exists and user owns it
+      Effect.tryPromise({
+        try: () => this.supabase.from("ski_specs").select("id").eq("id", specId).eq("user_id", userId).single(),
+        catch: (error) =>
+          this.handleDatabaseError(error, {
+            operation: "createNote",
+            table: "ski_specs",
+            userId,
+            resourceId: specId,
+          }),
+      }),
 
-    // Handle not found (PGRST116) or other fetch errors
-    if (specError?.code === "PGRST116" || !spec) {
-      throw new Error("Specification not found");
-    }
+      // Step 2: Validate spec exists
+      Effect.flatMap(({ data: spec, error: specError }) => {
+        if (specError?.code === "PGRST116" || !spec) {
+          return Effect.fail(
+            new NotFoundError("Ski specification not found", {
+              resourceType: "ski_spec",
+              resourceId: specId,
+            })
+          );
+        }
 
-    if (specError) {
-      throw specError;
-    }
+        if (specError) {
+          return Effect.fail(
+            this.handleDatabaseError(specError, {
+              operation: "createNote",
+              table: "ski_specs",
+              userId,
+              resourceId: specId,
+            })
+          );
+        }
 
-    // Step 2: Prepare note data for insertion
-    const noteData = {
-      ski_spec_id: specId,
-      content: command.content.trim(),
-    };
+        return Effect.succeed(spec);
+      }),
 
-    // Step 3: Insert note into database
-    const { data, error } = await this.supabase.from("ski_spec_notes").insert(noteData).select().single();
+      // Step 3: Prepare and insert note data
+      Effect.flatMap(() =>
+        Effect.tryPromise({
+          try: () =>
+            this.supabase
+              .from("ski_spec_notes")
+              .insert({
+                ski_spec_id: specId,
+                content: command.content.trim(),
+              })
+              .select()
+              .single(),
+          catch: (error) =>
+            this.handleDatabaseError(error, {
+              operation: "createNote",
+              table: "ski_spec_notes",
+              userId,
+              resourceId: specId,
+            }),
+        })
+      ),
 
-    // Step 4: Handle errors
-    if (error) {
-      throw error;
-    }
+      // Step 4: Validate response
+      Effect.flatMap(({ data, error }) => {
+        if (error) {
+          return Effect.fail(
+            this.handleDatabaseError(error, {
+              operation: "createNote",
+              table: "ski_spec_notes",
+              userId,
+              resourceId: specId,
+            })
+          );
+        }
 
-    if (!data) {
-      throw new Error("Failed to create note");
-    }
+        if (!data) {
+          return Effect.fail(
+            new DatabaseError("Failed to create note", {
+              operation: "createNote",
+              table: "ski_spec_notes",
+            })
+          );
+        }
 
-    // Step 5: Return created note as DTO
-    return data as NoteDTO;
+        return Effect.succeed(data as NoteDTO);
+      })
+    );
   }
 
   /**
@@ -493,47 +638,87 @@ export class SkiSpecService {
    * @param userId - ID of the authenticated user
    * @param specId - UUID of the ski specification that owns the note
    * @param noteId - UUID of the note to retrieve
-   * @returns Note data as DTO
-   * @throws Error with "Note not found" if spec/note not found or not owned by user
-   * @throws Error for database errors
+   * @returns Effect that succeeds with note data or fails with SkiSpecError
    */
-  async getNoteById(userId: string, specId: string, noteId: string): Promise<NoteDTO> {
-    // Step 1: Verify ski specification exists and user owns it
-    const { data: spec, error: specError } = await this.supabase
-      .from("ski_specs")
-      .select("id")
-      .eq("id", specId)
-      .eq("user_id", userId)
-      .single();
+  getNoteById(userId: string, specId: string, noteId: string): Effect.Effect<NoteDTO, SkiSpecError> {
+    return pipe(
+      // Step 1: Verify ski specification exists and user owns it
+      Effect.tryPromise({
+        try: () => this.supabase.from("ski_specs").select("id").eq("id", specId).eq("user_id", userId).single(),
+        catch: (error) =>
+          this.handleDatabaseError(error, {
+            operation: "getNoteById",
+            table: "ski_specs",
+            userId,
+            resourceId: specId,
+          }),
+      }),
 
-    // Handle not found (PGRST116) or ownership failure
-    if (specError?.code === "PGRST116" || !spec) {
-      throw new Error("Note not found");
-    }
+      // Step 2: Validate spec exists
+      Effect.flatMap(({ data: spec, error: specError }) => {
+        if (specError?.code === "PGRST116" || !spec) {
+          return Effect.fail(
+            new NotFoundError("Note not found", {
+              resourceType: "note",
+              resourceId: noteId,
+            })
+          );
+        }
 
-    if (specError) {
-      throw specError;
-    }
+        if (specError) {
+          return Effect.fail(
+            this.handleDatabaseError(specError, {
+              operation: "getNoteById",
+              table: "ski_specs",
+              userId,
+              resourceId: specId,
+            })
+          );
+        }
 
-    // Step 2: Query note with verification that it belongs to the specification
-    const { data: note, error: noteError } = await this.supabase
-      .from("ski_spec_notes")
-      .select("*")
-      .eq("id", noteId)
-      .eq("ski_spec_id", specId)
-      .single();
+        return Effect.succeed(spec);
+      }),
 
-    // Handle not found (PGRST116) or association failure
-    if (noteError?.code === "PGRST116" || !note) {
-      throw new Error("Note not found");
-    }
+      // Step 3: Query note with verification it belongs to the specification
+      Effect.flatMap(() =>
+        Effect.tryPromise({
+          try: () =>
+            this.supabase.from("ski_spec_notes").select("*").eq("id", noteId).eq("ski_spec_id", specId).single(),
+          catch: (error) =>
+            this.handleDatabaseError(error, {
+              operation: "getNoteById",
+              table: "ski_spec_notes",
+              userId,
+              resourceId: noteId,
+            }),
+        })
+      ),
 
-    if (noteError) {
-      throw noteError;
-    }
+      // Step 4: Validate note exists
+      Effect.flatMap(({ data: note, error: noteError }) => {
+        if (noteError?.code === "PGRST116" || !note) {
+          return Effect.fail(
+            new NotFoundError("Note not found", {
+              resourceType: "note",
+              resourceId: noteId,
+            })
+          );
+        }
 
-    // Step 3: Return note as DTO
-    return note as NoteDTO;
+        if (noteError) {
+          return Effect.fail(
+            this.handleDatabaseError(noteError, {
+              operation: "getNoteById",
+              table: "ski_spec_notes",
+              userId,
+              resourceId: noteId,
+            })
+          );
+        }
+
+        return Effect.succeed(note as NoteDTO);
+      })
+    );
   }
 
   /**
@@ -553,52 +738,101 @@ export class SkiSpecService {
    * @param specId - UUID of the ski specification that owns the note
    * @param noteId - UUID of the note to update
    * @param command - Validated note update data (content)
-   * @returns Updated note with new timestamp
-   * @throws Error with "Note not found" if spec/note not found or not owned by user
-   * @throws Error For database errors
+   * @returns Effect that succeeds with updated note or fails with SkiSpecError
    */
-  async updateNote(userId: string, specId: string, noteId: string, command: UpdateNoteCommand): Promise<NoteDTO> {
-    // Step 1: Verify ski specification exists and user owns it
-    const { data: spec, error: specError } = await this.supabase
-      .from("ski_specs")
-      .select("id")
-      .eq("id", specId)
-      .eq("user_id", userId)
-      .single();
+  updateNote(
+    userId: string,
+    specId: string,
+    noteId: string,
+    command: UpdateNoteCommand
+  ): Effect.Effect<NoteDTO, SkiSpecError> {
+    return pipe(
+      // Step 1: Verify ski specification exists and user owns it
+      Effect.tryPromise({
+        try: () => this.supabase.from("ski_specs").select("id").eq("id", specId).eq("user_id", userId).single(),
+        catch: (error) =>
+          this.handleDatabaseError(error, {
+            operation: "updateNote",
+            table: "ski_specs",
+            userId,
+            resourceId: specId,
+          }),
+      }),
 
-    // Handle not found (PGRST116) or ownership failure
-    if (specError?.code === "PGRST116" || !spec) {
-      throw new Error("Note not found");
-    }
+      // Step 2: Validate spec exists
+      Effect.flatMap(({ data: spec, error: specError }) => {
+        if (specError?.code === "PGRST116" || !spec) {
+          return Effect.fail(
+            new NotFoundError("Note not found", {
+              resourceType: "note",
+              resourceId: noteId,
+            })
+          );
+        }
 
-    if (specError) {
-      throw specError;
-    }
+        if (specError) {
+          return Effect.fail(
+            this.handleDatabaseError(specError, {
+              operation: "updateNote",
+              table: "ski_specs",
+              userId,
+              resourceId: specId,
+            })
+          );
+        }
 
-    // Step 2: Update note with new content and timestamp
-    // Note: updated_at is automatically set by database trigger, but we set it explicitly for consistency
-    const { data: updatedNote, error: updateError } = await this.supabase
-      .from("ski_spec_notes")
-      .update({
-        content: command.content,
-        updated_at: new Date().toISOString(),
+        return Effect.succeed(spec);
+      }),
+
+      // Step 3: Update note with new content and timestamp
+      Effect.flatMap(() =>
+        Effect.tryPromise({
+          try: () =>
+            this.supabase
+              .from("ski_spec_notes")
+              .update({
+                content: command.content,
+                updated_at: new Date().toISOString(),
+              })
+              .eq("id", noteId)
+              .eq("ski_spec_id", specId)
+              .select()
+              .single(),
+          catch: (error) =>
+            this.handleDatabaseError(error, {
+              operation: "updateNote",
+              table: "ski_spec_notes",
+              userId,
+              resourceId: noteId,
+            }),
+        })
+      ),
+
+      // Step 4: Validate response
+      Effect.flatMap(({ data: updatedNote, error: updateError }) => {
+        if (updateError?.code === "PGRST116" || !updatedNote) {
+          return Effect.fail(
+            new NotFoundError("Note not found", {
+              resourceType: "note",
+              resourceId: noteId,
+            })
+          );
+        }
+
+        if (updateError) {
+          return Effect.fail(
+            this.handleDatabaseError(updateError, {
+              operation: "updateNote",
+              table: "ski_spec_notes",
+              userId,
+              resourceId: noteId,
+            })
+          );
+        }
+
+        return Effect.succeed(updatedNote as NoteDTO);
       })
-      .eq("id", noteId)
-      .eq("ski_spec_id", specId)
-      .select()
-      .single();
-
-    // Handle not found (PGRST116) or update failure
-    if (updateError?.code === "PGRST116" || !updatedNote) {
-      throw new Error("Note not found");
-    }
-
-    if (updateError) {
-      throw updateError;
-    }
-
-    // Step 3: Return updated note
-    return updatedNote as NoteDTO;
+    );
   }
 
   /**
@@ -617,50 +851,115 @@ export class SkiSpecService {
    * @param userId - ID of the authenticated user
    * @param specId - UUID of the ski specification that owns the note
    * @param noteId - UUID of the note to delete
-   * @throws Error with "Note not found" if spec/note not found or not owned by user
-   * @throws Error For database errors
+   * @returns Effect that succeeds with void or fails with SkiSpecError
    */
-  async deleteNote(userId: string, specId: string, noteId: string): Promise<void> {
-    // Step 1: Verify ski specification exists and user owns it
-    const { data: spec, error: specError } = await this.supabase
-      .from("ski_specs")
-      .select("id")
-      .eq("id", specId)
-      .eq("user_id", userId)
-      .single();
+  deleteNote(userId: string, specId: string, noteId: string): Effect.Effect<void, SkiSpecError> {
+    return pipe(
+      // Step 1: Verify ski specification exists and user owns it
+      Effect.tryPromise({
+        try: () => this.supabase.from("ski_specs").select("id").eq("id", specId).eq("user_id", userId).single(),
+        catch: (error) =>
+          this.handleDatabaseError(error, {
+            operation: "deleteNote",
+            table: "ski_specs",
+            userId,
+            resourceId: specId,
+          }),
+      }),
 
-    // Handle not found (PGRST116) or ownership failure
-    if (specError?.code === "PGRST116" || !spec) {
-      throw new Error("Note not found");
-    }
+      // Step 2: Validate spec exists
+      Effect.flatMap(({ data: spec, error: specError }) => {
+        if (specError?.code === "PGRST116" || !spec) {
+          return Effect.fail(
+            new NotFoundError("Note not found", {
+              resourceType: "note",
+              resourceId: noteId,
+            })
+          );
+        }
 
-    if (specError) {
-      throw specError;
-    }
+        if (specError) {
+          return Effect.fail(
+            this.handleDatabaseError(specError, {
+              operation: "deleteNote",
+              table: "ski_specs",
+              userId,
+              resourceId: specId,
+            })
+          );
+        }
 
-    // Step 2: Verify note exists and belongs to the specification
-    const { data: note, error: noteError } = await this.supabase
-      .from("ski_spec_notes")
-      .select("id")
-      .eq("id", noteId)
-      .eq("ski_spec_id", specId)
-      .single();
+        return Effect.succeed(spec);
+      }),
 
-    // Handle not found (PGRST116) or association failure
-    if (noteError?.code === "PGRST116" || !note) {
-      throw new Error("Note not found");
-    }
+      // Step 3: Verify note exists and belongs to the specification
+      Effect.flatMap(() =>
+        Effect.tryPromise({
+          try: () =>
+            this.supabase.from("ski_spec_notes").select("id").eq("id", noteId).eq("ski_spec_id", specId).single(),
+          catch: (error) =>
+            this.handleDatabaseError(error, {
+              operation: "deleteNote",
+              table: "ski_spec_notes",
+              userId,
+              resourceId: noteId,
+            }),
+        })
+      ),
 
-    if (noteError) {
-      throw noteError;
-    }
+      // Step 4: Validate note exists
+      Effect.flatMap(({ data: note, error: noteError }) => {
+        if (noteError?.code === "PGRST116" || !note) {
+          return Effect.fail(
+            new NotFoundError("Note not found", {
+              resourceType: "note",
+              resourceId: noteId,
+            })
+          );
+        }
 
-    // Step 3: Delete the note (RLS policies provide additional security layer)
-    const { error: deleteError } = await this.supabase.from("ski_spec_notes").delete().eq("id", noteId);
+        if (noteError) {
+          return Effect.fail(
+            this.handleDatabaseError(noteError, {
+              operation: "deleteNote",
+              table: "ski_spec_notes",
+              userId,
+              resourceId: noteId,
+            })
+          );
+        }
 
-    if (deleteError) {
-      throw new Error(`Failed to delete note: ${deleteError.message}`);
-    }
+        return Effect.succeed(note);
+      }),
+
+      // Step 5: Delete the note
+      Effect.flatMap(() =>
+        Effect.tryPromise({
+          try: () => this.supabase.from("ski_spec_notes").delete().eq("id", noteId),
+          catch: (error) =>
+            new DatabaseError("Failed to delete note", {
+              cause: error instanceof Error ? error : undefined,
+              operation: "deleteNote",
+              table: "ski_spec_notes",
+            }),
+        })
+      ),
+
+      // Step 6: Validate deletion
+      Effect.flatMap(({ error: deleteError }) => {
+        if (deleteError) {
+          return Effect.fail(
+            new DatabaseError(`Failed to delete note: ${deleteError.message}`, {
+              cause: deleteError,
+              operation: "deleteNote",
+              table: "ski_spec_notes",
+            })
+          );
+        }
+
+        return Effect.succeed(undefined);
+      })
+    );
   }
 
   /**
@@ -672,58 +971,97 @@ export class SkiSpecService {
    * 3. Returns notes with total count
    *
    * Security: Verifies specification ownership before returning notes.
-   * Returns null if specification doesn't exist or user doesn't own it.
+   * Returns NotFoundError if specification doesn't exist or user doesn't own it.
    *
    * @param userId - ID of the authenticated user
    * @param specId - UUID of the ski specification
    * @param query - Validated query parameters (page, limit)
-   * @returns Object containing array of NoteDTO and total count, or null if spec not found
-   * @throws Error for database errors
+   * @returns Effect that succeeds with notes data and count or fails with SkiSpecError
    */
-  async listNotes(
+  listNotes(
     userId: string,
     specId: string,
     query: ListNotesQuery
-  ): Promise<{ data: NoteDTO[]; total: number } | null> {
-    // Step 1: Verify specification exists and user owns it
-    const { data: spec, error: specError } = await this.supabase
-      .from("ski_specs")
-      .select("id")
-      .eq("id", specId)
-      .eq("user_id", userId)
-      .single();
+  ): Effect.Effect<{ data: NoteDTO[]; total: number }, SkiSpecError> {
+    return pipe(
+      // Step 1: Verify specification exists and user owns it
+      Effect.tryPromise({
+        try: () => this.supabase.from("ski_specs").select("id").eq("id", specId).eq("user_id", userId).single(),
+        catch: (error) =>
+          this.handleDatabaseError(error, {
+            operation: "listNotes",
+            table: "ski_specs",
+            userId,
+            resourceId: specId,
+          }),
+      }),
 
-    // Handle not found case (PGRST116 is Supabase's "no rows returned" error code)
-    if (specError?.code === "PGRST116" || !spec) {
-      return null;
-    }
+      // Step 2: Validate spec exists
+      Effect.flatMap(({ data: spec, error: specError }) => {
+        if (specError?.code === "PGRST116" || !spec) {
+          return Effect.fail(
+            new NotFoundError("Ski specification not found", {
+              resourceType: "ski_spec",
+              resourceId: specId,
+            })
+          );
+        }
 
-    // Handle other database errors
-    if (specError) {
-      throw specError;
-    }
+        if (specError) {
+          return Effect.fail(
+            this.handleDatabaseError(specError, {
+              operation: "listNotes",
+              table: "ski_specs",
+              userId,
+              resourceId: specId,
+            })
+          );
+        }
 
-    // Step 2: Calculate offset for pagination
-    const offset = (query.page - 1) * query.limit;
+        return Effect.succeed(spec);
+      }),
 
-    // Step 3: Fetch notes with pagination and count
-    const { data, error, count } = await this.supabase
-      .from("ski_spec_notes")
-      .select("*", { count: "exact" })
-      .eq("ski_spec_id", specId)
-      .order("created_at", { ascending: false })
-      .range(offset, offset + query.limit - 1);
+      // Step 3: Fetch notes with pagination and count
+      Effect.flatMap(() => {
+        const offset = (query.page - 1) * query.limit;
 
-    // Handle database errors
-    if (error) {
-      throw error;
-    }
+        return Effect.tryPromise({
+          try: () =>
+            this.supabase
+              .from("ski_spec_notes")
+              .select("*", { count: "exact" })
+              .eq("ski_spec_id", specId)
+              .order("created_at", { ascending: false })
+              .range(offset, offset + query.limit - 1),
+          catch: (error) =>
+            this.handleDatabaseError(error, {
+              operation: "listNotes",
+              table: "ski_spec_notes",
+              userId,
+              resourceId: specId,
+            }),
+        });
+      }),
 
-    // Step 4: Return data and total count
-    return {
-      data: (data || []) as NoteDTO[],
-      total: count ?? 0,
-    };
+      // Step 4: Validate response and return data
+      Effect.flatMap(({ data, error, count }) => {
+        if (error) {
+          return Effect.fail(
+            this.handleDatabaseError(error, {
+              operation: "listNotes",
+              table: "ski_spec_notes",
+              userId,
+              resourceId: specId,
+            })
+          );
+        }
+
+        return Effect.succeed({
+          data: (data || []) as NoteDTO[],
+          total: count ?? 0,
+        });
+      })
+    );
   }
 
   /**
@@ -731,14 +1069,198 @@ export class SkiSpecService {
    *
    * Used by the health endpoint to verify the database is accessible.
    *
-   * @returns true if database is accessible, false otherwise
+   * @returns Effect that always succeeds with boolean (true if accessible, false otherwise)
    */
-  async checkDatabaseConnection(): Promise<boolean> {
-    try {
-      const { error } = await this.supabase.from("ski_specs").select("id").limit(1);
-      return !error;
-    } catch {
-      return false;
+  checkDatabaseConnection(): Effect.Effect<boolean, never> {
+    return pipe(
+      Effect.tryPromise({
+        try: () => this.supabase.from("ski_specs").select("id").limit(1),
+        catch: () => false as const,
+      }),
+      Effect.map(({ error }) => !error),
+      Effect.orElse(() => Effect.succeed(false))
+    );
+  }
+
+  // ============================================================================
+  // Private Helper Methods
+  // ============================================================================
+
+  /**
+   * Helper: Verify spec ownership (DRY for multiple methods)
+   * @private
+   */
+  private verifySpecOwnership(
+    userId: string,
+    specId: string
+  ): Effect.Effect<Database["public"]["Tables"]["ski_specs"]["Row"], SkiSpecError> {
+    return pipe(
+      Effect.tryPromise({
+        try: () => this.supabase.from("ski_specs").select("*").eq("id", specId).eq("user_id", userId).single(),
+        catch: (error) =>
+          this.handleDatabaseError(error, {
+            operation: "verifySpecOwnership",
+            table: "ski_specs",
+            userId,
+            resourceId: specId,
+          }),
+      }),
+      Effect.flatMap(({ data, error }) => {
+        if (error?.code === "PGRST116" || !data) {
+          return Effect.fail(
+            new NotFoundError("Ski specification not found", {
+              resourceType: "ski_spec",
+              resourceId: specId,
+            })
+          );
+        }
+
+        if (error) {
+          return Effect.fail(
+            this.handleDatabaseError(error, {
+              operation: "verifySpecOwnership",
+              table: "ski_specs",
+              userId,
+              resourceId: specId,
+            })
+          );
+        }
+
+        return Effect.succeed(data);
+      })
+    );
+  }
+
+  /**
+   * Helper: Check name uniqueness (DRY for create/update)
+   * @private
+   */
+  private checkNameUniqueness(
+    userId: string,
+    excludeId: string,
+    newName: string,
+    currentName: string
+  ): Effect.Effect<void, SkiSpecError> {
+    const trimmedName = newName.trim();
+
+    // Skip check if name hasn't changed
+    if (trimmedName === currentName) {
+      return Effect.succeed(undefined);
     }
+
+    return pipe(
+      Effect.tryPromise({
+        try: () =>
+          this.supabase
+            .from("ski_specs")
+            .select("id")
+            .eq("user_id", userId)
+            .eq("name", trimmedName)
+            .neq("id", excludeId)
+            .maybeSingle(),
+        catch: (error) =>
+          this.handleDatabaseError(error, {
+            operation: "checkNameUniqueness",
+            table: "ski_specs",
+            userId,
+          }),
+      }),
+      Effect.flatMap(({ data, error }) => {
+        if (error) {
+          return Effect.fail(
+            this.handleDatabaseError(error, {
+              operation: "checkNameUniqueness",
+              table: "ski_specs",
+              userId,
+            })
+          );
+        }
+
+        if (data) {
+          return Effect.fail(
+            new ConflictError("Specification with this name already exists", {
+              code: "DUPLICATE_NAME",
+              conflictingField: "name",
+              resourceType: "ski_spec",
+            })
+          );
+        }
+
+        return Effect.succeed(undefined);
+      })
+    );
+  }
+
+  /**
+   * Helper: Get notes count for a spec (DRY for multiple methods)
+   * @private
+   */
+  private getNotesCount(specId: string): Effect.Effect<number, DatabaseError> {
+    return pipe(
+      Effect.tryPromise({
+        try: () =>
+          this.supabase.from("ski_spec_notes").select("*", { count: "exact", head: true }).eq("ski_spec_id", specId),
+        catch: (error) =>
+          new DatabaseError("Failed to count notes", {
+            cause: error instanceof Error ? error : undefined,
+            operation: "getNotesCount",
+            table: "ski_spec_notes",
+          }),
+      }),
+      Effect.flatMap(({ count, error }) => {
+        if (error) {
+          return Effect.fail(
+            new DatabaseError("Failed to count notes", {
+              cause: error,
+              operation: "getNotesCount",
+              table: "ski_spec_notes",
+            })
+          );
+        }
+
+        return Effect.succeed(count ?? 0);
+      })
+    );
+  }
+
+  /**
+   * Helper: Handle database errors with context
+   * @private
+   */
+  private handleDatabaseError(
+    error: unknown,
+    context: {
+      operation: string;
+      table: string;
+      userId?: string;
+      resourceId?: string;
+    }
+  ): SkiSpecError {
+    const dbError = error as { code?: string; message?: string };
+
+    // UNIQUE constraint violation (23505) -> ConflictError
+    if (dbError?.code === "23505") {
+      return new ConflictError("Duplicate record", {
+        code: "DUPLICATE_RECORD",
+        resourceType: context.table,
+        context,
+      });
+    }
+
+    // PGRST116 (not found) -> NotFoundError
+    if (dbError?.code === "PGRST116") {
+      return new NotFoundError(`${context.table} not found`, {
+        resourceType: context.table,
+        resourceId: context.resourceId,
+      });
+    }
+
+    // Generic database error
+    return new DatabaseError(`Database operation failed: ${context.operation}`, {
+      cause: error instanceof Error ? error : undefined,
+      operation: context.operation,
+      table: context.table,
+      context,
+    });
   }
 }

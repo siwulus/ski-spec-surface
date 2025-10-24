@@ -1,9 +1,16 @@
 import type { APIRoute } from "astro";
+import { Effect, pipe } from "effect";
 import { z } from "zod";
 import { UpdateNoteCommandSchema } from "@/types/api.types";
-import type { ApiErrorResponse } from "@/types/api.types";
+import { parseWithSchema, parseJsonBody } from "@/lib/utils/zod";
+import { catchAllSkiSpecErrors } from "@/lib/utils/error";
+import { AuthenticationError } from "@/types/error.types";
 
 export const prerender = false;
+
+// ============================================================================
+// Local Helpers
+// ============================================================================
 
 /**
  * UUID validation schema for path parameters
@@ -12,6 +19,30 @@ const UuidParamsSchema = z.object({
   specId: z.string().uuid("Invalid ski specification ID format"),
   noteId: z.string().uuid("Invalid note ID format"),
 });
+
+/**
+ * Validates and extracts user ID from locals.
+ * Transitional helper - will be refactored to use Effect.Option later.
+ *
+ * @param user - User object from middleware (can be nullish)
+ * @returns Effect that succeeds with user ID or fails with AuthenticationError
+ */
+const getUserIdEffect = (user: { id: string } | null | undefined): Effect.Effect<string, AuthenticationError> =>
+  user?.id ? Effect.succeed(user.id) : Effect.fail(new AuthenticationError("User not authenticated"));
+
+/**
+ * Validates UUID path parameters for specId and noteId.
+ *
+ * @param specId - Ski specification path parameter
+ * @param noteId - Note path parameter
+ * @returns Effect that succeeds with validated UUIDs or fails with ValidationError
+ */
+const validateNoteParams = (specId: string | undefined, noteId: string | undefined) =>
+  parseWithSchema(UuidParamsSchema, { specId, noteId });
+
+// ============================================================================
+// API Route Handlers
+// ============================================================================
 
 /**
  * GET /api/ski-specs/{specId}/notes/{noteId}
@@ -23,102 +54,47 @@ const UuidParamsSchema = z.object({
  *
  * Response: NoteDTO (200) or ApiErrorResponse (4xx/5xx)
  *
- * Authentication: Handled by middleware (userId provided in locals)
+ * Authentication: User must be authenticated (validated via getUserIdEffect)
  * Authorization: User can only access notes for their own specifications
  *
  * Security: Returns 404 for both non-existent resources and unauthorized access
  * to prevent information disclosure (IDOR prevention).
  */
 export const GET: APIRoute = async ({ params, locals }) => {
-  try {
-    // Step 2: Extract and validate authentication
-    const { userId, skiSpecService } = locals;
+  const { user, skiSpecService } = locals;
 
-    if (!userId) {
-      return new Response(
-        JSON.stringify({
-          error: "Authentication required",
-          code: "UNAUTHORIZED",
-          timestamp: new Date().toISOString(),
-        } satisfies ApiErrorResponse),
-        { status: 401, headers: { "Content-Type": "application/json" } }
-      );
-    }
+  const program = pipe(
+    // Step 1: Validate user authentication
+    getUserIdEffect(user),
 
-    // Step 3: Extract and validate path parameters
-    const validationResult = UuidParamsSchema.safeParse({
-      specId: params.specId,
-      noteId: params.noteId,
-    });
+    // Step 2: Validate UUID path parameters
+    Effect.flatMap((userId) =>
+      pipe(
+        validateNoteParams(params.specId, params.noteId),
+        Effect.map((validated) => ({ userId, specId: validated.specId, noteId: validated.noteId }))
+      )
+    ),
 
-    if (!validationResult.success) {
-      const firstError = validationResult.error.issues[0];
-      return new Response(
-        JSON.stringify({
-          error: firstError?.message || "Invalid UUID format",
-          code: "VALIDATION_ERROR",
-          timestamp: new Date().toISOString(),
-        } satisfies ApiErrorResponse),
-        { status: 400, headers: { "Content-Type": "application/json" } }
-      );
-    }
+    // Step 3: Fetch note from service layer
+    Effect.flatMap(({ userId, specId, noteId }) => skiSpecService.getNoteById(userId, specId, noteId)),
 
-    const { specId, noteId } = validationResult.data;
-
-    // Step 4-6: Call service method and handle errors
-    try {
-      const note = await skiSpecService.getNoteById(userId, specId, noteId);
-
-      // Step 7: Return success response (200 OK)
+    // Step 4: Build success response
+    Effect.map((note) => {
       return new Response(JSON.stringify(note), {
         status: 200,
         headers: { "Content-Type": "application/json" },
       });
-    } catch (error: unknown) {
-      const dbError = error as { message?: string };
+    }),
 
-      // Handle "Note not found" (includes unauthorized access)
-      if (dbError?.message?.includes("Note not found")) {
-        return new Response(
-          JSON.stringify({
-            error: "Note not found",
-            code: "NOT_FOUND",
-            timestamp: new Date().toISOString(),
-          } satisfies ApiErrorResponse),
-          { status: 404, headers: { "Content-Type": "application/json" } }
-        );
-      }
+    // Step 5: Handle all errors consistently with structured logging
+    catchAllSkiSpecErrors({
+      endpoint: "/api/ski-specs/:specId/notes/:noteId",
+      method: "GET",
+      userId: user?.id,
+    })
+  );
 
-      // Log error for debugging
-      // eslint-disable-next-line no-console
-      console.error("Failed to fetch note:", {
-        userId,
-        specId,
-        noteId,
-        error: dbError?.message || "Unknown error",
-      });
-
-      // Handle generic database errors
-      return new Response(
-        JSON.stringify({
-          error: "Failed to fetch note",
-          code: "INTERNAL_ERROR",
-          timestamp: new Date().toISOString(),
-        } satisfies ApiErrorResponse),
-        { status: 500, headers: { "Content-Type": "application/json" } }
-      );
-    }
-  } catch {
-    // Catch-all for unexpected errors
-    return new Response(
-      JSON.stringify({
-        error: "Internal server error",
-        code: "INTERNAL_ERROR",
-        timestamp: new Date().toISOString(),
-      } satisfies ApiErrorResponse),
-      { status: 500, headers: { "Content-Type": "application/json" } }
-    );
-  }
+  return Effect.runPromise(program);
 };
 
 /**
@@ -131,7 +107,7 @@ export const GET: APIRoute = async ({ params, locals }) => {
  * Request body: UpdateNoteCommand (content: string)
  * Response: NoteDTO (200) or ApiErrorResponse (4xx/5xx)
  *
- * Authentication: Handled by middleware (userId provided in locals)
+ * Authentication: User must be authenticated (validated via getUserIdEffect)
  * Authorization: User can only update notes from their own specifications
  *
  * Features:
@@ -153,135 +129,45 @@ export const GET: APIRoute = async ({ params, locals }) => {
  * exist when the user doesn't have access to them.
  */
 export const PUT: APIRoute = async ({ params, request, locals }) => {
-  try {
-    // Step 1: Get authenticated user ID and Supabase client from middleware
-    const { userId, skiSpecService } = locals;
+  const { user, skiSpecService } = locals;
 
-    // Step 2: Check authentication
-    if (!userId) {
-      return new Response(
-        JSON.stringify({
-          error: "Authentication required",
-          code: "UNAUTHORIZED",
-          timestamp: new Date().toISOString(),
-        } satisfies ApiErrorResponse),
-        { status: 401, headers: { "Content-Type": "application/json" } }
-      );
-    }
+  const program = pipe(
+    // Step 1: Validate user authentication
+    getUserIdEffect(user),
 
-    // Step 3: Validate path parameters (UUID formats)
-    const validationResult = UuidParamsSchema.safeParse({
-      specId: params.specId,
-      noteId: params.noteId,
-    });
+    // Step 2: Validate UUID path parameters and parse JSON body in parallel
+    Effect.flatMap((userId) =>
+      pipe(
+        Effect.all([validateNoteParams(params.specId, params.noteId), parseJsonBody(request, UpdateNoteCommandSchema)]),
+        Effect.map(([validated, command]) => ({
+          userId,
+          specId: validated.specId,
+          noteId: validated.noteId,
+          command,
+        }))
+      )
+    ),
 
-    if (!validationResult.success) {
-      // Extract first validation error for cleaner error message
-      const firstError = validationResult.error.issues[0];
+    // Step 3: Update note via service layer
+    Effect.flatMap(({ userId, specId, noteId, command }) => skiSpecService.updateNote(userId, specId, noteId, command)),
 
-      return new Response(
-        JSON.stringify({
-          error: firstError.message,
-          code: "VALIDATION_ERROR",
-          timestamp: new Date().toISOString(),
-        } satisfies ApiErrorResponse),
-        { status: 400, headers: { "Content-Type": "application/json" } }
-      );
-    }
-
-    const { specId, noteId } = validationResult.data;
-
-    // Step 4: Parse and validate request body
-    let requestBody;
-    try {
-      requestBody = await request.json();
-    } catch {
-      return new Response(
-        JSON.stringify({
-          error: "Invalid request body",
-          code: "VALIDATION_ERROR",
-          timestamp: new Date().toISOString(),
-        } satisfies ApiErrorResponse),
-        { status: 400, headers: { "Content-Type": "application/json" } }
-      );
-    }
-
-    const bodyValidation = UpdateNoteCommandSchema.safeParse(requestBody);
-
-    if (!bodyValidation.success) {
-      // Transform Zod errors to ValidationErrorDetail format
-      const details = bodyValidation.error.issues.map((err) => ({
-        field: err.path.join(".") || "content",
-        message: err.message,
-      }));
-
-      return new Response(
-        JSON.stringify({
-          error: "Validation failed",
-          code: "VALIDATION_ERROR",
-          details,
-          timestamp: new Date().toISOString(),
-        } satisfies ApiErrorResponse),
-        { status: 400, headers: { "Content-Type": "application/json" } }
-      );
-    }
-
-    const updateData = bodyValidation.data;
-
-    // Step 5: Update note via service
-    try {
-      const updatedNote = await skiSpecService.updateNote(userId, specId, noteId, updateData);
-
-      // Step 6: Return success response (200 OK)
+    // Step 4: Build success response
+    Effect.map((updatedNote) => {
       return new Response(JSON.stringify(updatedNote), {
         status: 200,
         headers: { "Content-Type": "application/json" },
       });
-    } catch (error: unknown) {
-      const dbError = error as { message?: string };
+    }),
 
-      // Handle "Note not found" (includes spec not found, unauthorized access)
-      if (dbError?.message?.includes("Note not found")) {
-        return new Response(
-          JSON.stringify({
-            error: "Note or specification not found",
-            code: "NOT_FOUND",
-            timestamp: new Date().toISOString(),
-          } satisfies ApiErrorResponse),
-          { status: 404, headers: { "Content-Type": "application/json" } }
-        );
-      }
+    // Step 5: Handle all errors consistently with structured logging
+    catchAllSkiSpecErrors({
+      endpoint: "/api/ski-specs/:specId/notes/:noteId",
+      method: "PUT",
+      userId: user?.id,
+    })
+  );
 
-      // Log error for debugging
-      // eslint-disable-next-line no-console
-      console.error("Failed to update note:", {
-        userId,
-        specId,
-        noteId,
-        error: dbError?.message || "Unknown error",
-      });
-
-      // Handle generic database errors
-      return new Response(
-        JSON.stringify({
-          error: "An error occurred while updating the note",
-          code: "INTERNAL_ERROR",
-          timestamp: new Date().toISOString(),
-        } satisfies ApiErrorResponse),
-        { status: 500, headers: { "Content-Type": "application/json" } }
-      );
-    }
-  } catch {
-    // Catch-all for unexpected errors (e.g., JSON parsing, middleware issues)
-    return new Response(
-      JSON.stringify({
-        error: "Internal server error",
-        code: "INTERNAL_ERROR",
-        timestamp: new Date().toISOString(),
-      } satisfies ApiErrorResponse),
-      { status: 500, headers: { "Content-Type": "application/json" } }
-    );
-  }
+  return Effect.runPromise(program);
 };
 
 /**
@@ -294,7 +180,7 @@ export const PUT: APIRoute = async ({ params, request, locals }) => {
  * Request body: None
  * Response: 204 No Content (success) or ApiErrorResponse (4xx/5xx)
  *
- * Authentication: Handled by middleware (userId provided in locals)
+ * Authentication: User must be authenticated (validated via getUserIdEffect)
  * Authorization: User can only delete notes from their own specifications
  *
  * Features:
@@ -315,93 +201,33 @@ export const PUT: APIRoute = async ({ params, request, locals }) => {
  * exist when the user doesn't have access to them.
  */
 export const DELETE: APIRoute = async ({ params, locals }) => {
-  try {
-    // Step 1: Get authenticated user ID and Supabase client from middleware
-    const { userId, skiSpecService } = locals;
+  const { user, skiSpecService } = locals;
 
-    // Step 2: Check authentication
-    if (!userId) {
-      return new Response(
-        JSON.stringify({
-          error: "Authentication required",
-          code: "UNAUTHORIZED",
-          timestamp: new Date().toISOString(),
-        } satisfies ApiErrorResponse),
-        { status: 401, headers: { "Content-Type": "application/json" } }
-      );
-    }
+  const program = pipe(
+    // Step 1: Validate user authentication
+    getUserIdEffect(user),
 
-    // Step 3: Validate path parameters (UUID formats)
-    const validationResult = UuidParamsSchema.safeParse({
-      specId: params.specId,
-      noteId: params.noteId,
-    });
+    // Step 2: Validate UUID path parameters
+    Effect.flatMap((userId) =>
+      pipe(
+        validateNoteParams(params.specId, params.noteId),
+        Effect.map((validated) => ({ userId, specId: validated.specId, noteId: validated.noteId }))
+      )
+    ),
 
-    if (!validationResult.success) {
-      // Extract first validation error for cleaner error message
-      const firstError = validationResult.error.issues[0];
+    // Step 3: Delete note via service layer
+    Effect.flatMap(({ userId, specId, noteId }) => skiSpecService.deleteNote(userId, specId, noteId)),
 
-      return new Response(
-        JSON.stringify({
-          error: firstError.message,
-          code: "VALIDATION_ERROR",
-          timestamp: new Date().toISOString(),
-        } satisfies ApiErrorResponse),
-        { status: 400, headers: { "Content-Type": "application/json" } }
-      );
-    }
+    // Step 4: Build success response (204 No Content)
+    Effect.map(() => new Response(null, { status: 204 })),
 
-    const { specId, noteId } = validationResult.data;
+    // Step 5: Handle all errors consistently with structured logging
+    catchAllSkiSpecErrors({
+      endpoint: "/api/ski-specs/:specId/notes/:noteId",
+      method: "DELETE",
+      userId: user?.id,
+    })
+  );
 
-    // Step 4: Delete note via service
-    try {
-      await skiSpecService.deleteNote(userId, specId, noteId);
-
-      // Step 5: Return 204 No Content on successful deletion
-      return new Response(null, { status: 204 });
-    } catch (error: unknown) {
-      const dbError = error as { message?: string };
-
-      // Handle "Note not found" (includes spec not found, unauthorized access)
-      if (dbError?.message?.includes("Note not found")) {
-        return new Response(
-          JSON.stringify({
-            error: "Note not found",
-            code: "NOT_FOUND",
-            timestamp: new Date().toISOString(),
-          } satisfies ApiErrorResponse),
-          { status: 404, headers: { "Content-Type": "application/json" } }
-        );
-      }
-
-      // Log error for debugging
-      // eslint-disable-next-line no-console
-      console.error("Failed to delete note:", {
-        userId,
-        specId,
-        noteId,
-        error: dbError?.message || "Unknown error",
-      });
-
-      // Handle generic database errors
-      return new Response(
-        JSON.stringify({
-          error: "Failed to delete note",
-          code: "INTERNAL_ERROR",
-          timestamp: new Date().toISOString(),
-        } satisfies ApiErrorResponse),
-        { status: 500, headers: { "Content-Type": "application/json" } }
-      );
-    }
-  } catch {
-    // Catch-all for unexpected errors (e.g., JSON parsing, middleware issues)
-    return new Response(
-      JSON.stringify({
-        error: "Internal server error",
-        code: "INTERNAL_ERROR",
-        timestamp: new Date().toISOString(),
-      } satisfies ApiErrorResponse),
-      { status: 500, headers: { "Content-Type": "application/json" } }
-    );
-  }
+  return Effect.runPromise(program);
 };

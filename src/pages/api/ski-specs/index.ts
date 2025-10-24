@@ -8,7 +8,7 @@ import {
 } from "@/types/api.types";
 import { parseQueryParams, parseJsonBody, type QueryCoercer } from "@/lib/utils/zod";
 import { catchAllSkiSpecErrors } from "@/lib/utils/error";
-import { AuthenticationError, ConflictError, DatabaseError } from "@/types/error.types";
+import { AuthenticationError } from "@/types/error.types";
 
 export const prerender = false;
 
@@ -73,15 +73,7 @@ export const GET: APIRoute = async ({ url, locals }) => {
     // Step 3: Fetch ski specifications from service layer
     Effect.flatMap(({ userId, query }) =>
       pipe(
-        Effect.tryPromise({
-          try: () => skiSpecService.listSkiSpecs(userId, query),
-          catch: (error) =>
-            new DatabaseError("Failed to fetch ski specifications", {
-              cause: error instanceof Error ? error : undefined,
-              operation: "listSkiSpecs",
-              table: "ski_specs",
-            }),
-        }),
+        skiSpecService.listSkiSpecs(userId, query),
         Effect.map((result) => ({ ...result, query }))
       )
     ),
@@ -143,31 +135,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
     ),
 
     // Step 3: Create ski specification via service layer
-    Effect.flatMap(({ userId, command }) =>
-      Effect.tryPromise({
-        try: () => skiSpecService.createSkiSpec(userId, command),
-        catch: (error: unknown) => {
-          // Transform specific database errors to appropriate SkiSpecError types
-          const dbError = error as { code?: string };
-
-          // UNIQUE constraint violation (duplicate name)
-          if (dbError?.code === "23505") {
-            return new ConflictError("Specification with this name already exists", {
-              code: "DUPLICATE_NAME",
-              conflictingField: "name",
-              resourceType: "ski_spec",
-            });
-          }
-
-          // Generic database error
-          return new DatabaseError("Failed to create specification", {
-            cause: error instanceof Error ? error : undefined,
-            operation: "createSkiSpec",
-            table: "ski_specs",
-          });
-        },
-      })
-    ),
+    Effect.flatMap(({ userId, command }) => skiSpecService.createSkiSpec(userId, command)),
 
     // Step 4: Build success response
     Effect.map((skiSpec) => {
