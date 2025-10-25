@@ -14,7 +14,7 @@
 | `tip`               | `integer`       | `NOT NULL`                                                    | Tip width in **mm**                    |
 | `waist`             | `integer`       | `NOT NULL`                                                    | Waist width in **mm**                  |
 | `tail`              | `integer`       | `NOT NULL`                                                    | Tail width in **mm**                   |
-| `radius`            | `integer`       | `NOT NULL`                                                    | Turning radius in **m**                |
+| `radius`            | `numeric(10,2)` | `NOT NULL`                                                    | Turning radius in **m**                |
 | `weight`            | `integer`       | `NOT NULL`                                                    | Weight of one ski in **g**             |
 | `surface_area`      | `numeric(10,2)` | `NOT NULL`                                                    | Calculated surface area in **cm²**     |
 | `relative_weight`   | `numeric(10,2)` | `NOT NULL`                                                    | Calculated weight per cm² in **g/cm²** |
@@ -151,8 +151,7 @@ CREATE POLICY "Users can delete notes for own specs" ON ski_spec_notes
 
 ## 5. Additional Notes
 
-1. All dimensional values are stored in **base units** (mm, g) for consistency; presentation layer handles conversions.
-2. Application logic performs full validation (range checks, tip ≥ waist ≤ tail) before persistence.
-3. Hard deletes are used – no soft-delete column.
-4. Cascade deletion on notes is used
-5. Timestamps: `updated_at` should be kept current via trigger (`ON UPDATE` set new value to `now()`) on all tables that requires it
+1. Application logic performs full validation (range checks, tip ≥ waist ≤ tail) before persistence.
+2. Hard deletes are used – no soft-delete column.
+3. Cascade deletion on notes is used
+4. Timestamps: `updated_at` should be kept current via trigger (`ON UPDATE` set new value to `now()`) on all tables that requires it

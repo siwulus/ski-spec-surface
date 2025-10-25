@@ -106,7 +106,15 @@ export const SkiSpecForm: React.FC<SkiSpecFormProps> = ({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <NumberInputWithUnit name="length" label="Length" unit="cm" min={100} max={250} disabled={isSubmitting} />
 
-          <NumberInputWithUnit name="radius" label="Radius" unit="m" min={1} max={30} disabled={isSubmitting} />
+          <NumberInputWithUnit
+            name="radius"
+            label="Radius"
+            unit="m"
+            min={1}
+            max={30}
+            step={0.5}
+            disabled={isSubmitting}
+          />
         </div>
 
         {/* Width fields - all three in one row on larger screens */}

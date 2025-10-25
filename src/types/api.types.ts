@@ -40,7 +40,7 @@ export const SkiSpecDTOSchema = z.object({
   tip: z.number().int().min(50).max(250),
   waist: z.number().int().min(50).max(250),
   tail: z.number().int().min(50).max(250),
-  radius: z.number().int().min(1).max(30),
+  radius: z.number().min(1).max(30).multipleOf(0.01),
   weight: z.number().int().min(500).max(3000),
   surface_area: z.number().positive('Surface area must be positive'),
   relative_weight: z.number().positive('Relative weight must be positive'),
@@ -96,9 +96,9 @@ export const CreateSkiSpecCommandSchema = z
       .max(250, 'Tail width must be between 50 and 250 mm'),
     radius: z
       .number()
-      .int('Radius must be an integer')
       .min(1, 'Radius must be between 1 and 30 m')
-      .max(30, 'Radius must be between 1 and 30 m'),
+      .max(30, 'Radius must be between 1 and 30 m')
+      .multipleOf(0.01, 'Radius must have at most 2 decimal places'),
     weight: z
       .number()
       .int('Weight must be an integer')
@@ -165,7 +165,7 @@ export const SkiSpecComparisonDTOSchema = z.object({
   tip: z.number().int().min(50).max(250),
   waist: z.number().int().min(50).max(250),
   tail: z.number().int().min(50).max(250),
-  radius: z.number().int().min(1).max(30),
+  radius: z.number().min(1).max(30).multipleOf(0.01),
   weight: z.number().int().min(500).max(3000),
   surface_area: z.number().positive('Surface area must be positive'),
   relative_weight: z.number().positive('Relative weight must be positive'),

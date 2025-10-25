@@ -29,11 +29,11 @@ create table ski_specs (
   description text check (length(description) >= 1 and length(description) <= 2000),
   
   -- Dimensional data (stored in base units)
-  length integer not null,  -- ski length in mm
+  length integer not null,  -- ski length in cm
   tip integer not null,     -- tip width in mm
   waist integer not null,   -- waist width in mm
   tail integer not null,    -- tail width in mm
-  radius integer not null,  -- turning radius in m
+  radius numeric(10,2) not null,  -- turning radius in m
   weight integer not null,  -- weight of one ski in g
   
   -- Calculated metrics

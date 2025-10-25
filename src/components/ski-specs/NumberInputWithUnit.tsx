@@ -18,6 +18,8 @@ export interface NumberInputWithUnitProps {
   min: number;
   /** Maximum value */
   max: number;
+  /** Step value for input (default: 1 for integers, 0.01 for decimals) */
+  step?: number;
   /** Whether field is required */
   required?: boolean;
   /** Error message */
@@ -36,6 +38,7 @@ export const NumberInputWithUnit: React.FC<NumberInputWithUnitProps> = ({
   unit,
   min,
   max,
+  step = 1,
   required = true,
   error,
   disabled = false,
@@ -60,7 +63,7 @@ export const NumberInputWithUnit: React.FC<NumberInputWithUnitProps> = ({
         <Input
           id={name}
           type="number"
-          step="1"
+          step={step}
           min={min}
           max={max}
           disabled={disabled}
