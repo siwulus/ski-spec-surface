@@ -21,12 +21,12 @@ The project uses a comprehensive testing strategy with three types of tests:
 
 ### Testing Stack
 
-| Tool | Purpose |
-|------|---------|
-| [Vitest](https://vitest.dev/) | Unit and integration test runner |
-| [React Testing Library](https://testing-library.com/react) | React component testing |
-| [Playwright](https://playwright.dev/) | E2E browser testing |
-| [axe-core](https://github.com/dequelabs/axe-core) | Accessibility testing |
+| Tool                                                                     | Purpose                            |
+| ------------------------------------------------------------------------ | ---------------------------------- |
+| [Vitest](https://vitest.dev/)                                            | Unit and integration test runner   |
+| [React Testing Library](https://testing-library.com/react)               | React component testing            |
+| [Playwright](https://playwright.dev/)                                    | E2E browser testing                |
+| [axe-core](https://github.com/dequelabs/axe-core)                        | Accessibility testing              |
 | [@testing-library/jest-dom](https://github.com/testing-library/jest-dom) | Custom matchers for DOM assertions |
 
 ## Test Types
@@ -35,11 +35,14 @@ The project uses a comprehensive testing strategy with three types of tests:
 
 Unit tests focus on testing individual functions, utilities, and components in isolation.
 
-**Location**: `src/**/*.test.{ts,tsx}` or `tests/unit/**/*.test.{ts,tsx}`
+**Naming Convention**: `*.spec.{ts,tsx}`
+
+**Location**: Co-located with the source file in `src/**/*.spec.{ts,tsx}`
 
 **Example**:
+
 ```typescript
-// src/components/auth/PasswordStrengthIndicator.test.tsx
+// src/components/auth/PasswordStrengthIndicator.spec.tsx
 import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { PasswordStrengthIndicator } from './PasswordStrengthIndicator';
@@ -52,15 +55,26 @@ describe('PasswordStrengthIndicator', () => {
 });
 ```
 
+**Important**: Unit tests should be placed in the same directory as the file they test. For example:
+
+```text
+src/components/auth/
+├── PasswordStrengthIndicator.tsx
+└── PasswordStrengthIndicator.spec.tsx
+```
+
 ### Integration Tests
 
 Integration tests verify that multiple components or services work together correctly.
 
-**Location**: `tests/integration/**/*.test.{ts,tsx}`
+**Naming Convention**: `*.integration.spec.{ts,tsx}`
+
+**Location**: `tests/integration/**/*.integration.spec.{ts,tsx}`
 
 **Example**:
+
 ```typescript
-// tests/integration/SkiSpecForm.integration.test.tsx
+// tests/integration/SkiSpecForm.integration.spec.tsx
 import { describe, it, expect } from 'vitest';
 import { render, screen, userEvent } from '@/test/test-utils';
 import { SkiSpecForm } from '@/components/ski-specs/SkiSpecForm';
@@ -81,18 +95,21 @@ describe('SkiSpecForm Integration', () => {
 
 E2E tests verify complete user workflows from start to finish in a real browser environment.
 
+**Naming Convention**: `*.spec.ts` (Playwright convention)
+
 **Location**: `tests/e2e/**/*.spec.ts`
 
 **Example**:
+
 ```typescript
 // tests/e2e/auth-login.spec.ts
-import { test, expect } from '@playwright/test';
+import { test, expect } from "@playwright/test";
 
-test('user can login with valid credentials', async ({ page }) => {
-  await page.goto('/auth/login');
-  await page.getByLabel(/email/i).fill('user@example.com');
-  await page.getByLabel(/password/i).fill('password123');
-  await page.getByRole('button', { name: /login/i }).click();
+test("user can login with valid credentials", async ({ page }) => {
+  await page.goto("/auth/login");
+  await page.getByLabel(/email/i).fill("user@example.com");
+  await page.getByLabel(/password/i).fill("password123");
+  await page.getByRole("button", { name: /login/i }).click();
 
   await expect(page).toHaveURL(/\/ski-specs/);
 });
@@ -125,6 +142,7 @@ pnpm test:watch
 ```
 
 Useful commands in watch mode:
+
 - Press `a` to run all tests
 - Press `f` to run only failed tests
 - Press `t` to filter by test name pattern
@@ -141,6 +159,7 @@ pnpm test:coverage
 Coverage report will be available at `coverage/index.html`.
 
 **Coverage Thresholds** (configured in `vitest.config.ts`):
+
 - Lines: 70%
 - Functions: 70%
 - Branches: 70%
@@ -174,6 +193,7 @@ pnpm test:e2e:ui
 ```
 
 Features:
+
 - Visual test explorer
 - Watch mode for tests
 - Time travel debugging
@@ -202,11 +222,13 @@ pnpm test:all
 ### Unit Testing Components with React Testing Library
 
 **Key Principles**:
+
 - Test user behavior, not implementation details
 - Query by accessibility attributes (roles, labels)
 - Use `userEvent` for realistic user interactions
 
 **Example**:
+
 ```typescript
 import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
@@ -231,22 +253,20 @@ describe('MyComponent', () => {
 When testing code that uses EffectJS, use `Effect.runPromise` or `Effect.either`:
 
 ```typescript
-import { Effect } from 'effect';
-import { describe, it, expect } from 'vitest';
+import { Effect } from "effect";
+import { describe, it, expect } from "vitest";
 
-describe('calculateRelativeWeight', () => {
-  it('calculates correctly', async () => {
-    const result = await Effect.runPromise(
-      service.calculateRelativeWeight(1800, 2400)
-    );
+describe("calculateRelativeWeight", () => {
+  it("calculates correctly", async () => {
+    const result = await Effect.runPromise(service.calculateRelativeWeight(1800, 2400));
     expect(result).toBe(0.75);
   });
 
-  it('handles errors', async () => {
+  it("handles errors", async () => {
     const effect = service.calculateRelativeWeight(1800, 0);
     const result = await Effect.runPromise(Effect.either(effect));
 
-    if (result._tag === 'Left') {
+    if (result._tag === "Left") {
       expect(result.left).toBeInstanceOf(BusinessLogicError);
     }
   });
@@ -256,69 +276,75 @@ describe('calculateRelativeWeight', () => {
 ### Mocking with Vitest
 
 **Mock Functions**:
+
 ```typescript
-import { vi } from 'vitest';
+import { vi } from "vitest";
 
 const mockFn = vi.fn();
-mockFn.mockReturnValue('mocked value');
-mockFn.mockResolvedValue('async value');
+mockFn.mockReturnValue("mocked value");
+mockFn.mockResolvedValue("async value");
 ```
 
 **Mock Modules**:
+
 ```typescript
-vi.mock('@/lib/services/SkiSpecService', () => ({
+vi.mock("@/lib/services/SkiSpecService", () => ({
   SkiSpecService: vi.fn().mockImplementation(() => ({
-    createSkiSpec: vi.fn().mockResolvedValue({ id: '123' }),
+    createSkiSpec: vi.fn().mockResolvedValue({ id: "123" }),
   })),
 }));
 ```
 
 **Spy on Functions**:
+
 ```typescript
-const spy = vi.spyOn(object, 'method');
-expect(spy).toHaveBeenCalledWith('expected-arg');
+const spy = vi.spyOn(object, "method");
+expect(spy).toHaveBeenCalledWith("expected-arg");
 ```
 
 ### E2E Testing with Playwright
 
 **Best Practices**:
+
 1. Use Page Object Model for complex pages
 2. Prefer user-facing locators (roles, labels)
 3. Add explicit waits for dynamic content
 4. Use fixtures for common setup
 
 **Locator Strategies** (in order of preference):
+
 ```typescript
 // 1. By Role (most accessible)
-page.getByRole('button', { name: /submit/i })
+page.getByRole("button", { name: /submit/i });
 
 // 2. By Label
-page.getByLabel(/email/i)
+page.getByLabel(/email/i);
 
 // 3. By Placeholder
-page.getByPlaceholder(/enter your name/i)
+page.getByPlaceholder(/enter your name/i);
 
 // 4. By Text
-page.getByText(/welcome/i)
+page.getByText(/welcome/i);
 
 // 5. By Test ID (last resort)
-page.getByTestId('submit-button')
+page.getByTestId("submit-button");
 ```
 
 **Page Object Model Example**:
+
 ```typescript
 // tests/e2e/pages/LoginPage.ts
 export class LoginPage {
   constructor(private page: Page) {}
 
   async goto() {
-    await this.page.goto('/auth/login');
+    await this.page.goto("/auth/login");
   }
 
   async login(email: string, password: string) {
     await this.page.getByLabel(/email/i).fill(email);
     await this.page.getByLabel(/password/i).fill(password);
-    await this.page.getByRole('button', { name: /login/i }).click();
+    await this.page.getByRole("button", { name: /login/i }).click();
   }
 
   async getErrorMessage() {
@@ -327,13 +353,13 @@ export class LoginPage {
 }
 
 // Usage in test
-test('login with invalid credentials', async ({ page }) => {
+test("login with invalid credentials", async ({ page }) => {
   const loginPage = new LoginPage(page);
   await loginPage.goto();
-  await loginPage.login('invalid@example.com', 'wrong');
+  await loginPage.login("invalid@example.com", "wrong");
 
   const error = await loginPage.getErrorMessage();
-  expect(error).toContain('Invalid credentials');
+  expect(error).toContain("Invalid credentials");
 });
 ```
 
@@ -342,21 +368,21 @@ test('login with invalid credentials', async ({ page }) => {
 Use the `checkA11y` helper to test accessibility:
 
 ```typescript
-import { test } from '@playwright/test';
-import { checkA11y } from '../fixtures/accessibility';
+import { test } from "@playwright/test";
+import { checkA11y } from "../fixtures/accessibility";
 
-test('page is accessible', async ({ page }) => {
-  await page.goto('/');
+test("page is accessible", async ({ page }) => {
+  await page.goto("/");
   await checkA11y(page);
 });
 
 // With options
-test('specific element is accessible', async ({ page }) => {
-  await page.goto('/');
+test("specific element is accessible", async ({ page }) => {
+  await page.goto("/");
   await checkA11y(page, {
-    include: ['main'],
-    exclude: ['.third-party-widget'],
-    disabledRules: ['color-contrast'], // Only if necessary
+    include: ["main"],
+    exclude: [".third-party-widget"],
+    disabledRules: ["color-contrast"], // Only if necessary
   });
 });
 ```
@@ -397,21 +423,31 @@ test('specific element is accessible', async ({ page }) => {
 
 ## Test Organization
 
-```
+### File Naming Conventions
+
+- **Unit tests**: `*.spec.{ts,tsx}` - co-located with source files
+- **Integration tests**: `*.integration.spec.{ts,tsx}` - in `tests/integration/`
+- **E2E tests**: `*.spec.ts` - in `tests/e2e/`
+
+### Directory Structure
+
+```text
 project-root/
 ├── src/
 │   ├── components/
 │   │   └── auth/
 │   │       ├── PasswordStrengthIndicator.tsx
-│   │       └── PasswordStrengthIndicator.test.tsx  # Co-located unit tests
+│   │       └── PasswordStrengthIndicator.spec.tsx  # Co-located unit test
+│   ├── lib/
+│   │   └── services/
+│   │       ├── SkiSpecService.ts
+│   │       └── SkiSpecService.spec.ts              # Co-located unit test
 │   └── test/
 │       ├── setup.ts              # Global test setup
 │       └── test-utils.tsx        # Custom render functions
 ├── tests/
-│   ├── unit/                     # Additional unit tests
-│   │   └── SkiSpecService.calculations.test.ts
 │   ├── integration/              # Integration tests
-│   │   └── SkiSpecForm.integration.test.tsx
+│   │   └── SkiSpecForm.integration.spec.tsx
 │   ├── e2e/                      # E2E tests
 │   │   ├── homepage.spec.ts
 │   │   └── auth-login.spec.ts
@@ -422,17 +458,26 @@ project-root/
 └── playwright.config.ts          # Playwright configuration
 ```
 
+**Key Principles**:
+
+1. **Unit tests are co-located** with their source files for easy discoverability
+2. **Integration tests are centralized** in `tests/integration/` to test cross-component interactions
+3. **E2E tests are centralized** in `tests/e2e/` to test complete user workflows
+4. **Test utilities and fixtures** are shared from dedicated directories
+
 ## Continuous Integration
 
 Tests are automatically run in CI/CD pipeline (GitHub Actions).
 
 **Configuration**:
+
 - Unit/Integration tests run on every push
 - E2E tests run on pull requests to main branch
 - Coverage reports are generated and tracked
 - Failed tests block merging
 
 **CI Environment Variables**:
+
 ```bash
 CI=true                    # Enables CI-specific behavior
 PLAYWRIGHT_BASE_URL=...    # Base URL for E2E tests
@@ -457,15 +502,17 @@ PLAYWRIGHT_BASE_URL=...    # Base URL for E2E tests
 ### Debug Mode
 
 **Vitest**:
+
 ```bash
 # Run specific test file
-pnpm vitest src/components/auth/PasswordStrengthIndicator.test.tsx
+pnpm vitest src/components/auth/PasswordStrengthIndicator.spec.tsx
 
 # Run tests matching pattern
 pnpm vitest -t "password strength"
 ```
 
 **Playwright**:
+
 ```bash
 # Debug specific test
 pnpm test:e2e:debug tests/e2e/auth-login.spec.ts
@@ -485,6 +532,7 @@ pnpm test:e2e tests/e2e/auth-login.spec.ts:10  # Line number
 ## Contributing
 
 When adding new features:
+
 1. Write unit tests for new components/functions
 2. Add integration tests for component interactions
 3. Create E2E tests for new user flows

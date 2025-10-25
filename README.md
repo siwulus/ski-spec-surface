@@ -34,15 +34,15 @@ Key capabilities:
 
 ## Tech Stack
 
-| Layer                     | Technology                                                   |
-| ------------------------- | ------------------------------------------------------------ |
-| Runtime & Package Manager | Node.js 22 • [pnpm](https://pnpm.io/)                        |
-| Frontend                  | [Astro](https://astro.build/) 5 • React 19 • TypeScript 5    |
-| Styling                   | Tailwind CSS 4 • Shadcn/ui • clsx / class-variance-authority |
-| Backend-as-a-Service      | Supabase (PostgreSQL + Auth)                                 |
-| Dev & CI                  | ESLint • Prettier • Husky + lint-staged • GitHub Actions     |
-| Hosting                   | DigitalOcean (Docker image)                                  |
-| AI Integrations           | Openrouter.ai for model access                               |
+| Layer                     | Technology                                                                        |
+| ------------------------- | --------------------------------------------------------------------------------- |
+| Runtime & Package Manager | Node.js 22 • [pnpm](https://pnpm.io/)                                             |
+| Frontend                  | [Astro](https://astro.build/) 5 • React 19 • TypeScript 5                         |
+| Styling                   | Tailwind CSS 4 • Shadcn/ui • clsx / class-variance-authority                      |
+| Backend-as-a-Service      | Supabase (PostgreSQL + Auth)                                                      |
+| Dev & CI                  | ESLint • Prettier • Husky + lint-staged • GitHub Actions                          |
+| Hosting                   | DigitalOcean (Docker image)                                                       |
+| AI Integrations           | Openrouter.ai for model access                                                    |
 | Testing                   | Vitest (unit & integration) • React Testing Library • Playwright (E2E) • axe-core |
 
 ---

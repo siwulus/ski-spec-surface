@@ -87,13 +87,18 @@ Required environment variables (see `.env.example`):
 ```
 src/
 ├── components/          # Astro (static) and React (dynamic) components
+│   ├── auth/
+│   │   ├── PasswordStrengthIndicator.tsx
+│   │   └── PasswordStrengthIndicator.spec.tsx  # Co-located unit test
 │   └── ui/             # Shadcn/ui components
 ├── db/                 # Supabase clients and database types
 │   ├── supabase.client.ts    # Initialized Supabase client
 │   └── database.types.ts     # Generated DB types
 ├── layouts/            # Astro layouts
 ├── lib/                # Services and helpers
-│   └── services/       # Business logic services (e.g., SkiSpecService)
+│   └── services/       # Business logic services
+│       ├── SkiSpecService.ts
+│       └── SkiSpecService.spec.ts  # Co-located unit test
 ├── middleware/         # Astro middleware (Supabase injection, auth)
 ├── pages/              # Astro pages and API routes
 │   └── api/            # RESTful API endpoints
@@ -106,9 +111,8 @@ src/
     └── api.types.ts    # DTOs, Commands, Queries, Responses
 
 tests/
-├── e2e/                # Playwright E2E tests
-├── integration/        # Integration tests
-├── unit/               # Additional unit tests
+├── e2e/                # Playwright E2E tests (*.spec.ts)
+├── integration/        # Integration tests (*.integration.spec.ts)
 └── fixtures/           # Test fixtures and helpers
     ├── test-fixtures.ts      # Playwright custom fixtures
     └── accessibility.ts      # Accessibility testing helpers
@@ -289,23 +293,30 @@ Project configuration (from `components.json`):
 The project has a comprehensive testing setup with three types of tests:
 
 **Unit Tests** (Vitest + React Testing Library):
-- Location: `src/**/*.test.{ts,tsx}` or `tests/unit/**`
+
+- Naming: `*.spec.{ts,tsx}`
+- Location: Co-located with source files in `src/**/*.spec.{ts,tsx}`
 - Test individual components, functions, and utilities in isolation
 - Use `render()` from `@/test/test-utils` for React components
 - Mock browser APIs (matchMedia, IntersectionObserver) are configured in `src/test/setup.ts`
 
 **Integration Tests** (Vitest):
-- Location: `tests/integration/**`
+
+- Naming: `*.integration.spec.{ts,tsx}`
+- Location: `tests/integration/**/*.integration.spec.{ts,tsx}`
 - Test interactions between multiple components or services
 - Verify end-to-end data flow within feature modules
 
 **E2E Tests** (Playwright):
-- Location: `tests/e2e/**`
+
+- Naming: `*.spec.ts`
+- Location: `tests/e2e/**/*.spec.ts`
 - Test complete user workflows in real browser (Chromium)
 - Accessibility testing with `checkA11y()` helper from `tests/fixtures/accessibility.ts`
 - Dev server auto-starts for E2E tests
 
 **Testing EffectJS Code**:
+
 ```typescript
 // Success case
 const result = await Effect.runPromise(service.method());
@@ -314,12 +325,13 @@ expect(result).toBe(expectedValue);
 // Error case
 const effect = service.method();
 const result = await Effect.runPromise(Effect.either(effect));
-if (result._tag === 'Left') {
+if (result._tag === "Left") {
   expect(result.left).toBeInstanceOf(ExpectedError);
 }
 ```
 
 **Coverage Requirements** (configured in `vitest.config.ts`):
+
 - Lines: 70%
 - Functions: 70%
 - Branches: 70%

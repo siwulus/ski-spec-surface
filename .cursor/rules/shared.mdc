@@ -15,6 +15,8 @@ Ski Surface Spec Extension is a web application created for advanced ski touring
 - Tailwind 4
 - Shadcn/ui
 - pnpm as package manager
+- Vitest + React Testing Library for unit and integration tests
+- Playwright for e2e tests
 
 ## Project Structure
 
@@ -65,3 +67,36 @@ See architectural pattern #2 above and `.cursor/rules/functional-programming.mdc
 - **Type safety**: Leverage TypeScript strict mode (extends `astro/tsconfigs/strict`)
 - **Explicit types**: Always define return types for functions
 - **No `any`**: Avoid `any` type; use `unknown` for uncertain types
+
+## Testing Guidelines
+
+The project has a comprehensive testing setup with three types of tests:
+
+### Unit Tests
+
+(Vitest + React Testing Library):
+
+- Naming: `*.spec.{ts,tsx}`
+- Location: Co-located with source files in `src/**/*.spec.{ts,tsx}`
+- Test individual components, functions, and utilities in isolation
+- Use `render()` from `@/test/test-utils` for React components
+- Mock browser APIs (matchMedia, IntersectionObserver) are configured in `src/test/setup.ts`
+
+### Integration Tests
+
+(Vitest):
+
+- Naming: `*.integration.spec.{ts,tsx}`
+- Location: `tests/integration/**/*.integration.spec.{ts,tsx}`
+- Test interactions between multiple components or services
+- Verify end-to-end data flow within feature modules
+
+### E2E Tests
+
+(Playwright):
+
+- Naming: `*.spec.ts`
+- Location: `tests/e2e/**/*.spec.ts`
+- Test complete user workflows in real browser (Chromium)
+- Accessibility testing with `checkA11y()` helper from `tests/fixtures/accessibility.ts`
+- Dev server auto-starts for E2E tests

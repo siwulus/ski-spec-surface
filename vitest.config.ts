@@ -15,6 +15,7 @@ export default defineConfig({
     setupFiles: ["./src/test/setup.ts"],
 
     // Test file patterns
+    // Convention: Use *.spec.{ts,tsx} for all tests
     include: [
       "src/**/*.{test,spec}.{ts,tsx}",
       "tests/unit/**/*.{test,spec}.{ts,tsx}",
