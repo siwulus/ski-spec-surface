@@ -43,6 +43,7 @@ Key capabilities:
 | Dev & CI                  | ESLint • Prettier • Husky + lint-staged • GitHub Actions     |
 | Hosting                   | DigitalOcean (Docker image)                                  |
 | AI Integrations           | Openrouter.ai for model access                               |
+| Testing                   | Vitest (unit & integration) • React Testing Library • Playwright (E2E) • axe-core |
 
 ---
 
@@ -97,7 +98,7 @@ pnpm preview
 
 Key directories and files:
 
-```
+```text
 src/
 ├── components/        # Astro (static) and React (dynamic) components
 │   └── ui/           # Shadcn/ui components

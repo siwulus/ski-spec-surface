@@ -5,7 +5,7 @@
 - Node wersja v22
 - Manager paczek: pnpm
 
-## Frontend - Astro z React dla komponentów interaktywnych:
+## Frontend - Astro z React dla komponentów interaktywnych
 
 - Astro 5 pozwala na tworzenie szybkich, wydajnych stron i aplikacji z minimalną ilością JavaScript
 - React 19 zapewni interaktywność tam, gdzie jest potrzebna
@@ -14,7 +14,7 @@
 - Shadcn/ui zapewnia bibliotekę dostępnych komponentów React, na których oprzemy UI
 - React Hook Form jako biblioteka formularzy
 
-## Backend - Supabase jako kompleksowe rozwiązanie backendowe:
+## Backend - Supabase jako kompleksowe rozwiązanie backendowe
 
 - Zapewnia bazę danych PostgreSQL
 - Zapewnia SDK w wielu językach, które posłużą jako Backend-as-a-Service
@@ -29,7 +29,14 @@
 - Prosty w integracji z frontendem dzięki dostarczanym SDK
 - Zapewnia przechowywanie sesji i automatyczną odnowę tokenów
 
-## CI/CD i Hosting:
+## CI/CD i Hosting
 
 - Github Actions do tworzenia pipeline’ów CI/CD
 - DigitalOcean do hostowania aplikacji za pośrednictwem obrazu docker
+
+## Testy
+
+- Framework do testów jednostkowych i integracyjnych: Vitest
+- Biblioteka do testowania komponentów React: React Testing Library
+- Framework do testów E2E: Playwright
+- Testy dostępności: axe-core
