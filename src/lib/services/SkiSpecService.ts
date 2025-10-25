@@ -292,7 +292,7 @@ export class SkiSpecService {
           );
         }
 
-        if (count === 0) {
+        if (count === 0 || count === null) {
           return Effect.fail(
             new NotFoundError('Ski specification not found', {
               resourceType: 'ski_spec',
