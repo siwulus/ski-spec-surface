@@ -14,6 +14,7 @@ Ski Surface Spec Extension is a web application for ski-tour and freeride enthus
 - **Error Handling**: EffectJS (Either Monad / Railway-Oriented Programming)
 - **Styling**: Tailwind CSS 4 with Shadcn/ui components
 - **Backend**: Supabase (PostgreSQL + Auth)
+- **Testing**: Vitest (unit/integration), Playwright (E2E), React Testing Library, axe-core (accessibility)
 - **Package Manager**: pnpm
 
 ## Development Commands
@@ -39,6 +40,33 @@ pnpm lint:fix
 
 # Format with Prettier
 pnpm format
+
+# Run tests in watch mode
+pnpm test
+
+# Run unit/integration tests once
+pnpm test:unit
+
+# Run tests with coverage
+pnpm test:coverage
+
+# Run E2E tests (headless)
+pnpm test:e2e
+
+# Run E2E tests (headed mode)
+pnpm test:e2e:headed
+
+# Debug E2E tests
+pnpm test:e2e:debug
+
+# Open Vitest UI
+pnpm test:ui
+
+# Open Playwright UI
+pnpm test:e2e:ui
+
+# Run all tests (unit + E2E)
+pnpm test:all
 
 # Run Astro CLI commands
 pnpm astro [command]
@@ -70,9 +98,20 @@ src/
 ├── pages/              # Astro pages and API routes
 │   └── api/            # RESTful API endpoints
 ├── styles/             # Global CSS
+├── test/               # Test setup and utilities
+│   ├── setup.ts        # Global test configuration
+│   └── test-utils.tsx  # Custom render functions for React Testing Library
 └── types/              # TypeScript type definitions
     ├── db.types.ts     # Database entities
     └── api.types.ts    # DTOs, Commands, Queries, Responses
+
+tests/
+├── e2e/                # Playwright E2E tests
+├── integration/        # Integration tests
+├── unit/               # Additional unit tests
+└── fixtures/           # Test fixtures and helpers
+    ├── test-fixtures.ts      # Playwright custom fixtures
+    └── accessibility.ts      # Accessibility testing helpers
 ```
 
 ### Key Architectural Patterns
@@ -245,6 +284,49 @@ Project configuration (from `components.json`):
 - Base color: "neutral"
 - Theming: CSS variables
 
+#### 10. Testing Architecture
+
+The project has a comprehensive testing setup with three types of tests:
+
+**Unit Tests** (Vitest + React Testing Library):
+- Location: `src/**/*.test.{ts,tsx}` or `tests/unit/**`
+- Test individual components, functions, and utilities in isolation
+- Use `render()` from `@/test/test-utils` for React components
+- Mock browser APIs (matchMedia, IntersectionObserver) are configured in `src/test/setup.ts`
+
+**Integration Tests** (Vitest):
+- Location: `tests/integration/**`
+- Test interactions between multiple components or services
+- Verify end-to-end data flow within feature modules
+
+**E2E Tests** (Playwright):
+- Location: `tests/e2e/**`
+- Test complete user workflows in real browser (Chromium)
+- Accessibility testing with `checkA11y()` helper from `tests/fixtures/accessibility.ts`
+- Dev server auto-starts for E2E tests
+
+**Testing EffectJS Code**:
+```typescript
+// Success case
+const result = await Effect.runPromise(service.method());
+expect(result).toBe(expectedValue);
+
+// Error case
+const effect = service.method();
+const result = await Effect.runPromise(Effect.either(effect));
+if (result._tag === 'Left') {
+  expect(result.left).toBeInstanceOf(ExpectedError);
+}
+```
+
+**Coverage Requirements** (configured in `vitest.config.ts`):
+- Lines: 70%
+- Functions: 70%
+- Branches: 70%
+- Statements: 70%
+
+See `TESTING.md` for comprehensive testing guide and best practices.
+
 ## Core Business Logic
 
 ### Ski Specification Calculations
@@ -397,4 +479,4 @@ All list endpoints return:
 
 7. **Service Layer TODO**: `listSkiSpecs` currently uses N+1 pattern for notes count aggregation - optimize with single query if performance becomes an issue
 
-8. **Testing**: No test framework is currently configured. When adding tests, consider Vitest for unit tests and Playwright for E2E tests (both have good Astro integration)
+8. **Testing**: Vitest and Playwright are configured for unit, integration, and E2E tests. Run `pnpm test:ui` for interactive test development. Tests should be run before pushing (will be enforced in CI). See `TESTING.md` for comprehensive guide
