@@ -1,5 +1,5 @@
-import { parseJsonPromise, parseJsonResponse } from "@/lib/utils/zod";
-import type { ApiErrorResponse, ValidationErrorDetail } from "@/types/api.types";
+import { parseJsonPromise, parseJsonResponse } from '@/lib/utils/zod';
+import type { ApiErrorResponse, ValidationErrorDetail } from '@/types/api.types';
 import {
   AuthenticationError,
   AuthorizationError,
@@ -9,10 +9,10 @@ import {
   UnexpectedError,
   ValidationError,
   type SkiSpecError,
-} from "@/types/error.types";
-import { Effect, Match, pipe } from "effect";
-import type { ZodType } from "zod";
-import { withErrorLogging } from "./error";
+} from '@/types/error.types';
+import { Effect, Match, pipe } from 'effect';
+import type { ZodType } from 'zod';
+import { withErrorLogging } from './error';
 
 /**
  * HTTP client class for making validated API requests with Effect-based error handling.
@@ -35,7 +35,7 @@ export class SkiSpecHttpClient {
   private mapHttpStatusToError(response: Response, errorData: unknown): SkiSpecError {
     const status = response.status;
     const apiError = errorData as ApiErrorResponse;
-    const message = apiError?.error || response.statusText || "Request failed";
+    const message = apiError?.error || response.statusText || 'Request failed';
 
     switch (status) {
       case 400:
@@ -82,20 +82,20 @@ export class SkiSpecHttpClient {
    * @returns Complete RequestInit configuration
    */
   private buildRequestConfig(options: RequestInit = {}): RequestInit {
-    const { method = "GET", body, headers = {}, credentials = "include", ...rest } = options;
+    const { method = 'GET', body, headers = {}, credentials = 'include', ...rest } = options;
 
     const config: RequestInit = {
       method,
       credentials,
       headers: {
-        "Content-Type": "application/json",
+        'Content-Type': 'application/json',
         ...headers,
       },
       ...rest,
     };
 
-    if (body && method !== "GET") {
-      config.body = typeof body === "string" ? body : JSON.stringify(body);
+    if (body && method !== 'GET') {
+      config.body = typeof body === 'string' ? body : JSON.stringify(body);
     }
 
     return config;
@@ -105,11 +105,11 @@ export class SkiSpecHttpClient {
     return Effect.tryPromise({
       try: () => fetch(url, this.buildRequestConfig(options)),
       catch: (error) =>
-        new NetworkError("Network request failed", {
+        new NetworkError('Network request failed', {
           cause: error instanceof Error ? error : undefined,
           context: {
             url,
-            method: options.method || "GET",
+            method: options.method || 'GET',
           },
         }),
     });
@@ -163,7 +163,7 @@ export class SkiSpecHttpClient {
    * @returns Effect with validated data or typed error
    */
   get<T>(url: string, schema: ZodType<T>, headers?: Record<string, string>): Effect.Effect<T, SkiSpecError> {
-    return this.fetchWithValidation(url, schema, { method: "GET", headers });
+    return this.fetchWithValidation(url, schema, { method: 'GET', headers });
   }
 
   /**
@@ -181,7 +181,7 @@ export class SkiSpecHttpClient {
     body: BodyInit | null | Record<string, unknown>,
     headers?: Record<string, string>
   ): Effect.Effect<T, SkiSpecError> {
-    return this.fetchWithValidation(url, schema, { method: "POST", body: body as BodyInit, headers });
+    return this.fetchWithValidation(url, schema, { method: 'POST', body: body as BodyInit, headers });
   }
 
   /**
@@ -199,7 +199,7 @@ export class SkiSpecHttpClient {
     body: BodyInit | null | Record<string, unknown>,
     headers?: Record<string, string>
   ): Effect.Effect<T, SkiSpecError> {
-    return this.fetchWithValidation(url, schema, { method: "PUT", body: body as BodyInit, headers });
+    return this.fetchWithValidation(url, schema, { method: 'PUT', body: body as BodyInit, headers });
   }
 
   /**
@@ -211,7 +211,7 @@ export class SkiSpecHttpClient {
    * @returns Effect with validated data or typed error
    */
   delete<T>(url: string, schema: ZodType<T>, headers?: Record<string, string>): Effect.Effect<T, SkiSpecError> {
-    return this.fetchWithValidation(url, schema, { method: "DELETE", headers });
+    return this.fetchWithValidation(url, schema, { method: 'DELETE', headers });
   }
 
   /**
@@ -226,7 +226,7 @@ export class SkiSpecHttpClient {
    */
   deleteNoContent(url: string, headers?: Record<string, string>): Effect.Effect<void, SkiSpecError> {
     return pipe(
-      this.fetchEffect(url, { method: "DELETE", headers }),
+      this.fetchEffect(url, { method: 'DELETE', headers }),
       Effect.flatMap((response) =>
         Match.value(response.ok).pipe(
           Match.when(true, () => Effect.succeed(undefined)),

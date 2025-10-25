@@ -1,35 +1,35 @@
-import { useState } from "react";
-import { Search, ArrowUp, ArrowDown } from "lucide-react";
-import { useDebouncedCallback } from "use-debounce";
-import type { ListSkiSpecsQuery } from "@/types/api.types";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Button } from "@/components/ui/button";
+import { useState } from 'react';
+import { Search, ArrowUp, ArrowDown } from 'lucide-react';
+import { useDebouncedCallback } from 'use-debounce';
+import type { ListSkiSpecsQuery } from '@/types/api.types';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Button } from '@/components/ui/button';
 
 interface SkiSpecToolbarProps {
   search: string;
-  sortBy: ListSkiSpecsQuery["sort_by"];
-  sortOrder: ListSkiSpecsQuery["sort_order"];
+  sortBy: ListSkiSpecsQuery['sort_by'];
+  sortOrder: ListSkiSpecsQuery['sort_order'];
   limit: number;
   onSearchChange: (value: string) => void;
-  onSortByChange: (value: ListSkiSpecsQuery["sort_by"]) => void;
-  onSortOrderChange: (value: ListSkiSpecsQuery["sort_order"]) => void;
+  onSortByChange: (value: ListSkiSpecsQuery['sort_by']) => void;
+  onSortOrderChange: (value: ListSkiSpecsQuery['sort_order']) => void;
   onLimitChange: (value: number) => void;
 }
 
-const SORT_OPTIONS: { value: ListSkiSpecsQuery["sort_by"]; label: string }[] = [
-  { value: "created_at", label: "Date Added" },
-  { value: "name", label: "Name" },
-  { value: "length", label: "Length" },
-  { value: "surface_area", label: "Surface Area" },
-  { value: "relative_weight", label: "Relative Weight" },
+const SORT_OPTIONS: { value: ListSkiSpecsQuery['sort_by']; label: string }[] = [
+  { value: 'created_at', label: 'Date Added' },
+  { value: 'name', label: 'Name' },
+  { value: 'length', label: 'Length' },
+  { value: 'surface_area', label: 'Surface Area' },
+  { value: 'relative_weight', label: 'Relative Weight' },
 ];
 
 const ITEMS_PER_PAGE_OPTIONS = [
-  { value: 5, label: "5 per page" },
-  { value: 10, label: "10 per page" },
-  { value: 20, label: "20 per page" },
-  { value: 50, label: "50 per page" },
+  { value: 5, label: '5 per page' },
+  { value: 10, label: '10 per page' },
+  { value: 20, label: '20 per page' },
+  { value: 50, label: '50 per page' },
 ];
 
 export const SkiSpecToolbar = ({
@@ -94,21 +94,21 @@ export const SkiSpecToolbar = ({
         </Select>
         <div className="flex border border-border rounded-md" role="group" aria-label="Sort order">
           <Button
-            variant={sortOrder === "asc" ? "secondary" : "ghost"}
+            variant={sortOrder === 'asc' ? 'secondary' : 'ghost'}
             size="sm"
-            onClick={() => onSortOrderChange("asc")}
+            onClick={() => onSortOrderChange('asc')}
             aria-label="Sort ascending"
-            aria-pressed={sortOrder === "asc"}
+            aria-pressed={sortOrder === 'asc'}
             className="rounded-r-none border-r border-border"
           >
             <ArrowUp className="h-4 w-4" aria-hidden="true" />
           </Button>
           <Button
-            variant={sortOrder === "desc" ? "secondary" : "ghost"}
+            variant={sortOrder === 'desc' ? 'secondary' : 'ghost'}
             size="sm"
-            onClick={() => onSortOrderChange("desc")}
+            onClick={() => onSortOrderChange('desc')}
             aria-label="Sort descending"
-            aria-pressed={sortOrder === "desc"}
+            aria-pressed={sortOrder === 'desc'}
             className="rounded-l-none"
           >
             <ArrowDown className="h-4 w-4" aria-hidden="true" />

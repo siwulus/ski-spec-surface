@@ -17,10 +17,10 @@
  * - Type-safe validation pipeline
  */
 
-import type { ValidationErrorDetail } from "@/types/api.types";
-import { InvalidJsonError, ValidationError } from "@/types/error.types";
-import { Effect, pipe } from "effect";
-import type { z } from "zod";
+import type { ValidationErrorDetail } from '@/types/api.types';
+import { InvalidJsonError, ValidationError } from '@/types/error.types';
+import { Effect, pipe } from 'effect';
+import type { z } from 'zod';
 
 // ============================================================================
 // Internal Utilities
@@ -43,7 +43,7 @@ import type { z } from "zod";
  */
 const zodIssuesToDetails = (issues: z.core.$ZodIssue[]): ValidationErrorDetail[] => {
   return issues.map((issue) => ({
-    field: issue.path.length > 0 ? issue.path.join(".") : "root",
+    field: issue.path.length > 0 ? issue.path.join('.') : 'root',
     message: issue.message,
   }));
 };
@@ -81,8 +81,8 @@ export const parseWithSchema = <T>(schema: z.ZodSchema<T>, data: unknown): Effec
   const details = zodIssuesToDetails(result.error.issues);
   const error = new ValidationError(
     result.error.issues.length === 1
-      ? result.error.issues.map((issue) => issue.message).join(", ")
-      : "Validation failed",
+      ? result.error.issues.map((issue) => issue.message).join(', ')
+      : 'Validation failed',
     details
   );
 
@@ -150,7 +150,7 @@ export const parseJsonPromise = (promise: () => Promise<unknown>): Effect.Effect
   return Effect.tryPromise({
     try: promise,
     catch: (error) =>
-      new InvalidJsonError("Invalid request body", {
+      new InvalidJsonError('Invalid request body', {
         cause: error instanceof Error ? error : undefined,
       }),
   });

@@ -1,6 +1,6 @@
-import AxeBuilder from "@axe-core/playwright";
-import type { Page } from "@playwright/test";
-import { expect } from "@playwright/test";
+import AxeBuilder from '@axe-core/playwright';
+import type { Page } from '@playwright/test';
+import { expect } from '@playwright/test';
 
 /**
  * Check page for accessibility violations using axe-core
@@ -69,8 +69,8 @@ export const a11yPatterns = {
    */
   async checkAriaLabel(page: Page, selector: string) {
     const element = page.locator(selector);
-    const ariaLabel = await element.getAttribute("aria-label");
-    const ariaLabelledBy = await element.getAttribute("aria-labelledby");
+    const ariaLabel = await element.getAttribute('aria-label');
+    const ariaLabelledBy = await element.getAttribute('aria-labelledby');
     expect(ariaLabel || ariaLabelledBy).toBeTruthy();
   },
 };

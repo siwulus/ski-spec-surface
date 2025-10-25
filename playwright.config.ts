@@ -1,11 +1,11 @@
-import { defineConfig, devices } from "@playwright/test";
+import { defineConfig, devices } from '@playwright/test';
 
 /**
  * See https://playwright.dev/docs/test-configuration.
  */
 export default defineConfig({
   // Test directory
-  testDir: "./tests/e2e",
+  testDir: './tests/e2e',
 
   // Maximum time one test can run
   timeout: 30 * 1000,
@@ -28,24 +28,24 @@ export default defineConfig({
 
   // Reporter to use
   reporter: [
-    ["html", { outputFolder: "playwright-report" }],
-    ["json", { outputFile: "test-results/results.json" }],
-    ["list"],
+    ['html', { outputFolder: 'playwright-report' }],
+    ['json', { outputFile: 'test-results/results.json' }],
+    ['list'],
   ],
 
   // Shared settings for all the projects below
   use: {
     // Base URL to use in actions like `await page.goto('/')`
-    baseURL: process.env.PLAYWRIGHT_BASE_URL || "http://localhost:3000",
+    baseURL: process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:3000',
 
     // Collect trace when retrying the failed test
-    trace: "on-first-retry",
+    trace: 'on-first-retry',
 
     // Screenshot on failure
-    screenshot: "only-on-failure",
+    screenshot: 'only-on-failure',
 
     // Video on first retry
-    video: "retain-on-failure",
+    video: 'retain-on-failure',
 
     // Emulate timezone
     // timezoneId: 'Europe/Warsaw',
@@ -57,19 +57,19 @@ export default defineConfig({
   // Configure projects for major browsers
   projects: [
     {
-      name: "chromium",
-      use: { ...devices["Desktop Chrome"] },
+      name: 'chromium',
+      use: { ...devices['Desktop Chrome'] },
     },
   ],
 
   // Run your local dev server before starting the tests
   webServer: {
-    command: "pnpm dev",
-    url: "http://localhost:3000",
+    command: 'pnpm dev',
+    url: 'http://localhost:3000',
     reuseExistingServer: !process.env.CI,
     timeout: 120 * 1000,
   },
 
   // Output directory for test artifacts
-  outputDir: "test-results/",
+  outputDir: 'test-results/',
 });

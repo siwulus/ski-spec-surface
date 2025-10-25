@@ -1,27 +1,27 @@
-import { createSupabaseServerClient, type SupabaseClient } from "@/db/supabase.client";
-import type { User } from "@supabase/supabase-js";
-import type { AstroCookies } from "astro";
-import { defineMiddleware } from "astro:middleware";
-import { Effect, pipe } from "effect";
+import { createSupabaseServerClient, type SupabaseClient } from '@/db/supabase.client';
+import type { User } from '@supabase/supabase-js';
+import type { AstroCookies } from 'astro';
+import { defineMiddleware } from 'astro:middleware';
+import { Effect, pipe } from 'effect';
 
-import { SkiSpecService } from "@/lib/services/SkiSpecService";
-import { wrapErrorEffect } from "@/lib/utils/error";
-import { DatabaseError, logError, type SkiSpecError } from "@/types/error.types";
+import { SkiSpecService } from '@/lib/services/SkiSpecService';
+import { wrapErrorEffect } from '@/lib/utils/error';
+import { DatabaseError, logError, type SkiSpecError } from '@/types/error.types';
 
 // ============================================================================
 // Constants
 // ============================================================================
 
 // Routes that should only be accessible to guests (not authenticated users)
-const GUEST_ONLY_ROUTES = ["/auth/login", "/auth/register"];
+const GUEST_ONLY_ROUTES = ['/auth/login', '/auth/register'];
 
 // Public paths - Server-Rendered Astro Pages
 const PUBLIC_PATHS = [
   // Server-Rendered Astro Pages
-  "/",
-  "/auth/login",
-  "/auth/register",
-  "/auth/reset-password",
+  '/',
+  '/auth/login',
+  '/auth/register',
+  '/auth/reset-password',
 ];
 
 // ============================================================================
@@ -78,17 +78,17 @@ const getUserEffect = (supabase: SupabaseClient): Effect.Effect<User | null, Ski
     Effect.tryPromise({
       try: () => supabase.auth.getUser(),
       catch: (error) =>
-        new DatabaseError("Failed to fetch user from Supabase", {
+        new DatabaseError('Failed to fetch user from Supabase', {
           cause: error instanceof Error ? error : undefined,
-          operation: "getUser",
-          table: "auth.users",
+          operation: 'getUser',
+          table: 'auth.users',
         }),
     }),
     Effect.map(({ data, error }) => {
       if (error) {
-        throw new DatabaseError("Supabase auth error", {
+        throw new DatabaseError('Supabase auth error', {
           cause: error,
-          operation: "getUser",
+          operation: 'getUser',
           context: {
             supabaseErrorCode: error.code,
             supabaseErrorMessage: error.message,
@@ -110,8 +110,8 @@ const getUserEffect = (supabase: SupabaseClient): Effect.Effect<User | null, Ski
  */
 const redirectToLogin = (url: URL, redirect: (path: string) => Response): Effect.Effect<Response, never> => {
   return Effect.sync(() => {
-    const redirectUrl = new URL("/auth/login", url);
-    redirectUrl.searchParams.set("redirectTo", url.pathname);
+    const redirectUrl = new URL('/auth/login', url);
+    redirectUrl.searchParams.set('redirectTo', url.pathname);
     return redirect(redirectUrl.toString());
   });
 };
@@ -123,7 +123,7 @@ const redirectToLogin = (url: URL, redirect: (path: string) => Response): Effect
  * @returns Effect that succeeds with redirect Response
  */
 const redirectToSpecs = (redirect: (path: string) => Response): Effect.Effect<Response, never> => {
-  return Effect.sync(() => redirect("/ski-specs"));
+  return Effect.sync(() => redirect('/ski-specs'));
 };
 
 // ============================================================================
@@ -135,8 +135,8 @@ const redirectToSpecs = (redirect: (path: string) => Response): Effect.Effect<Re
  * Either allows the request to continue or provides a redirect response.
  */
 type AuthorizationResult =
-  | { type: "continue"; user: User | null; supabase: SupabaseClient }
-  | { type: "redirect"; response: Response };
+  | { type: 'continue'; user: User | null; supabase: SupabaseClient }
+  | { type: 'redirect'; response: Response };
 
 /**
  * Determines the authorization outcome based on user and route.
@@ -163,7 +163,7 @@ const authorizeRequest = (
   if (user && isGuestOnlyRoute(url.pathname)) {
     return pipe(
       redirectToSpecs(redirect),
-      Effect.map((response) => ({ type: "redirect" as const, response }))
+      Effect.map((response) => ({ type: 'redirect' as const, response }))
     );
   }
 
@@ -171,12 +171,12 @@ const authorizeRequest = (
   if (!user && !isPublicPath(url.pathname)) {
     return pipe(
       redirectToLogin(url, redirect),
-      Effect.map((response) => ({ type: "redirect" as const, response }))
+      Effect.map((response) => ({ type: 'redirect' as const, response }))
     );
   }
 
   // Rule 3: Allow request to continue
-  return Effect.succeed({ type: "continue" as const, user, supabase });
+  return Effect.succeed({ type: 'continue' as const, user, supabase });
 };
 
 // ============================================================================
@@ -219,7 +219,7 @@ export const onRequest = defineMiddleware(async ({ locals, cookies, url, request
 
     // Step 4: Handle result
     Effect.map((result) => {
-      if (result.type === "redirect") {
+      if (result.type === 'redirect') {
         return result.response;
       }
 
@@ -236,7 +236,7 @@ export const onRequest = defineMiddleware(async ({ locals, cookies, url, request
       logError(error, {
         endpoint: url.pathname,
         method: request.method,
-        operation: "middleware",
+        operation: 'middleware',
       });
 
       // Fail open: Continue without authentication

@@ -1,4 +1,4 @@
-import { test as base } from "@playwright/test";
+import { test as base } from '@playwright/test';
 
 /**
  * Extended test fixtures for Playwright
@@ -32,4 +32,4 @@ export const test = base.extend<TestFixtures>({
   // },
 });
 
-export { expect } from "@playwright/test";
+export { expect } from '@playwright/test';

@@ -1,13 +1,13 @@
-import { Button } from "@/components/ui/button";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { useAuth } from "@/components/hooks/useAuth";
-import { RegisterSchema, type RegisterFormData } from "@/types/auth.types";
-import { zodResolver } from "@hookform/resolvers/zod";
-import React, { useState } from "react";
-import { useForm } from "react-hook-form";
-import { toast } from "sonner";
-import { PasswordStrengthIndicator } from "./PasswordStrengthIndicator";
+import { Button } from '@/components/ui/button';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { useAuth } from '@/components/hooks/useAuth';
+import { RegisterSchema, type RegisterFormData } from '@/types/auth.types';
+import { zodResolver } from '@hookform/resolvers/zod';
+import React, { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { toast } from 'sonner';
+import { PasswordStrengthIndicator } from './PasswordStrengthIndicator';
 
 /**
  * RegisterForm component
@@ -32,14 +32,14 @@ export const RegisterForm: React.FC = () => {
   const form = useForm<RegisterFormData>({
     resolver: zodResolver(RegisterSchema),
     defaultValues: {
-      email: "",
-      password: "",
-      confirmPassword: "",
+      email: '',
+      password: '',
+      confirmPassword: '',
     },
   });
 
   // Watch password field for strength indicator
-  const watchedPassword = form.watch("password");
+  const watchedPassword = form.watch('password');
 
   const onSubmit = async (data: RegisterFormData): Promise<void> => {
     setIsLoading(true);
@@ -51,18 +51,18 @@ export const RegisterForm: React.FC = () => {
       });
 
       if (!success) {
-        toast.error(error?.message || "Failed to create account");
+        toast.error(error?.message || 'Failed to create account');
         return;
       }
 
       // Success - user account created
-      toast.success("Account created successfully!");
+      toast.success('Account created successfully!');
       // Force full page reload to refresh middleware and session
-      window.location.href = "/ski-specs";
+      window.location.href = '/ski-specs';
     } catch (error) {
       // eslint-disable-next-line no-console
-      console.error("Registration error:", error);
-      toast.error("An unexpected error occurred. Please try again.");
+      console.error('Registration error:', error);
+      toast.error('An unexpected error occurred. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -139,12 +139,12 @@ export const RegisterForm: React.FC = () => {
 
         {/* Submit button */}
         <Button type="submit" className="w-full" disabled={isLoading}>
-          {isLoading ? "Creating account..." : "Create account"}
+          {isLoading ? 'Creating account...' : 'Create account'}
         </Button>
 
         {/* Link to login */}
         <div className="text-center text-sm text-muted-foreground">
-          Already have an account?{" "}
+          Already have an account?{' '}
           <a
             href="/auth/login"
             className="text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"

@@ -1,10 +1,10 @@
-import { Effect, pipe } from "effect";
-import { type LogoutResponse } from "@/types/api.types";
-import { AuthOperationError, SkiSpecError, wrapError } from "@/types/error.types";
-import { catchAllSkiSpecErrors } from "@/lib/utils/error";
-import type { APIRoute } from "astro";
-import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Database } from "@/db/database.types";
+import { Effect, pipe } from 'effect';
+import { type LogoutResponse } from '@/types/api.types';
+import { AuthOperationError, SkiSpecError, wrapError } from '@/types/error.types';
+import { catchAllSkiSpecErrors } from '@/lib/utils/error';
+import type { APIRoute } from 'astro';
+import type { SupabaseClient } from '@supabase/supabase-js';
+import type { Database } from '@/db/database.types';
 
 export const prerender = false;
 
@@ -44,10 +44,10 @@ const performSignOut = (supabase: SupabaseClient<Database>): Effect.Effect<void,
     try: async () => {
       const { error } = await supabase.auth.signOut();
       if (error) {
-        throw new AuthOperationError("Failed to logout", {
+        throw new AuthOperationError('Failed to logout', {
           cause: error,
-          code: "LOGOUT_FAILED",
-          operation: "signOut",
+          code: 'LOGOUT_FAILED',
+          operation: 'signOut',
           context: {
             supabaseErrorCode: error.code,
             supabaseErrorMessage: error.message,
@@ -55,7 +55,7 @@ const performSignOut = (supabase: SupabaseClient<Database>): Effect.Effect<void,
         });
       }
     },
-    catch: (error) => wrapError(error, "Logout operation failed"),
+    catch: (error) => wrapError(error, 'Logout operation failed'),
   });
 
 /**
@@ -72,7 +72,7 @@ const createSuccessResponse = () =>
       } satisfies LogoutResponse),
       {
         status: 200,
-        headers: { "Content-Type": "application/json" },
+        headers: { 'Content-Type': 'application/json' },
       }
     )
   );
@@ -102,8 +102,8 @@ export const POST: APIRoute = async ({ locals }) => {
     Effect.flatMap(() => createSuccessResponse()),
     // Step 3: Handle all errors consistently with logging and response generation
     catchAllSkiSpecErrors({
-      endpoint: "/api/auth/logout",
-      method: "POST",
+      endpoint: '/api/auth/logout',
+      method: 'POST',
     })
   );
 

@@ -103,13 +103,13 @@ E2E tests verify complete user workflows from start to finish in a real browser 
 
 ```typescript
 // tests/e2e/auth-login.spec.ts
-import { test, expect } from "@playwright/test";
+import { test, expect } from '@playwright/test';
 
-test("user can login with valid credentials", async ({ page }) => {
-  await page.goto("/auth/login");
-  await page.getByLabel(/email/i).fill("user@example.com");
-  await page.getByLabel(/password/i).fill("password123");
-  await page.getByRole("button", { name: /login/i }).click();
+test('user can login with valid credentials', async ({ page }) => {
+  await page.goto('/auth/login');
+  await page.getByLabel(/email/i).fill('user@example.com');
+  await page.getByLabel(/password/i).fill('password123');
+  await page.getByRole('button', { name: /login/i }).click();
 
   await expect(page).toHaveURL(/\/ski-specs/);
 });
@@ -253,20 +253,20 @@ describe('MyComponent', () => {
 When testing code that uses EffectJS, use `Effect.runPromise` or `Effect.either`:
 
 ```typescript
-import { Effect } from "effect";
-import { describe, it, expect } from "vitest";
+import { Effect } from 'effect';
+import { describe, it, expect } from 'vitest';
 
-describe("calculateRelativeWeight", () => {
-  it("calculates correctly", async () => {
+describe('calculateRelativeWeight', () => {
+  it('calculates correctly', async () => {
     const result = await Effect.runPromise(service.calculateRelativeWeight(1800, 2400));
     expect(result).toBe(0.75);
   });
 
-  it("handles errors", async () => {
+  it('handles errors', async () => {
     const effect = service.calculateRelativeWeight(1800, 0);
     const result = await Effect.runPromise(Effect.either(effect));
 
-    if (result._tag === "Left") {
+    if (result._tag === 'Left') {
       expect(result.left).toBeInstanceOf(BusinessLogicError);
     }
   });
@@ -278,19 +278,19 @@ describe("calculateRelativeWeight", () => {
 **Mock Functions**:
 
 ```typescript
-import { vi } from "vitest";
+import { vi } from 'vitest';
 
 const mockFn = vi.fn();
-mockFn.mockReturnValue("mocked value");
-mockFn.mockResolvedValue("async value");
+mockFn.mockReturnValue('mocked value');
+mockFn.mockResolvedValue('async value');
 ```
 
 **Mock Modules**:
 
 ```typescript
-vi.mock("@/lib/services/SkiSpecService", () => ({
+vi.mock('@/lib/services/SkiSpecService', () => ({
   SkiSpecService: vi.fn().mockImplementation(() => ({
-    createSkiSpec: vi.fn().mockResolvedValue({ id: "123" }),
+    createSkiSpec: vi.fn().mockResolvedValue({ id: '123' }),
   })),
 }));
 ```
@@ -298,8 +298,8 @@ vi.mock("@/lib/services/SkiSpecService", () => ({
 **Spy on Functions**:
 
 ```typescript
-const spy = vi.spyOn(object, "method");
-expect(spy).toHaveBeenCalledWith("expected-arg");
+const spy = vi.spyOn(object, 'method');
+expect(spy).toHaveBeenCalledWith('expected-arg');
 ```
 
 ### E2E Testing with Playwright
@@ -315,7 +315,7 @@ expect(spy).toHaveBeenCalledWith("expected-arg");
 
 ```typescript
 // 1. By Role (most accessible)
-page.getByRole("button", { name: /submit/i });
+page.getByRole('button', { name: /submit/i });
 
 // 2. By Label
 page.getByLabel(/email/i);
@@ -327,7 +327,7 @@ page.getByPlaceholder(/enter your name/i);
 page.getByText(/welcome/i);
 
 // 5. By Test ID (last resort)
-page.getByTestId("submit-button");
+page.getByTestId('submit-button');
 ```
 
 **Page Object Model Example**:
@@ -338,13 +338,13 @@ export class LoginPage {
   constructor(private page: Page) {}
 
   async goto() {
-    await this.page.goto("/auth/login");
+    await this.page.goto('/auth/login');
   }
 
   async login(email: string, password: string) {
     await this.page.getByLabel(/email/i).fill(email);
     await this.page.getByLabel(/password/i).fill(password);
-    await this.page.getByRole("button", { name: /login/i }).click();
+    await this.page.getByRole('button', { name: /login/i }).click();
   }
 
   async getErrorMessage() {
@@ -353,13 +353,13 @@ export class LoginPage {
 }
 
 // Usage in test
-test("login with invalid credentials", async ({ page }) => {
+test('login with invalid credentials', async ({ page }) => {
   const loginPage = new LoginPage(page);
   await loginPage.goto();
-  await loginPage.login("invalid@example.com", "wrong");
+  await loginPage.login('invalid@example.com', 'wrong');
 
   const error = await loginPage.getErrorMessage();
-  expect(error).toContain("Invalid credentials");
+  expect(error).toContain('Invalid credentials');
 });
 ```
 
@@ -368,21 +368,21 @@ test("login with invalid credentials", async ({ page }) => {
 Use the `checkA11y` helper to test accessibility:
 
 ```typescript
-import { test } from "@playwright/test";
-import { checkA11y } from "../fixtures/accessibility";
+import { test } from '@playwright/test';
+import { checkA11y } from '../fixtures/accessibility';
 
-test("page is accessible", async ({ page }) => {
-  await page.goto("/");
+test('page is accessible', async ({ page }) => {
+  await page.goto('/');
   await checkA11y(page);
 });
 
 // With options
-test("specific element is accessible", async ({ page }) => {
-  await page.goto("/");
+test('specific element is accessible', async ({ page }) => {
+  await page.goto('/');
   await checkA11y(page, {
-    include: ["main"],
-    exclude: [".third-party-widget"],
-    disabledRules: ["color-contrast"], // Only if necessary
+    include: ['main'],
+    exclude: ['.third-party-widget'],
+    disabledRules: ['color-contrast'], // Only if necessary
   });
 });
 ```

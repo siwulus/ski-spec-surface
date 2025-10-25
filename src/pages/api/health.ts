@@ -1,5 +1,5 @@
-import type { APIRoute } from "astro";
-import type { HealthCheckResponse } from "@/types/api.types";
+import type { APIRoute } from 'astro';
+import type { HealthCheckResponse } from '@/types/api.types';
 
 export const prerender = false;
 
@@ -12,7 +12,7 @@ export const prerender = false;
  */
 export const GET: APIRoute = async ({ locals }) => {
   const timestamp = new Date().toISOString();
-  const version = "1.0.0";
+  const version = '1.0.0';
 
   const { skiSpecService } = locals;
   try {
@@ -21,39 +21,39 @@ export const GET: APIRoute = async ({ locals }) => {
 
     if (!isHealthy) {
       const response: HealthCheckResponse = {
-        status: "unhealthy",
+        status: 'unhealthy',
         timestamp,
         version,
-        error: "Database connection failed",
+        error: 'Database connection failed',
       };
 
       return new Response(JSON.stringify(response), {
         status: 503,
-        headers: { "Content-Type": "application/json" },
+        headers: { 'Content-Type': 'application/json' },
       });
     }
 
     const response: HealthCheckResponse = {
-      status: "healthy",
+      status: 'healthy',
       timestamp,
       version,
     };
 
     return new Response(JSON.stringify(response), {
       status: 200,
-      headers: { "Content-Type": "application/json" },
+      headers: { 'Content-Type': 'application/json' },
     });
   } catch (error) {
     const response: HealthCheckResponse = {
-      status: "unhealthy",
+      status: 'unhealthy',
       timestamp,
       version,
-      error: error instanceof Error ? error.message : "Unknown error",
+      error: error instanceof Error ? error.message : 'Unknown error',
     };
 
     return new Response(JSON.stringify(response), {
       status: 503,
-      headers: { "Content-Type": "application/json" },
+      headers: { 'Content-Type': 'application/json' },
     });
   }
 };

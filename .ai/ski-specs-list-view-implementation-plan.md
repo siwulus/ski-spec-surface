@@ -93,8 +93,8 @@ Widok służy do przeglądania, filtrowania i zarządzania zapisanymi specyfikac
     ```ts
     type ToolbarViewModel = {
       search?: string;
-      sort_by: "name" | "length" | "surface_area" | "relative_weight" | "created_at";
-      sort_order: "asc" | "desc";
+      sort_by: 'name' | 'length' | 'surface_area' | 'relative_weight' | 'created_at';
+      sort_order: 'asc' | 'desc';
       limit: number; // 1..100
     };
     ```

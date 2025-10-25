@@ -1,12 +1,12 @@
-import React from "react";
-import { FormProvider } from "react-hook-form";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { NumberInputWithUnit } from "./NumberInputWithUnit";
-import { TextareaWithCounter } from "./TextareaWithCounter";
-import { useSkiSpecForm } from "@/components/hooks/useSkiSpecForm";
-import type { CreateSkiSpecCommand } from "@/types/api.types";
+import React from 'react';
+import { FormProvider } from 'react-hook-form';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { NumberInputWithUnit } from './NumberInputWithUnit';
+import { TextareaWithCounter } from './TextareaWithCounter';
+import { useSkiSpecForm } from '@/components/hooks/useSkiSpecForm';
+import type { CreateSkiSpecCommand } from '@/types/api.types';
 
 /**
  * Props for the form component
@@ -42,7 +42,7 @@ export const SkiSpecForm: React.FC<SkiSpecFormProps> = ({
   const { watch, formState, handleSubmit, setError } = form;
 
   // Watch description field for character counter
-  const description = watch("description");
+  const description = watch('description');
   const descriptionLength = description?.length || 0;
 
   // Notify parent of unsaved changes state
@@ -54,7 +54,7 @@ export const SkiSpecForm: React.FC<SkiSpecFormProps> = ({
   React.useEffect(() => {
     Object.entries(apiErrors).forEach(([field, message]) => {
       setError(field as keyof CreateSkiSpecCommand, {
-        type: "manual",
+        type: 'manual',
         message,
       });
     });
@@ -69,7 +69,7 @@ export const SkiSpecForm: React.FC<SkiSpecFormProps> = ({
       <form onSubmit={handleFormSubmit} className="space-y-6">
         {/* Name field */}
         <div className="space-y-2">
-          <Label htmlFor="name" className={formState.errors.name ? "text-destructive" : ""}>
+          <Label htmlFor="name" className={formState.errors.name ? 'text-destructive' : ''}>
             Name
             <span className="text-destructive ml-1" aria-label="required">
               *
@@ -80,10 +80,10 @@ export const SkiSpecForm: React.FC<SkiSpecFormProps> = ({
             type="text"
             disabled={isSubmitting}
             aria-invalid={!!formState.errors.name}
-            aria-describedby={formState.errors.name ? "name-error" : undefined}
+            aria-describedby={formState.errors.name ? 'name-error' : undefined}
             aria-required="true"
-            className={formState.errors.name ? "border-destructive" : ""}
-            {...form.register("name")}
+            className={formState.errors.name ? 'border-destructive' : ''}
+            {...form.register('name')}
           />
           {formState.errors.name && (
             <p id="name-error" className="text-sm text-destructive" role="alert">
@@ -145,7 +145,7 @@ export const SkiSpecForm: React.FC<SkiSpecFormProps> = ({
           </Button>
 
           <Button type="submit" disabled={isSubmitting || !formState.isValid}>
-            {isSubmitting ? "Saving..." : "Save"}
+            {isSubmitting ? 'Saving...' : 'Save'}
           </Button>
         </div>
       </form>

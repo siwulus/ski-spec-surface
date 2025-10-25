@@ -1,15 +1,15 @@
-import { getUserIdEffect } from "@/lib/utils/auth";
-import { catchAllSkiSpecErrors } from "@/lib/utils/error";
-import { parseJsonBody, parseQueryParams, parseWithSchema, type QueryCoercer } from "@/lib/utils/zod";
+import { getUserIdEffect } from '@/lib/utils/auth';
+import { catchAllSkiSpecErrors } from '@/lib/utils/error';
+import { parseJsonBody, parseQueryParams, parseWithSchema, type QueryCoercer } from '@/lib/utils/zod';
 import {
   CreateNoteCommandSchema,
   ListNotesQuerySchema,
   type NoteListResponse,
   type PaginationMeta,
-} from "@/types/api.types";
-import type { APIRoute } from "astro";
-import { Effect, pipe } from "effect";
-import { z } from "zod";
+} from '@/types/api.types';
+import type { APIRoute } from 'astro';
+import { Effect, pipe } from 'effect';
+import { z } from 'zod';
 
 export const prerender = false;
 
@@ -21,7 +21,7 @@ export const prerender = false;
  * UUID validation schema for path parameter
  */
 const UuidParamSchema = z.object({
-  specId: z.string().uuid("Invalid UUID format"),
+  specId: z.string().uuid('Invalid UUID format'),
 });
 
 /**
@@ -38,8 +38,8 @@ const validateSpecIdParam = (specId: string | undefined) =>
  * Converts string query params to appropriate types for Zod validation.
  */
 const coerceListNotesQuery: QueryCoercer = (params) => {
-  const page = params.get("page");
-  const limit = params.get("limit");
+  const page = params.get('page');
+  const limit = params.get('limit');
 
   return {
     page: page ? parseInt(page, 10) : undefined,
@@ -113,14 +113,14 @@ export const GET: APIRoute = async ({ params, url, locals }) => {
 
       return new Response(JSON.stringify(response), {
         status: 200,
-        headers: { "Content-Type": "application/json" },
+        headers: { 'Content-Type': 'application/json' },
       });
     }),
 
     // Step 6: Handle all errors consistently with structured logging
     catchAllSkiSpecErrors({
-      endpoint: "/api/ski-specs/:specId/notes",
-      method: "GET",
+      endpoint: '/api/ski-specs/:specId/notes',
+      method: 'GET',
       userId: user?.id,
     })
   );
@@ -169,14 +169,14 @@ export const POST: APIRoute = async ({ params, request, locals }) => {
     Effect.map((createdNote) => {
       return new Response(JSON.stringify(createdNote), {
         status: 201,
-        headers: { "Content-Type": "application/json" },
+        headers: { 'Content-Type': 'application/json' },
       });
     }),
 
     // Step 5: Handle all errors consistently with structured logging
     catchAllSkiSpecErrors({
-      endpoint: "/api/ski-specs/:specId/notes",
-      method: "POST",
+      endpoint: '/api/ski-specs/:specId/notes',
+      method: 'POST',
       userId: user?.id,
     })
   );

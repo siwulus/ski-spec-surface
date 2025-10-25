@@ -1,4 +1,4 @@
-import { useEffect, type RefObject } from "react";
+import { useEffect, type RefObject } from 'react';
 
 /**
  * Custom hook for implementing focus trap in modal dialogs
@@ -29,7 +29,7 @@ export const useFocusTrap = (
 
     // Handle Tab key for focus trap
     const handleTabKey = (e: KeyboardEvent) => {
-      if (e.key !== "Tab") return;
+      if (e.key !== 'Tab') return;
 
       // Shift + Tab on first element -> focus last element
       if (e.shiftKey && document.activeElement === firstElement) {
@@ -44,14 +44,14 @@ export const useFocusTrap = (
     };
 
     // Add event listener
-    dialogRef.current.addEventListener("keydown", handleTabKey);
+    dialogRef.current.addEventListener('keydown', handleTabKey);
 
     // Focus first element when modal opens
     firstElement?.focus();
 
     // Cleanup: remove listener and return focus
     return () => {
-      dialogRef.current?.removeEventListener("keydown", handleTabKey);
+      dialogRef.current?.removeEventListener('keydown', handleTabKey);
 
       // Return focus to trigger button or previously focused element
       if (returnFocusRef?.current) {

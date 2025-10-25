@@ -1,5 +1,5 @@
-import * as React from "react";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import * as React from 'react';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 
 export const SkiSpecGridSkeleton: React.FC = () => {
   return (

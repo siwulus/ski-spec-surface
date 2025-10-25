@@ -1,14 +1,14 @@
-import React, { useState } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { toast } from "sonner";
-import { ResetPasswordSchema, type ResetPasswordFormData } from "@/types/auth.types";
-import { useAuth } from "@/components/hooks/useAuth";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { MailCheck } from "lucide-react";
+import React, { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { toast } from 'sonner';
+import { ResetPasswordSchema, type ResetPasswordFormData } from '@/types/auth.types';
+import { useAuth } from '@/components/hooks/useAuth';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { MailCheck } from 'lucide-react';
 
 /**
  * ResetPasswordForm component
@@ -36,7 +36,7 @@ export const ResetPasswordForm: React.FC = () => {
   const form = useForm<ResetPasswordFormData>({
     resolver: zodResolver(ResetPasswordSchema),
     defaultValues: {
-      email: "",
+      email: '',
     },
   });
 
@@ -47,17 +47,17 @@ export const ResetPasswordForm: React.FC = () => {
       const { success, error } = await resetPassword({ email: data.email });
 
       if (!success) {
-        toast.error(error?.message || "Failed to send reset email");
+        toast.error(error?.message || 'Failed to send reset email');
         return;
       }
 
       // Always show success state (security best practice - don't reveal if email exists)
       setEmailSent(true);
-      toast.success("Password reset email sent");
+      toast.success('Password reset email sent');
     } catch (error) {
       // eslint-disable-next-line no-console
-      console.error("Reset password error:", error);
-      toast.error("An unexpected error occurred. Please try again.");
+      console.error('Reset password error:', error);
+      toast.error('An unexpected error occurred. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -119,7 +119,7 @@ export const ResetPasswordForm: React.FC = () => {
 
         {/* Submit button */}
         <Button type="submit" className="w-full" disabled={isLoading}>
-          {isLoading ? "Sending..." : "Send reset link"}
+          {isLoading ? 'Sending...' : 'Send reset link'}
         </Button>
 
         {/* Link back to login */}

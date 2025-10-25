@@ -1,10 +1,10 @@
-import { getUserIdEffect } from "@/lib/utils/auth";
-import { catchAllSkiSpecErrors } from "@/lib/utils/error";
-import { parseJsonBody, parseWithSchema } from "@/lib/utils/zod";
-import { UpdateSkiSpecCommandSchema } from "@/types/api.types";
-import type { APIRoute } from "astro";
-import { Effect, pipe } from "effect";
-import { z } from "zod";
+import { getUserIdEffect } from '@/lib/utils/auth';
+import { catchAllSkiSpecErrors } from '@/lib/utils/error';
+import { parseJsonBody, parseWithSchema } from '@/lib/utils/zod';
+import { UpdateSkiSpecCommandSchema } from '@/types/api.types';
+import type { APIRoute } from 'astro';
+import { Effect, pipe } from 'effect';
+import { z } from 'zod';
 
 export const prerender = false;
 
@@ -16,7 +16,7 @@ export const prerender = false;
  * UUID validation schema for path parameter
  */
 const UuidParamSchema = z.object({
-  id: z.string().uuid("Invalid UUID format"),
+  id: z.string().uuid('Invalid UUID format'),
 });
 
 /**
@@ -67,14 +67,14 @@ export const GET: APIRoute = async ({ params, locals }) => {
     Effect.map((skiSpec) => {
       return new Response(JSON.stringify(skiSpec), {
         status: 200,
-        headers: { "Content-Type": "application/json" },
+        headers: { 'Content-Type': 'application/json' },
       });
     }),
 
     // Step 6: Handle all errors consistently with structured logging
     catchAllSkiSpecErrors({
-      endpoint: "/api/ski-specs/:id",
-      method: "GET",
+      endpoint: '/api/ski-specs/:id',
+      method: 'GET',
       userId: user?.id,
     })
   );
@@ -123,14 +123,14 @@ export const PUT: APIRoute = async ({ params, request, locals }) => {
     Effect.map((updatedSpec) => {
       return new Response(JSON.stringify(updatedSpec), {
         status: 200,
-        headers: { "Content-Type": "application/json" },
+        headers: { 'Content-Type': 'application/json' },
       });
     }),
 
     // Step 5: Handle all errors consistently with structured logging
     catchAllSkiSpecErrors({
-      endpoint: "/api/ski-specs/:id",
-      method: "PUT",
+      endpoint: '/api/ski-specs/:id',
+      method: 'PUT',
       userId: user?.id,
     })
   );
@@ -174,8 +174,8 @@ export const DELETE: APIRoute = async ({ params, locals }) => {
 
     // Step 5: Handle all errors consistently with structured logging
     catchAllSkiSpecErrors({
-      endpoint: "/api/ski-specs/:id",
-      method: "DELETE",
+      endpoint: '/api/ski-specs/:id',
+      method: 'DELETE',
       userId: user?.id,
     })
   );

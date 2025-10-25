@@ -257,17 +257,17 @@ GET /api/ski-specs/550e8400-e29b-41d4-a716-446655440000/notes?page=2&limit=25
 **Query 1: Verify Specification Ownership**
 
 ```typescript
-const { data: spec } = await supabase.from("ski_specs").select("id").eq("id", specId).eq("user_id", userId).single();
+const { data: spec } = await supabase.from('ski_specs').select('id').eq('id', specId).eq('user_id', userId).single();
 ```
 
 **Query 2: Fetch Notes with Pagination**
 
 ```typescript
 const { data, count } = await supabase
-  .from("ski_spec_notes")
-  .select("*", { count: "exact" })
-  .eq("ski_spec_id", specId)
-  .order("created_at", { ascending: false })
+  .from('ski_spec_notes')
+  .select('*', { count: 'exact' })
+  .eq('ski_spec_id', specId)
+  .order('created_at', { ascending: false })
   .range(offset, offset + limit - 1);
 ```
 
@@ -326,12 +326,12 @@ const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}
 if (!uuidRegex.test(specId)) {
   return new Response(
     JSON.stringify({
-      error: "Invalid ski specification ID format",
-      code: "VALIDATION_ERROR",
-      details: [{ field: "specId", message: "Must be a valid UUID" }],
+      error: 'Invalid ski specification ID format',
+      code: 'VALIDATION_ERROR',
+      details: [{ field: 'specId', message: 'Must be a valid UUID' }],
       timestamp: new Date().toISOString(),
     } satisfies ApiErrorResponse),
-    { status: 400, headers: { "Content-Type": "application/json" } }
+    { status: 400, headers: { 'Content-Type': 'application/json' } }
   );
 }
 ```
@@ -342,18 +342,18 @@ if (!uuidRegex.test(specId)) {
 const validation = ListNotesQuerySchema.safeParse(parsedQuery);
 if (!validation.success) {
   const details = validation.error.issues.map((err) => ({
-    field: err.path.join("."),
+    field: err.path.join('.'),
     message: err.message,
   }));
 
   return new Response(
     JSON.stringify({
-      error: "Invalid query parameters",
-      code: "VALIDATION_ERROR",
+      error: 'Invalid query parameters',
+      code: 'VALIDATION_ERROR',
       details,
       timestamp: new Date().toISOString(),
     } satisfies ApiErrorResponse),
-    { status: 400, headers: { "Content-Type": "application/json" } }
+    { status: 400, headers: { 'Content-Type': 'application/json' } }
   );
 }
 ```
@@ -369,11 +369,11 @@ const result = await listNotes(supabase, userId, specId, validatedQuery);
 if (result === null) {
   return new Response(
     JSON.stringify({
-      error: "Ski specification not found",
-      code: "NOT_FOUND",
+      error: 'Ski specification not found',
+      code: 'NOT_FOUND',
       timestamp: new Date().toISOString(),
     } satisfies ApiErrorResponse),
-    { status: 404, headers: { "Content-Type": "application/json" } }
+    { status: 404, headers: { 'Content-Type': 'application/json' } }
   );
 }
 ```
@@ -387,8 +387,8 @@ try {
   const result = await listNotes(supabase, userId, specId, validatedQuery);
   // ... process result
 } catch (error) {
-  console.error("Error in GET /api/ski-specs/{specId}/notes:", {
-    error: error instanceof Error ? error.message : "Unknown error",
+  console.error('Error in GET /api/ski-specs/{specId}/notes:', {
+    error: error instanceof Error ? error.message : 'Unknown error',
     userId,
     specId,
     timestamp: new Date().toISOString(),
@@ -396,11 +396,11 @@ try {
 
   return new Response(
     JSON.stringify({
-      error: "An unexpected error occurred while fetching notes",
-      code: "INTERNAL_ERROR",
+      error: 'An unexpected error occurred while fetching notes',
+      code: 'INTERNAL_ERROR',
       timestamp: new Date().toISOString(),
     } satisfies ApiErrorResponse),
-    { status: 500, headers: { "Content-Type": "application/json" } }
+    { status: 500, headers: { 'Content-Type': 'application/json' } }
   );
 }
 ```
@@ -410,8 +410,8 @@ try {
 **Structured Logging Format:**
 
 ```typescript
-console.error("Error in GET /api/ski-specs/{specId}/notes:", {
-  error: error instanceof Error ? error.message : "Unknown error",
+console.error('Error in GET /api/ski-specs/{specId}/notes:', {
+  error: error instanceof Error ? error.message : 'Unknown error',
   stack: error instanceof Error ? error.stack : undefined,
   userId: locals.userId,
   specId: specId,
@@ -507,8 +507,8 @@ LIMIT ? OFFSET ?
 **Content:**
 
 ```typescript
-import type { SupabaseClient } from "@/db/supabase.client";
-import type { NoteDTO, ListNotesQuery } from "@/types";
+import type { SupabaseClient } from '@/db/supabase.client';
+import type { NoteDTO, ListNotesQuery } from '@/types';
 
 /**
  * Retrieves a paginated list of notes for a specific ski specification.
@@ -535,14 +535,14 @@ export async function listNotes(
 ): Promise<{ data: NoteDTO[]; total: number } | null> {
   // Step 1: Verify specification exists and user owns it
   const { data: spec, error: specError } = await supabase
-    .from("ski_specs")
-    .select("id")
-    .eq("id", specId)
-    .eq("user_id", userId)
+    .from('ski_specs')
+    .select('id')
+    .eq('id', specId)
+    .eq('user_id', userId)
     .single();
 
   // Handle not found case
-  if (specError?.code === "PGRST116" || !spec) {
+  if (specError?.code === 'PGRST116' || !spec) {
     return null;
   }
 
@@ -556,10 +556,10 @@ export async function listNotes(
 
   // Step 3: Fetch notes with pagination and count
   const { data, error, count } = await supabase
-    .from("ski_spec_notes")
-    .select("*", { count: "exact" })
-    .eq("ski_spec_id", specId)
-    .order("created_at", { ascending: false })
+    .from('ski_spec_notes')
+    .select('*', { count: 'exact' })
+    .eq('ski_spec_id', specId)
+    .order('created_at', { ascending: false })
     .range(offset, offset + query.limit - 1);
 
   // Handle database errors
@@ -590,9 +590,9 @@ mkdir -p src/pages/api/ski-specs/[specId]/notes
 **Content:**
 
 ```typescript
-import type { APIRoute } from "astro";
-import { ListNotesQuerySchema, type ApiErrorResponse, type NoteListResponse, type PaginationMeta } from "@/types";
-import { listNotes } from "@/lib/services/ski-spec-note.service";
+import type { APIRoute } from 'astro';
+import { ListNotesQuerySchema, type ApiErrorResponse, type NoteListResponse, type PaginationMeta } from '@/types';
+import { listNotes } from '@/lib/services/ski-spec-note.service';
 
 export const prerender = false;
 
@@ -617,11 +617,11 @@ export const GET: APIRoute = async ({ params, url, locals }) => {
     if (!specId) {
       return new Response(
         JSON.stringify({
-          error: "Ski specification ID is required",
-          code: "VALIDATION_ERROR",
+          error: 'Ski specification ID is required',
+          code: 'VALIDATION_ERROR',
           timestamp: new Date().toISOString(),
         } satisfies ApiErrorResponse),
-        { status: 400, headers: { "Content-Type": "application/json" } }
+        { status: 400, headers: { 'Content-Type': 'application/json' } }
       );
     }
 
@@ -630,19 +630,19 @@ export const GET: APIRoute = async ({ params, url, locals }) => {
     if (!uuidRegex.test(specId)) {
       return new Response(
         JSON.stringify({
-          error: "Invalid ski specification ID format",
-          code: "VALIDATION_ERROR",
-          details: [{ field: "specId", message: "Must be a valid UUID" }],
+          error: 'Invalid ski specification ID format',
+          code: 'VALIDATION_ERROR',
+          details: [{ field: 'specId', message: 'Must be a valid UUID' }],
           timestamp: new Date().toISOString(),
         } satisfies ApiErrorResponse),
-        { status: 400, headers: { "Content-Type": "application/json" } }
+        { status: 400, headers: { 'Content-Type': 'application/json' } }
       );
     }
 
     // Step 4: Extract query parameters from URL
     const rawQuery = {
-      page: url.searchParams.get("page"),
-      limit: url.searchParams.get("limit"),
+      page: url.searchParams.get('page'),
+      limit: url.searchParams.get('limit'),
     };
 
     // Step 5: Coerce string parameters to appropriate types
@@ -656,18 +656,18 @@ export const GET: APIRoute = async ({ params, url, locals }) => {
 
     if (!validation.success) {
       const details = validation.error.issues.map((err) => ({
-        field: err.path.join("."),
+        field: err.path.join('.'),
         message: err.message,
       }));
 
       return new Response(
         JSON.stringify({
-          error: "Invalid query parameters",
-          code: "VALIDATION_ERROR",
+          error: 'Invalid query parameters',
+          code: 'VALIDATION_ERROR',
           details,
           timestamp: new Date().toISOString(),
         } satisfies ApiErrorResponse),
-        { status: 400, headers: { "Content-Type": "application/json" } }
+        { status: 400, headers: { 'Content-Type': 'application/json' } }
       );
     }
 
@@ -680,11 +680,11 @@ export const GET: APIRoute = async ({ params, url, locals }) => {
     if (result === null) {
       return new Response(
         JSON.stringify({
-          error: "Ski specification not found",
-          code: "NOT_FOUND",
+          error: 'Ski specification not found',
+          code: 'NOT_FOUND',
           timestamp: new Date().toISOString(),
         } satisfies ApiErrorResponse),
-        { status: 404, headers: { "Content-Type": "application/json" } }
+        { status: 404, headers: { 'Content-Type': 'application/json' } }
       );
     }
 
@@ -707,12 +707,12 @@ export const GET: APIRoute = async ({ params, url, locals }) => {
 
     return new Response(JSON.stringify(response), {
       status: 200,
-      headers: { "Content-Type": "application/json" },
+      headers: { 'Content-Type': 'application/json' },
     });
   } catch (error) {
     // Step 11: Handle unexpected errors
-    console.error("Error in GET /api/ski-specs/{specId}/notes:", {
-      error: error instanceof Error ? error.message : "Unknown error",
+    console.error('Error in GET /api/ski-specs/{specId}/notes:', {
+      error: error instanceof Error ? error.message : 'Unknown error',
       stack: error instanceof Error ? error.stack : undefined,
       userId: locals.userId,
       specId: params.specId,
@@ -721,11 +721,11 @@ export const GET: APIRoute = async ({ params, url, locals }) => {
 
     return new Response(
       JSON.stringify({
-        error: "An unexpected error occurred while fetching notes",
-        code: "INTERNAL_ERROR",
+        error: 'An unexpected error occurred while fetching notes',
+        code: 'INTERNAL_ERROR',
         timestamp: new Date().toISOString(),
       } satisfies ApiErrorResponse),
-      { status: 500, headers: { "Content-Type": "application/json" } }
+      { status: 500, headers: { 'Content-Type': 'application/json' } }
     );
   }
 };

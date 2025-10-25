@@ -27,7 +27,7 @@ Create `src/pages/api-docs.astro` with the Scalar API reference component:
 
 ```astro
 ---
-import ApiReference from "@scalar/astro-api-reference";
+import ApiReference from '@scalar/astro-api-reference';
 ---
 
 <!doctype html>
@@ -49,10 +49,10 @@ import ApiReference from "@scalar/astro-api-reference";
     <ApiReference
       configuration={{
         spec: {
-          url: "/swagger.yaml",
+          url: '/swagger.yaml',
         },
-        theme: "purple",
-        layout: "modern",
+        theme: 'purple',
+        layout: 'modern',
         darkMode: true,
         showSidebar: true,
       }}

@@ -41,11 +41,11 @@ These will be added to `src/components/ui/`.
 ```tsx
 interface SkiSpecToolbarProps {
   search: string;
-  sortBy: ListSkiSpecsQuery["sort_by"];
-  sortOrder: ListSkiSpecsQuery["sort_order"];
+  sortBy: ListSkiSpecsQuery['sort_by'];
+  sortOrder: ListSkiSpecsQuery['sort_order'];
   onSearchChange: (value: string) => void;
-  onSortByChange: (value: ListSkiSpecsQuery["sort_by"]) => void;
-  onSortOrderChange: (value: ListSkiSpecsQuery["sort_order"]) => void;
+  onSortByChange: (value: ListSkiSpecsQuery['sort_by']) => void;
+  onSortOrderChange: (value: ListSkiSpecsQuery['sort_order']) => void;
 }
 ```
 
@@ -101,13 +101,13 @@ interface SkiSpecToolbarProps {
       {/* Select options */}
     </Select>
     <div className="flex border rounded-md">
-      <Button variant={sortOrder === "asc" ? "secondary" : "ghost"} size="sm" onClick={() => onSortOrderChange("asc")}>
+      <Button variant={sortOrder === 'asc' ? 'secondary' : 'ghost'} size="sm" onClick={() => onSortOrderChange('asc')}>
         <ArrowUp className="h-4 w-4" />
       </Button>
       <Button
-        variant={sortOrder === "desc" ? "secondary" : "ghost"}
+        variant={sortOrder === 'desc' ? 'secondary' : 'ghost'}
         size="sm"
-        onClick={() => onSortOrderChange("desc")}
+        onClick={() => onSortOrderChange('desc')}
       >
         <ArrowDown className="h-4 w-4" />
       </Button>
@@ -124,7 +124,7 @@ interface SkiSpecToolbarProps {
 - Call `onSearchChange` (which updates URL) after 300ms delay
 
 ```tsx
-import { useDebouncedCallback } from "use-debounce";
+import { useDebouncedCallback } from 'use-debounce';
 
 const [localSearch, setLocalSearch] = useState(search);
 
@@ -224,8 +224,8 @@ interface SkiSpecPaginationProps {
 1. Import new components:
 
 ```tsx
-import { SkiSpecToolbar } from "@/components/SkiSpecToolbar";
-import { SkiSpecPagination } from "@/components/SkiSpecPagination";
+import { SkiSpecToolbar } from '@/components/SkiSpecToolbar';
+import { SkiSpecPagination } from '@/components/SkiSpecPagination';
 ```
 
 2. Destructure `updateState` from `useSkiSpecsQueryUrlState`:
@@ -241,18 +241,18 @@ const handleSearchChange = (search: string) => {
   updateState({ search, page: 1 }); // Reset to page 1 on new search
 };
 
-const handleSortByChange = (sort_by: ListSkiSpecsQuery["sort_by"]) => {
+const handleSortByChange = (sort_by: ListSkiSpecsQuery['sort_by']) => {
   updateState({ sort_by });
 };
 
-const handleSortOrderChange = (sort_order: ListSkiSpecsQuery["sort_order"]) => {
+const handleSortOrderChange = (sort_order: ListSkiSpecsQuery['sort_order']) => {
   updateState({ sort_order });
 };
 
 const handlePageChange = (page: number) => {
   updateState({ page });
   // Optional: scroll to top after page change
-  window.scrollTo({ top: 0, behavior: "smooth" });
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 };
 ```
 

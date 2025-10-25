@@ -1,9 +1,9 @@
-import { skiSpecHttpClient } from "@/lib/utils/SkiSpecHttpClient";
-import type { CreateSkiSpecCommand, SkiSpecDTO, UpdateSkiSpecCommand } from "@/types/api.types";
-import { SkiSpecDTOSchema } from "@/types/api.types";
-import { Effect, pipe } from "effect";
-import { useCallback, useState } from "react";
-import { useErrorHandler } from "./useErrorHandler";
+import { skiSpecHttpClient } from '@/lib/utils/SkiSpecHttpClient';
+import type { CreateSkiSpecCommand, SkiSpecDTO, UpdateSkiSpecCommand } from '@/types/api.types';
+import { SkiSpecDTOSchema } from '@/types/api.types';
+import { Effect, pipe } from 'effect';
+import { useCallback, useState } from 'react';
+import { useErrorHandler } from './useErrorHandler';
 
 /**
  * Custom hook for handling ski spec CRUD API calls with EffectJS
@@ -25,10 +25,10 @@ export const useSkiSpecMutation = () => {
           setIsSubmitting(true);
           setApiErrors({});
         }),
-        Effect.flatMap(() => skiSpecHttpClient.post("/api/ski-specs", SkiSpecDTOSchema, data)),
+        Effect.flatMap(() => skiSpecHttpClient.post('/api/ski-specs', SkiSpecDTOSchema, data)),
         Effect.tap(() =>
           Effect.sync(() => {
-            showSuccess("Success", "Specification has been added");
+            showSuccess('Success', 'Specification has been added');
             setIsSubmitting(false);
           })
         ),
@@ -36,7 +36,7 @@ export const useSkiSpecMutation = () => {
           Effect.sync(() => {
             const fieldErrors = showError(err, {
               redirectOnAuth: true,
-              redirectTo: "/ski-specs",
+              redirectTo: '/ski-specs',
             });
             setApiErrors(fieldErrors);
             setIsSubmitting(false);
@@ -58,7 +58,7 @@ export const useSkiSpecMutation = () => {
         Effect.flatMap(() => skiSpecHttpClient.put(`/api/ski-specs/${id}`, SkiSpecDTOSchema, data)),
         Effect.tap(() =>
           Effect.sync(() => {
-            showSuccess("Success", "Specification has been updated");
+            showSuccess('Success', 'Specification has been updated');
             setIsSubmitting(false);
           })
         ),
@@ -66,7 +66,7 @@ export const useSkiSpecMutation = () => {
           Effect.sync(() => {
             const fieldErrors = showError(err, {
               redirectOnAuth: true,
-              redirectTo: "/ski-specs",
+              redirectTo: '/ski-specs',
             });
             setApiErrors(fieldErrors);
             setIsSubmitting(false);
@@ -95,7 +95,7 @@ export const useSkiSpecMutation = () => {
           Effect.sync(() => {
             showError(err, {
               redirectOnAuth: true,
-              redirectTo: "/ski-specs",
+              redirectTo: '/ski-specs',
             });
             setIsSubmitting(false);
           })
@@ -116,13 +116,13 @@ export const useSkiSpecMutation = () => {
         Effect.flatMap(() => skiSpecHttpClient.deleteNoContent(`/api/ski-specs/${id}`)),
         Effect.tap(() =>
           Effect.sync(() => {
-            showSuccess("Success", "Specification has been deleted");
+            showSuccess('Success', 'Specification has been deleted');
             setIsSubmitting(false);
           })
         ),
         Effect.tapError((err) =>
           Effect.sync(() => {
-            showError(err, { redirectOnAuth: true, redirectTo: "/ski-specs" });
+            showError(err, { redirectOnAuth: true, redirectTo: '/ski-specs' });
             setIsSubmitting(false);
           })
         ),

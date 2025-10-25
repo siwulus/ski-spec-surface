@@ -1,6 +1,6 @@
-import React from "react";
-import { Progress } from "@/components/ui/progress";
-import { Check, X } from "lucide-react";
+import React from 'react';
+import { Progress } from '@/components/ui/progress';
+import { Check, X } from 'lucide-react';
 
 interface PasswordStrengthIndicatorProps {
   /** Password string to evaluate */
@@ -40,11 +40,11 @@ const calculateStrength = (password: string): number => {
  * Get text label for password strength
  */
 const getStrengthLabel = (strength: number): string => {
-  if (strength === 0) return "No password";
-  if (strength <= 25) return "Weak";
-  if (strength <= 50) return "Fair";
-  if (strength <= 75) return "Good";
-  return "Strong";
+  if (strength === 0) return 'No password';
+  if (strength <= 25) return 'Weak';
+  if (strength <= 50) return 'Fair';
+  if (strength <= 75) return 'Good';
+  return 'Strong';
 };
 
 /**
@@ -67,10 +67,10 @@ export const PasswordStrengthIndicator: React.FC<PasswordStrengthIndicatorProps>
   const strengthLabel = getStrengthLabel(strength);
 
   const requirements: PasswordRequirement[] = [
-    { label: "At least 8 characters", met: password.length >= 8 },
-    { label: "One uppercase letter", met: /[A-Z]/.test(password) },
-    { label: "One lowercase letter", met: /[a-z]/.test(password) },
-    { label: "One number", met: /[0-9]/.test(password) },
+    { label: 'At least 8 characters', met: password.length >= 8 },
+    { label: 'One uppercase letter', met: /[A-Z]/.test(password) },
+    { label: 'One lowercase letter', met: /[a-z]/.test(password) },
+    { label: 'One number', met: /[0-9]/.test(password) },
   ];
 
   return (
@@ -82,14 +82,14 @@ export const PasswordStrengthIndicator: React.FC<PasswordStrengthIndicatorProps>
           <span
             className={`font-medium ${
               strength === 0
-                ? "text-muted-foreground"
+                ? 'text-muted-foreground'
                 : strength <= 25
-                  ? "text-destructive"
+                  ? 'text-destructive'
                   : strength <= 50
-                    ? "text-orange-500"
+                    ? 'text-orange-500'
                     : strength <= 75
-                      ? "text-yellow-600"
-                      : "text-green-600"
+                      ? 'text-yellow-600'
+                      : 'text-green-600'
             }`}
           >
             {strengthLabel}
@@ -116,7 +116,7 @@ export const PasswordStrengthIndicator: React.FC<PasswordStrengthIndicatorProps>
               ) : (
                 <X className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
               )}
-              <span className={req.met ? "text-foreground" : "text-muted-foreground"}>{req.label}</span>
+              <span className={req.met ? 'text-foreground' : 'text-muted-foreground'}>{req.label}</span>
             </li>
           ))}
         </ul>

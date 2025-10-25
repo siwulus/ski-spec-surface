@@ -1,10 +1,10 @@
-import { getUserIdEffect } from "@/lib/utils/auth";
-import { catchAllSkiSpecErrors } from "@/lib/utils/error";
-import { parseJsonBody, parseWithSchema } from "@/lib/utils/zod";
-import { UpdateNoteCommandSchema } from "@/types/api.types";
-import type { APIRoute } from "astro";
-import { Effect, pipe } from "effect";
-import { z } from "zod";
+import { getUserIdEffect } from '@/lib/utils/auth';
+import { catchAllSkiSpecErrors } from '@/lib/utils/error';
+import { parseJsonBody, parseWithSchema } from '@/lib/utils/zod';
+import { UpdateNoteCommandSchema } from '@/types/api.types';
+import type { APIRoute } from 'astro';
+import { Effect, pipe } from 'effect';
+import { z } from 'zod';
 
 export const prerender = false;
 
@@ -16,8 +16,8 @@ export const prerender = false;
  * UUID validation schema for path parameters
  */
 const UuidParamsSchema = z.object({
-  specId: z.string().uuid("Invalid ski specification ID format"),
-  noteId: z.string().uuid("Invalid note ID format"),
+  specId: z.string().uuid('Invalid ski specification ID format'),
+  noteId: z.string().uuid('Invalid note ID format'),
 });
 
 /**
@@ -72,14 +72,14 @@ export const GET: APIRoute = async ({ params, locals }) => {
     Effect.map((note) => {
       return new Response(JSON.stringify(note), {
         status: 200,
-        headers: { "Content-Type": "application/json" },
+        headers: { 'Content-Type': 'application/json' },
       });
     }),
 
     // Step 5: Handle all errors consistently with structured logging
     catchAllSkiSpecErrors({
-      endpoint: "/api/ski-specs/:specId/notes/:noteId",
-      method: "GET",
+      endpoint: '/api/ski-specs/:specId/notes/:noteId',
+      method: 'GET',
       userId: user?.id,
     })
   );
@@ -145,14 +145,14 @@ export const PUT: APIRoute = async ({ params, request, locals }) => {
     Effect.map((updatedNote) => {
       return new Response(JSON.stringify(updatedNote), {
         status: 200,
-        headers: { "Content-Type": "application/json" },
+        headers: { 'Content-Type': 'application/json' },
       });
     }),
 
     // Step 5: Handle all errors consistently with structured logging
     catchAllSkiSpecErrors({
-      endpoint: "/api/ski-specs/:specId/notes/:noteId",
-      method: "PUT",
+      endpoint: '/api/ski-specs/:specId/notes/:noteId',
+      method: 'PUT',
       userId: user?.id,
     })
   );
@@ -213,8 +213,8 @@ export const DELETE: APIRoute = async ({ params, locals }) => {
 
     // Step 5: Handle all errors consistently with structured logging
     catchAllSkiSpecErrors({
-      endpoint: "/api/ski-specs/:specId/notes/:noteId",
-      method: "DELETE",
+      endpoint: '/api/ski-specs/:specId/notes/:noteId',
+      method: 'DELETE',
       userId: user?.id,
     })
   );

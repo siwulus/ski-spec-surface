@@ -1,12 +1,12 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect } from 'react';
 import {
   NavigationMenu,
   NavigationMenuItem,
   NavigationMenuLink,
   NavigationMenuList,
   navigationMenuTriggerStyle,
-} from "@/components/ui/navigation-menu";
-import { useAuth } from "@/components/hooks/useAuth";
+} from '@/components/ui/navigation-menu';
+import { useAuth } from '@/components/hooks/useAuth';
 
 interface NavigationProps {
   currentPath: string;
@@ -22,8 +22,8 @@ interface NavigationItem {
 }
 
 const navigationItems: NavigationItem[] = [
-  { label: "Home", href: "/" },
-  { label: "Ski Specs", href: "/ski-specs", requiresAuth: true },
+  { label: 'Home', href: '/' },
+  { label: 'Ski Specs', href: '/ski-specs', requiresAuth: true },
 ];
 
 export default function Navigation({ currentPath }: NavigationProps) {
@@ -57,7 +57,7 @@ export default function Navigation({ currentPath }: NavigationProps) {
                 href={item.href}
                 className={navigationMenuTriggerStyle()}
                 active={isActive}
-                aria-current={isActive ? "page" : undefined}
+                aria-current={isActive ? 'page' : undefined}
               >
                 {item.label}
               </NavigationMenuLink>

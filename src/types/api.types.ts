@@ -10,9 +10,9 @@
  * compile-time type check using expectTypeOf to ensure schema and type consistency.
  */
 
-import type { SkiSpecEntity, SkiSpecNoteEntity } from "@/types/db.types";
-import { z } from "zod";
-import { expectTypeOf } from "expect-type";
+import type { SkiSpecEntity, SkiSpecNoteEntity } from '@/types/db.types';
+import { z } from 'zod';
+import { expectTypeOf } from 'expect-type';
 
 // ============================================================================
 // Ski Specification DTOs
@@ -32,8 +32,8 @@ export type SkiSpecDTO = SkiSpecEntity & {
  * Validates complete ski specification data including notes count.
  */
 export const SkiSpecDTOSchema = z.object({
-  id: z.string().uuid("ID must be a valid UUID"),
-  user_id: z.string().uuid("User ID must be a valid UUID"),
+  id: z.string().uuid('ID must be a valid UUID'),
+  user_id: z.string().uuid('User ID must be a valid UUID'),
   name: z.string().min(1).max(255),
   description: z.string().max(2000).nullable(),
   length: z.number().int().min(100).max(250),
@@ -42,12 +42,12 @@ export const SkiSpecDTOSchema = z.object({
   tail: z.number().int().min(50).max(250),
   radius: z.number().int().min(1).max(30),
   weight: z.number().int().min(500).max(3000),
-  surface_area: z.number().positive("Surface area must be positive"),
-  relative_weight: z.number().positive("Relative weight must be positive"),
-  algorithm_version: z.string().min(1, "Algorithm version is required"),
-  created_at: z.iso.datetime({ offset: true, message: "Created at must be a valid ISO datetime" }),
-  updated_at: z.iso.datetime({ offset: true, message: "Updated at must be a valid ISO datetime" }),
-  notes_count: z.number().int().min(0, "Notes count must be non-negative"),
+  surface_area: z.number().positive('Surface area must be positive'),
+  relative_weight: z.number().positive('Relative weight must be positive'),
+  algorithm_version: z.string().min(1, 'Algorithm version is required'),
+  created_at: z.iso.datetime({ offset: true, message: 'Created at must be a valid ISO datetime' }),
+  updated_at: z.iso.datetime({ offset: true, message: 'Updated at must be a valid ISO datetime' }),
+  notes_count: z.number().int().min(0, 'Notes count must be non-negative'),
 });
 
 // Compile-time type check to ensure schema matches type
@@ -63,7 +63,7 @@ expectTypeOf<z.infer<typeof SkiSpecDTOSchema>>().toMatchTypeOf<SkiSpecDTO>();
  */
 export type CreateSkiSpecCommand = Pick<
   SkiSpecEntity,
-  "name" | "description" | "length" | "tip" | "waist" | "tail" | "radius" | "weight"
+  'name' | 'description' | 'length' | 'tip' | 'waist' | 'tail' | 'radius' | 'weight'
 >;
 
 /**
@@ -72,42 +72,42 @@ export type CreateSkiSpecCommand = Pick<
  */
 export const CreateSkiSpecCommandSchema = z
   .object({
-    name: z.string().min(1, "Name is required").max(255, "Name must not exceed 255 characters"),
-    description: z.string().max(2000, "Description must not exceed 2000 characters").nullable(),
+    name: z.string().min(1, 'Name is required').max(255, 'Name must not exceed 255 characters'),
+    description: z.string().max(2000, 'Description must not exceed 2000 characters').nullable(),
     length: z
       .number()
-      .int("Length must be an integer")
-      .min(100, "Length must be between 100 and 250 cm")
-      .max(250, "Length must be between 100 and 250 cm"),
+      .int('Length must be an integer')
+      .min(100, 'Length must be between 100 and 250 cm')
+      .max(250, 'Length must be between 100 and 250 cm'),
     tip: z
       .number()
-      .int("Tip width must be an integer")
-      .min(50, "Tip width must be between 50 and 250 mm")
-      .max(250, "Tip width must be between 50 and 250 mm"),
+      .int('Tip width must be an integer')
+      .min(50, 'Tip width must be between 50 and 250 mm')
+      .max(250, 'Tip width must be between 50 and 250 mm'),
     waist: z
       .number()
-      .int("Waist width must be an integer")
-      .min(50, "Waist width must be between 50 and 250 mm")
-      .max(250, "Waist width must be between 50 and 250 mm"),
+      .int('Waist width must be an integer')
+      .min(50, 'Waist width must be between 50 and 250 mm')
+      .max(250, 'Waist width must be between 50 and 250 mm'),
     tail: z
       .number()
-      .int("Tail width must be an integer")
-      .min(50, "Tail width must be between 50 and 250 mm")
-      .max(250, "Tail width must be between 50 and 250 mm"),
+      .int('Tail width must be an integer')
+      .min(50, 'Tail width must be between 50 and 250 mm')
+      .max(250, 'Tail width must be between 50 and 250 mm'),
     radius: z
       .number()
-      .int("Radius must be an integer")
-      .min(1, "Radius must be between 1 and 30 m")
-      .max(30, "Radius must be between 1 and 30 m"),
+      .int('Radius must be an integer')
+      .min(1, 'Radius must be between 1 and 30 m')
+      .max(30, 'Radius must be between 1 and 30 m'),
     weight: z
       .number()
-      .int("Weight must be an integer")
-      .min(500, "Weight must be between 500 and 3000 g")
-      .max(3000, "Weight must be between 500 and 3000 g"),
+      .int('Weight must be an integer')
+      .min(500, 'Weight must be between 500 and 3000 g')
+      .max(3000, 'Weight must be between 500 and 3000 g'),
   })
   .refine((data) => data.tip >= data.waist && data.tail >= data.waist, {
-    message: "Waist must be less than or equal to both tip and tail widths",
-    path: ["waist"],
+    message: 'Waist must be less than or equal to both tip and tail widths',
+    path: ['waist'],
   });
 
 // Compile-time type check to ensure schema matches type
@@ -140,17 +140,17 @@ expectTypeOf<z.infer<typeof UpdateSkiSpecCommandSchema>>().toEqualTypeOf<UpdateS
  */
 export type SkiSpecComparisonDTO = Pick<
   SkiSpecEntity,
-  | "id"
-  | "name"
-  | "description"
-  | "length"
-  | "tip"
-  | "waist"
-  | "tail"
-  | "radius"
-  | "weight"
-  | "surface_area"
-  | "relative_weight"
+  | 'id'
+  | 'name'
+  | 'description'
+  | 'length'
+  | 'tip'
+  | 'waist'
+  | 'tail'
+  | 'radius'
+  | 'weight'
+  | 'surface_area'
+  | 'relative_weight'
 >;
 
 /**
@@ -158,7 +158,7 @@ export type SkiSpecComparisonDTO = Pick<
  * Validates ski specification data in comparison responses.
  */
 export const SkiSpecComparisonDTOSchema = z.object({
-  id: z.string().uuid("ID must be a valid UUID"),
+  id: z.string().uuid('ID must be a valid UUID'),
   name: z.string().min(1).max(255),
   description: z.string().max(2000).nullable(),
   length: z.number().int().min(100).max(250),
@@ -167,8 +167,8 @@ export const SkiSpecComparisonDTOSchema = z.object({
   tail: z.number().int().min(50).max(250),
   radius: z.number().int().min(1).max(30),
   weight: z.number().int().min(500).max(3000),
-  surface_area: z.number().positive("Surface area must be positive"),
-  relative_weight: z.number().positive("Relative weight must be positive"),
+  surface_area: z.number().positive('Surface area must be positive'),
+  relative_weight: z.number().positive('Relative weight must be positive'),
 });
 
 // Compile-time type check to ensure schema matches type
@@ -190,11 +190,11 @@ export type NoteDTO = SkiSpecNoteEntity;
  * Validates complete note data.
  */
 export const NoteDTOSchema = z.object({
-  id: z.string().uuid("ID must be a valid UUID"),
-  ski_spec_id: z.string().uuid("Ski spec ID must be a valid UUID"),
-  content: z.string().min(1, "Content is required").max(2000, "Content must be between 1 and 2000 characters"),
-  created_at: z.iso.datetime({ offset: true, message: "Created at must be a valid ISO datetime" }),
-  updated_at: z.iso.datetime({ offset: true, message: "Updated at must be a valid ISO datetime" }),
+  id: z.string().uuid('ID must be a valid UUID'),
+  ski_spec_id: z.string().uuid('Ski spec ID must be a valid UUID'),
+  content: z.string().min(1, 'Content is required').max(2000, 'Content must be between 1 and 2000 characters'),
+  created_at: z.iso.datetime({ offset: true, message: 'Created at must be a valid ISO datetime' }),
+  updated_at: z.iso.datetime({ offset: true, message: 'Updated at must be a valid ISO datetime' }),
 });
 
 // Compile-time type check to ensure schema matches type
@@ -207,14 +207,14 @@ expectTypeOf<z.infer<typeof NoteDTOSchema>>().toEqualTypeOf<NoteDTO>();
  * Only requires content. The ski_spec_id comes from the URL path parameter,
  * and other fields (id, timestamps) are auto-generated.
  */
-export type CreateNoteCommand = Pick<SkiSpecNoteEntity, "content">;
+export type CreateNoteCommand = Pick<SkiSpecNoteEntity, 'content'>;
 
 /**
  * Zod schema for CreateNoteCommand.
  * Validates user input for creating a new note.
  */
 export const CreateNoteCommandSchema = z.object({
-  content: z.string().min(1, "Content is required").max(2000, "Content must be between 1 and 2000 characters"),
+  content: z.string().min(1, 'Content is required').max(2000, 'Content must be between 1 and 2000 characters'),
 });
 
 // Compile-time type check to ensure schema matches type
@@ -246,10 +246,10 @@ expectTypeOf<z.infer<typeof UpdateNoteCommandSchema>>().toEqualTypeOf<UpdateNote
  * Validates pagination metadata in responses.
  */
 export const PaginationMetaSchema = z.object({
-  page: z.number().int().positive("Page must be a positive integer"),
-  limit: z.number().int().positive("Limit must be a positive integer").max(100, "Limit must not exceed 100"),
-  total: z.number().int().min(0, "Total must be non-negative"),
-  total_pages: z.number().int().min(0, "Total pages must be non-negative"),
+  page: z.number().int().positive('Page must be a positive integer'),
+  limit: z.number().int().positive('Limit must be a positive integer').max(100, 'Limit must not exceed 100'),
+  total: z.number().int().min(0, 'Total must be non-negative'),
+  total_pages: z.number().int().min(0, 'Total pages must be non-negative'),
 });
 
 /**
@@ -310,17 +310,17 @@ export type NoteListResponse = z.infer<typeof NoteListResponseSchema>;
  * Validates query parameters for listing ski specifications.
  */
 export const ListSkiSpecsQuerySchema = z.object({
-  page: z.number().int("Page must be an integer").positive("Page must be a positive integer").optional().default(1),
+  page: z.number().int('Page must be an integer').positive('Page must be a positive integer').optional().default(1),
   limit: z
     .number()
-    .int("Limit must be an integer")
-    .positive("Limit must be a positive integer")
-    .min(1, "Limit must be at least 1")
-    .max(100, "Limit must not exceed 100")
+    .int('Limit must be an integer')
+    .positive('Limit must be a positive integer')
+    .min(1, 'Limit must be at least 1')
+    .max(100, 'Limit must not exceed 100')
     .optional()
     .default(20),
-  sort_by: z.enum(["name", "length", "surface_area", "relative_weight", "created_at"]).optional().default("created_at"),
-  sort_order: z.enum(["asc", "desc"]).optional().default("desc"),
+  sort_by: z.enum(['name', 'length', 'surface_area', 'relative_weight', 'created_at']).optional().default('created_at'),
+  sort_order: z.enum(['asc', 'desc']).optional().default('desc'),
   search: z.string().optional(),
 });
 
@@ -335,13 +335,13 @@ export type ListSkiSpecsQuery = z.infer<typeof ListSkiSpecsQuerySchema>;
  * Validates query parameters for listing notes.
  */
 export const ListNotesQuerySchema = z.object({
-  page: z.number().int("Page must be an integer").positive("Page must be a positive integer").optional().default(1),
+  page: z.number().int('Page must be an integer').positive('Page must be a positive integer').optional().default(1),
   limit: z
     .number()
-    .int("Limit must be an integer")
-    .positive("Limit must be a positive integer")
-    .min(1, "Limit must be at least 1")
-    .max(100, "Limit must not exceed 100")
+    .int('Limit must be an integer')
+    .positive('Limit must be a positive integer')
+    .min(1, 'Limit must be at least 1')
+    .max(100, 'Limit must not exceed 100')
     .optional()
     .default(50),
 });
@@ -359,27 +359,27 @@ export type ListNotesQuery = z.infer<typeof ListNotesQuerySchema>;
  */
 export const CompareSkiSpecsQuerySchema = z
   .object({
-    ids: z.string().min(1, "IDs parameter is required"),
+    ids: z.string().min(1, 'IDs parameter is required'),
   })
   .refine(
     (data) => {
-      const idArray = data.ids.split(",").map((id) => id.trim());
+      const idArray = data.ids.split(',').map((id) => id.trim());
       return idArray.length >= 2 && idArray.length <= 4;
     },
     {
-      message: "Comparison requires between 2 and 4 specification IDs",
-      path: ["ids"],
+      message: 'Comparison requires between 2 and 4 specification IDs',
+      path: ['ids'],
     }
   )
   .refine(
     (data) => {
-      const idArray = data.ids.split(",").map((id) => id.trim());
+      const idArray = data.ids.split(',').map((id) => id.trim());
       const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
       return idArray.every((id) => uuidRegex.test(id));
     },
     {
-      message: "All IDs must be valid UUIDs",
-      path: ["ids"],
+      message: 'All IDs must be valid UUIDs',
+      path: ['ids'],
     }
   );
 
@@ -396,8 +396,8 @@ export type CompareSkiSpecsQuery = z.infer<typeof CompareSkiSpecsQuerySchema>;
 export const CompareSkiSpecsResponseSchema = z.object({
   specifications: z
     .array(SkiSpecComparisonDTOSchema)
-    .min(2, "Response must contain at least 2 specifications")
-    .max(4, "Response must contain at most 4 specifications"),
+    .min(2, 'Response must contain at least 2 specifications')
+    .max(4, 'Response must contain at most 4 specifications'),
 });
 
 /**
@@ -415,10 +415,10 @@ export type CompareSkiSpecsResponse = z.infer<typeof CompareSkiSpecsResponseSche
  * Validates import operation summary counts.
  */
 export const ImportSummarySchema = z.object({
-  total_rows: z.number().int().min(0, "Total rows must be non-negative"),
-  successful: z.number().int().min(0, "Successful count must be non-negative"),
-  failed: z.number().int().min(0, "Failed count must be non-negative"),
-  skipped: z.number().int().min(0, "Skipped count must be non-negative"),
+  total_rows: z.number().int().min(0, 'Total rows must be non-negative'),
+  successful: z.number().int().min(0, 'Successful count must be non-negative'),
+  failed: z.number().int().min(0, 'Failed count must be non-negative'),
+  skipped: z.number().int().min(0, 'Skipped count must be non-negative'),
 });
 
 /**
@@ -432,9 +432,9 @@ export type ImportSummary = z.infer<typeof ImportSummarySchema>;
  * Validates successfully imported item details.
  */
 export const ImportedItemSchema = z.object({
-  row: z.number().int().positive("Row number must be positive"),
-  name: z.string().min(1, "Name is required").max(255),
-  id: z.string().uuid("ID must be a valid UUID"),
+  row: z.number().int().positive('Row number must be positive'),
+  name: z.string().min(1, 'Name is required').max(255),
+  id: z.string().uuid('ID must be a valid UUID'),
 });
 
 /**
@@ -448,8 +448,8 @@ export type ImportedItem = z.infer<typeof ImportedItemSchema>;
  * Validates field-level import error details.
  */
 export const ImportErrorDetailSchema = z.object({
-  field: z.string().min(1, "Field name is required"),
-  message: z.string().min(1, "Error message is required"),
+  field: z.string().min(1, 'Field name is required'),
+  message: z.string().min(1, 'Error message is required'),
 });
 
 /**
@@ -463,9 +463,9 @@ export type ImportErrorDetail = z.infer<typeof ImportErrorDetailSchema>;
  * Validates failed import row details with error array.
  */
 export const ImportErrorSchema = z.object({
-  row: z.number().int().positive("Row number must be positive"),
-  name: z.string().min(1, "Name is required"),
-  errors: z.array(ImportErrorDetailSchema).min(1, "At least one error detail is required"),
+  row: z.number().int().positive('Row number must be positive'),
+  name: z.string().min(1, 'Name is required'),
+  errors: z.array(ImportErrorDetailSchema).min(1, 'At least one error detail is required'),
 });
 
 /**
@@ -503,7 +503,7 @@ export type ImportResponse = z.infer<typeof ImportResponseSchema>;
  * Validates health check response data.
  */
 export const HealthCheckResponseSchema = z.object({
-  status: z.enum(["healthy", "unhealthy"]),
+  status: z.enum(['healthy', 'unhealthy']),
   timestamp: z.iso.datetime({ offset: true }),
   version: z.string(),
   error: z.string().optional(),
@@ -540,8 +540,8 @@ export type LogoutResponse = z.infer<typeof LogoutResponseSchema>;
  * Validates field-level validation error details.
  */
 export const ValidationErrorDetailSchema = z.object({
-  field: z.string().min(1, "Field name is required"),
-  message: z.string().min(1, "Error message is required"),
+  field: z.string().min(1, 'Field name is required'),
+  message: z.string().min(1, 'Error message is required'),
 });
 
 /**
@@ -555,10 +555,10 @@ export type ValidationErrorDetail = z.infer<typeof ValidationErrorDetailSchema>;
  * Validates standard API error response format.
  */
 export const ApiErrorResponseSchema = z.object({
-  error: z.string().min(1, "Error message is required"),
+  error: z.string().min(1, 'Error message is required'),
   code: z.string().optional(),
   details: z.array(ValidationErrorDetailSchema).optional(),
-  timestamp: z.iso.datetime({ offset: true, message: "Timestamp must be a valid ISO datetime" }).optional(),
+  timestamp: z.iso.datetime({ offset: true, message: 'Timestamp must be a valid ISO datetime' }).optional(),
 });
 
 /**

@@ -1,9 +1,9 @@
-import type { Database } from "@/db/database.types";
-import { skiSpecHttpClient } from "@/lib/utils/SkiSpecHttpClient";
-import { LogoutResponseSchema } from "@/types/api.types";
-import { createBrowserClient } from "@supabase/ssr";
-import type { AuthError, User } from "@supabase/supabase-js";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import type { Database } from '@/db/database.types';
+import { skiSpecHttpClient } from '@/lib/utils/SkiSpecHttpClient';
+import { LogoutResponseSchema } from '@/types/api.types';
+import { createBrowserClient } from '@supabase/ssr';
+import type { AuthError, User } from '@supabase/supabase-js';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 export interface LoginCredentials {
   email: string;
@@ -86,7 +86,7 @@ export const useAuth = (): UseAuthReturn => {
       setIsAuthenticated(!!user);
     } catch (error) {
       // eslint-disable-next-line no-console
-      console.error("Error fetching session:", error);
+      console.error('Error fetching session:', error);
       setUser(null);
       setIsAuthenticated(false);
     }
@@ -136,7 +136,7 @@ export const useAuth = (): UseAuthReturn => {
       return { success: true };
     } catch (error) {
       // eslint-disable-next-line no-console
-      console.error("Error signing in:", error);
+      console.error('Error signing in:', error);
       return {
         success: false,
         error: error as AuthError,
@@ -162,7 +162,7 @@ export const useAuth = (): UseAuthReturn => {
       return { success: true };
     } catch (error) {
       // eslint-disable-next-line no-console
-      console.error("Error signing up:", error);
+      console.error('Error signing up:', error);
       return {
         success: false,
         error: error as AuthError,
@@ -177,7 +177,7 @@ export const useAuth = (): UseAuthReturn => {
   const signOut = async (): Promise<AuthResult> => {
     try {
       // Call server-side logout API to clear server session
-      await skiSpecHttpClient.post("/api/auth/logout", LogoutResponseSchema, null);
+      await skiSpecHttpClient.post('/api/auth/logout', LogoutResponseSchema, null);
 
       // Call client-side Supabase signOut to clear local session
       const { error } = await supabase.auth.signOut();
@@ -191,7 +191,7 @@ export const useAuth = (): UseAuthReturn => {
       return { success: true };
     } catch (error) {
       // eslint-disable-next-line no-console
-      console.error("Error signing out:", error);
+      console.error('Error signing out:', error);
       return {
         success: false,
         error: error as AuthError,
@@ -215,7 +215,7 @@ export const useAuth = (): UseAuthReturn => {
       return { success: true };
     } catch (error) {
       // eslint-disable-next-line no-console
-      console.error("Error requesting password reset:", error);
+      console.error('Error requesting password reset:', error);
       return {
         success: false,
         error: error as AuthError,
@@ -239,7 +239,7 @@ export const useAuth = (): UseAuthReturn => {
       return { success: true };
     } catch (error) {
       // eslint-disable-next-line no-console
-      console.error("Error updating password:", error);
+      console.error('Error updating password:', error);
       return {
         success: false,
         error: error as AuthError,

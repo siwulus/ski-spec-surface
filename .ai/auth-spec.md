@@ -142,8 +142,8 @@ System uwierzytelniania wprowadza nowe strony oraz modyfikuje istniejące elemen
 
 ```typescript
 const LoginSchema = z.object({
-  email: z.string().email("Nieprawidłowy format adresu email"),
-  password: z.string().min(6, "Hasło musi mieć minimum 6 znaków"),
+  email: z.string().email('Nieprawidłowy format adresu email'),
+  password: z.string().min(6, 'Hasło musi mieć minimum 6 znaków'),
   rememberMe: z.boolean().optional(),
 });
 ```
@@ -190,19 +190,19 @@ const LoginSchema = z.object({
 ```typescript
 const RegisterSchema = z
   .object({
-    email: z.string().email("Nieprawidłowy format adresu email"),
+    email: z.string().email('Nieprawidłowy format adresu email'),
     password: z
       .string()
-      .min(8, "Hasło musi mieć minimum 8 znaków")
-      .regex(/[A-Z]/, "Hasło musi zawierać wielką literę")
-      .regex(/[a-z]/, "Hasło musi zawierać małą literę")
-      .regex(/[0-9]/, "Hasło musi zawierać cyfrę"),
+      .min(8, 'Hasło musi mieć minimum 8 znaków')
+      .regex(/[A-Z]/, 'Hasło musi zawierać wielką literę')
+      .regex(/[a-z]/, 'Hasło musi zawierać małą literę')
+      .regex(/[0-9]/, 'Hasło musi zawierać cyfrę'),
     confirmPassword: z.string(),
-    acceptTerms: z.boolean().refine((val) => val === true, "Musisz zaakceptować regulamin"),
+    acceptTerms: z.boolean().refine((val) => val === true, 'Musisz zaakceptować regulamin'),
   })
   .refine((data) => data.password === data.confirmPassword, {
-    message: "Hasła nie są identyczne",
-    path: ["confirmPassword"],
+    message: 'Hasła nie są identyczne',
+    path: ['confirmPassword'],
   });
 ```
 
@@ -227,7 +227,7 @@ const RegisterSchema = z
 
 ```typescript
 const ResetPasswordSchema = z.object({
-  email: z.string().email("Nieprawidłowy format adresu email"),
+  email: z.string().email('Nieprawidłowy format adresu email'),
 });
 ```
 
@@ -257,15 +257,15 @@ const UpdatePasswordSchema = z
   .object({
     password: z
       .string()
-      .min(8, "Hasło musi mieć minimum 8 znaków")
-      .regex(/[A-Z]/, "Hasło musi zawierać wielką literę")
-      .regex(/[a-z]/, "Hasło musi zawierać małą literę")
-      .regex(/[0-9]/, "Hasło musi zawierać cyfrę"),
+      .min(8, 'Hasło musi mieć minimum 8 znaków')
+      .regex(/[A-Z]/, 'Hasło musi zawierać wielką literę')
+      .regex(/[a-z]/, 'Hasło musi zawierać małą literę')
+      .regex(/[0-9]/, 'Hasło musi zawierać cyfrę'),
     confirmPassword: z.string(),
   })
   .refine((data) => data.password === data.confirmPassword, {
-    message: "Hasła nie są identyczne",
-    path: ["confirmPassword"],
+    message: 'Hasła nie są identyczne',
+    path: ['confirmPassword'],
   });
 ```
 
@@ -281,12 +281,12 @@ const UpdatePasswordSchema = z
 
 ```typescript
 // Stan niezalogowany:
-const unauthenticatedItems = [{ label: "Home", href: "/" }];
+const unauthenticatedItems = [{ label: 'Home', href: '/' }];
 
 // Stan zalogowany:
 const authenticatedItems = [
-  { label: "Home", href: "/" },
-  { label: "Ski Specs", href: "/ski-specs" },
+  { label: 'Home', href: '/' },
+  { label: 'Ski Specs', href: '/ski-specs' },
 ];
 ```
 
@@ -445,8 +445,8 @@ const useAuth = (): UseAuthReturn => {
 - **Implementacja:**
 
 ```typescript
-import { createClient } from "@supabase/supabase-js";
-import type { Database } from "@/db/database.types";
+import { createClient } from '@supabase/supabase-js';
+import type { Database } from '@/db/database.types';
 
 export const useSupabaseClient = () => {
   const supabase = useMemo(
@@ -487,15 +487,15 @@ Mapowanie kodów błędów Supabase Auth na przyjazne komunikaty:
 
 ```typescript
 const authErrorMessages: Record<string, string> = {
-  invalid_credentials: "Nieprawidłowy email lub hasło",
-  email_not_confirmed: "Email nie został potwierdzony. Sprawdź swoją skrzynkę pocztową.",
-  user_already_exists: "Ten adres email jest już zarejestrowany",
-  weak_password: "Hasło jest zbyt słabe. Użyj silniejszego hasła.",
-  over_email_send_rate_limit: "Zbyt wiele prób wysłania emaila. Spróbuj ponownie później.",
-  invalid_grant: "Link resetujący hasło wygasł lub jest nieprawidłowy",
-  refresh_token_not_found: "Sesja wygasła. Zaloguj się ponownie.",
+  invalid_credentials: 'Nieprawidłowy email lub hasło',
+  email_not_confirmed: 'Email nie został potwierdzony. Sprawdź swoją skrzynkę pocztową.',
+  user_already_exists: 'Ten adres email jest już zarejestrowany',
+  weak_password: 'Hasło jest zbyt słabe. Użyj silniejszego hasła.',
+  over_email_send_rate_limit: 'Zbyt wiele prób wysłania emaila. Spróbuj ponownie później.',
+  invalid_grant: 'Link resetujący hasło wygasł lub jest nieprawidłowy',
+  refresh_token_not_found: 'Sesja wygasła. Zaloguj się ponownie.',
   // domyślny:
-  default: "Wystąpił błąd. Spróbuj ponownie.",
+  default: 'Wystąpił błąd. Spróbuj ponownie.',
 };
 ```
 
@@ -610,7 +610,7 @@ const authErrorMessages: Record<string, string> = {
 ```typescript
 export const onRequest = defineMiddleware((context, next) => {
   context.locals.skiSpecService = new SkiSpecService(supabaseClient);
-  context.locals.userId = "2be2c57e-3845-4579-9a60-c872cbfb9886"; // MOCK
+  context.locals.userId = '2be2c57e-3845-4579-9a60-c872cbfb9886'; // MOCK
   return next();
 });
 ```
@@ -618,24 +618,24 @@ export const onRequest = defineMiddleware((context, next) => {
 **Nowa implementacja:**
 
 ```typescript
-import { defineMiddleware } from "astro:middleware";
-import { createServerClient } from "@supabase/ssr";
-import type { Database } from "@/db/database.types";
-import { SkiSpecService } from "@/lib/services/SkiSpecService";
+import { defineMiddleware } from 'astro:middleware';
+import { createServerClient } from '@supabase/ssr';
+import type { Database } from '@/db/database.types';
+import { SkiSpecService } from '@/lib/services/SkiSpecService';
 
 // Whitelist tras publicznych (nie wymagających autentykacji)
 const PUBLIC_ROUTES = [
-  "/",
-  "/auth/login",
-  "/auth/register",
-  "/auth/reset-password",
-  "/auth/update-password",
-  "/api/health",
-  "/404",
+  '/',
+  '/auth/login',
+  '/auth/register',
+  '/auth/reset-password',
+  '/auth/update-password',
+  '/api/health',
+  '/404',
 ];
 
 // Trasy tylko dla niezalogowanych (redirect do /ski-specs jeśli zalogowany)
-const GUEST_ONLY_ROUTES = ["/auth/login", "/auth/register"];
+const GUEST_ONLY_ROUTES = ['/auth/login', '/auth/register'];
 
 export const onRequest = defineMiddleware(async (context, next) => {
   // 1. Utworzenie Server-Side Supabase Client z obsługą cookies
@@ -675,7 +675,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
 
   // 5a. Zalogowany użytkownik próbuje wejść na /login lub /register
   if (isAuthenticated && isGuestOnlyRoute) {
-    return Response.redirect(new URL("/ski-specs", context.url));
+    return Response.redirect(new URL('/ski-specs', context.url));
   }
 
   // 5b. Niezalogowany użytkownik próbuje wejść na chronioną trasę
@@ -696,9 +696,9 @@ export const onRequest = defineMiddleware(async (context, next) => {
 ```typescript
 /// <reference types="astro/client" />
 
-import type { SkiSpecService } from "@/lib/services/SkiSpecService";
-import type { Session, SupabaseClient } from "@supabase/supabase-js";
-import type { Database } from "@/db/database.types";
+import type { SkiSpecService } from '@/lib/services/SkiSpecService';
+import type { Session, SupabaseClient } from '@supabase/supabase-js';
+import type { Database } from '@/db/database.types';
 
 declare global {
   namespace App {
@@ -761,7 +761,7 @@ interface ImportMeta {
 **A. Server-Side Client (w middleware i API routes)**
 
 ```typescript
-import { createServerClient } from "@supabase/ssr";
+import { createServerClient } from '@supabase/ssr';
 
 const supabase = createServerClient<Database>(supabaseUrl, supabaseKey, {
   cookies: {
@@ -782,7 +782,7 @@ const supabase = createServerClient<Database>(supabaseUrl, supabaseKey, {
 **B. Client-Side Client (w komponentach React)**
 
 ```typescript
-import { createClient } from "@supabase/supabase-js";
+import { createClient } from '@supabase/supabase-js';
 
 const supabase = createClient<Database>(import.meta.env.PUBLIC_SUPABASE_URL, import.meta.env.PUBLIC_SUPABASE_KEY);
 ```
@@ -818,7 +818,7 @@ Większość operacji uwierzytelniania jest obsługiwana bezpośrednio przez Sup
 - **Implementacja:**
 
 ```typescript
-import type { APIRoute } from "astro";
+import type { APIRoute } from 'astro';
 
 export const GET: APIRoute = async ({ locals }) => {
   const { session } = locals;
@@ -826,7 +826,7 @@ export const GET: APIRoute = async ({ locals }) => {
   if (!session?.user) {
     return new Response(JSON.stringify({ user: null, isAuthenticated: false }), {
       status: 200,
-      headers: { "Content-Type": "application/json" },
+      headers: { 'Content-Type': 'application/json' },
     });
   }
 
@@ -838,7 +838,7 @@ export const GET: APIRoute = async ({ locals }) => {
       },
       isAuthenticated: true,
     }),
-    { status: 200, headers: { "Content-Type": "application/json" } }
+    { status: 200, headers: { 'Content-Type': 'application/json' } }
   );
 };
 ```
@@ -851,7 +851,7 @@ export const GET: APIRoute = async ({ locals }) => {
 - **Implementacja:**
 
 ```typescript
-import type { APIRoute } from "astro";
+import type { APIRoute } from 'astro';
 
 export const POST: APIRoute = async ({ locals, cookies }) => {
   const { supabase } = locals;
@@ -863,7 +863,7 @@ export const POST: APIRoute = async ({ locals, cookies }) => {
 
   return new Response(JSON.stringify({ success: true }), {
     status: 200,
-    headers: { "Content-Type": "application/json" },
+    headers: { 'Content-Type': 'application/json' },
   });
 };
 ```
@@ -885,22 +885,22 @@ export interface AuthError {
 }
 
 export const mapSupabaseAuthError = (error: any): AuthError => {
-  const code = error?.code || error?.error_code || "unknown_error";
+  const code = error?.code || error?.error_code || 'unknown_error';
 
   const errorMessages: Record<string, string> = {
-    invalid_credentials: "Nieprawidłowy email lub hasło",
-    email_not_confirmed: "Email nie został potwierdzony. Sprawdź swoją skrzynkę pocztową.",
-    user_already_exists: "Ten adres email jest już zarejestrowany",
-    weak_password: "Hasło jest zbyt słabe. Użyj silniejszego hasła.",
-    over_email_send_rate_limit: "Zbyt wiele prób wysłania emaila. Spróbuj ponownie później.",
-    invalid_grant: "Link resetujący hasło wygasł lub jest nieprawidłowy",
-    refresh_token_not_found: "Sesja wygasła. Zaloguj się ponownie.",
-    email_provider_disabled: "Logowanie przez email jest obecnie niedostępne",
-    validation_failed: "Dane formularza są nieprawidłowe",
+    invalid_credentials: 'Nieprawidłowy email lub hasło',
+    email_not_confirmed: 'Email nie został potwierdzony. Sprawdź swoją skrzynkę pocztową.',
+    user_already_exists: 'Ten adres email jest już zarejestrowany',
+    weak_password: 'Hasło jest zbyt słabe. Użyj silniejszego hasła.',
+    over_email_send_rate_limit: 'Zbyt wiele prób wysłania emaila. Spróbuj ponownie później.',
+    invalid_grant: 'Link resetujący hasło wygasł lub jest nieprawidłowy',
+    refresh_token_not_found: 'Sesja wygasła. Zaloguj się ponownie.',
+    email_provider_disabled: 'Logowanie przez email jest obecnie niedostępne',
+    validation_failed: 'Dane formularza są nieprawidłowe',
   };
 
   return {
-    message: errorMessages[code] || "Wystąpił nieoczekiwany błąd. Spróbuj ponownie.",
+    message: errorMessages[code] || 'Wystąpił nieoczekiwany błąd. Spróbuj ponownie.',
     code,
   };
 };
@@ -934,7 +934,7 @@ Wszystkie strony uwierzytelniania muszą być renderowane po stronie serwera (SS
 
 ```javascript
 export default defineConfig({
-  output: "server", // już ustawione - OK
+  output: 'server', // już ustawione - OK
   // ...
 });
 ```
@@ -1185,7 +1185,7 @@ if (!rememberMe) {
   await supabase.auth.updateUser(
     {},
     {
-      data: { session_persistence: "session" },
+      data: { session_persistence: 'session' },
     }
   );
 }
@@ -1223,10 +1223,10 @@ useEffect(() => {
   const {
     data: { subscription },
   } = supabase.auth.onAuthStateChange((event, session) => {
-    if (event === "TOKEN_REFRESHED") {
-      console.log("Token odświeżony automatycznie");
+    if (event === 'TOKEN_REFRESHED') {
+      console.log('Token odświeżony automatycznie');
     }
-    if (event === "SIGNED_OUT") {
+    if (event === 'SIGNED_OUT') {
       // Przekierowanie do login
     }
   });
@@ -1310,7 +1310,7 @@ export const GET: APIRoute = async ({ locals }) => {
   const { userId } = locals;
 
   if (!userId) {
-    return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 });
+    return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
   }
 
   // Kontynuacja jeśli zalogowany
@@ -1369,11 +1369,11 @@ const { data, error } = await supabase.auth.signUp({
 
 if (data?.user && !data.session) {
   // Email verification włączona
-  toast.success("Sprawdź swoją skrzynkę pocztową i kliknij link weryfikacyjny");
+  toast.success('Sprawdź swoją skrzynkę pocztową i kliknij link weryfikacyjny');
   // NIE przekierowujemy do /ski-specs
 } else if (data?.session) {
   // Email verification wyłączona - automatyczne logowanie
-  window.location.href = "/ski-specs";
+  window.location.href = '/ski-specs';
 }
 ```
 

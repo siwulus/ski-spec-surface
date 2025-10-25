@@ -71,7 +71,7 @@ SkiSpecDTOSchema; // Already defined in types.ts (lines 51-68)
 ```typescript
 // Path parameter validation schema
 const PathParamsSchema = z.object({
-  id: z.string().uuid("Invalid specification ID format"),
+  id: z.string().uuid('Invalid specification ID format'),
 });
 ```
 
@@ -181,10 +181,10 @@ The service function will use a supabase clinet and axecute single efficient que
 ```typescript
 // Query with count using Supabase's query builder
 const { data, error, count } = await supabase
-  .from("ski_specs")
-  .select("*, notes:ski_spec_notes(count)", { count: "exact" })
-  .eq("id", specId)
-  .eq("user_id", userId)
+  .from('ski_specs')
+  .select('*, notes:ski_spec_notes(count)', { count: 'exact' })
+  .eq('id', specId)
+  .eq('user_id', userId)
   .single();
 ```
 
@@ -232,11 +232,11 @@ const result = PathParamsSchema.safeParse({ id: context.params.id });
 if (!result.success) {
   return new Response(
     JSON.stringify({
-      error: "Invalid specification ID format",
-      code: "VALIDATION_ERROR",
+      error: 'Invalid specification ID format',
+      code: 'VALIDATION_ERROR',
       timestamp: new Date().toISOString(),
     }),
-    { status: 400, headers: { "Content-Type": "application/json" } }
+    { status: 400, headers: { 'Content-Type': 'application/json' } }
   );
 }
 ```
@@ -248,11 +248,11 @@ const userId = context.locals.userId;
 if (!userId) {
   return new Response(
     JSON.stringify({
-      error: "Authentication required",
-      code: "UNAUTHORIZED",
+      error: 'Authentication required',
+      code: 'UNAUTHORIZED',
       timestamp: new Date().toISOString(),
     }),
-    { status: 401, headers: { "Content-Type": "application/json" } }
+    { status: 401, headers: { 'Content-Type': 'application/json' } }
   );
 }
 ```
@@ -265,11 +265,11 @@ if (!userId) {
 if (!skiSpec) {
   return new Response(
     JSON.stringify({
-      error: "Ski specification not found",
-      code: "NOT_FOUND",
+      error: 'Ski specification not found',
+      code: 'NOT_FOUND',
       timestamp: new Date().toISOString(),
     }),
-    { status: 404, headers: { "Content-Type": "application/json" } }
+    { status: 404, headers: { 'Content-Type': 'application/json' } }
   );
 }
 ```
@@ -280,19 +280,19 @@ if (!skiSpec) {
 try {
   // ... database operations
 } catch (error) {
-  console.error("Failed to retrieve ski specification:", {
+  console.error('Failed to retrieve ski specification:', {
     userId,
     specId,
-    error: error instanceof Error ? error.message : "Unknown error",
+    error: error instanceof Error ? error.message : 'Unknown error',
   });
 
   return new Response(
     JSON.stringify({
-      error: "Internal server error",
-      code: "INTERNAL_ERROR",
+      error: 'Internal server error',
+      code: 'INTERNAL_ERROR',
       timestamp: new Date().toISOString(),
     }),
-    { status: 500, headers: { "Content-Type": "application/json" } }
+    { status: 500, headers: { 'Content-Type': 'application/json' } }
   );
 }
 ```
@@ -340,14 +340,14 @@ export async function getSkiSpec(
 ): Promise<SkiSpecDTO | null> {
   // Query ski_specs with notes count
   const { data: spec, error: specError } = await supabase
-    .from("ski_specs")
-    .select("*")
-    .eq("id", specId)
-    .eq("user_id", userId)
+    .from('ski_specs')
+    .select('*')
+    .eq('id', specId)
+    .eq('user_id', userId)
     .single();
 
   // Handle not found case
-  if (specError?.code === "PGRST116") {
+  if (specError?.code === 'PGRST116') {
     return null;
   }
 
@@ -358,9 +358,9 @@ export async function getSkiSpec(
 
   // Query notes count separately
   const { count, error: countError } = await supabase
-    .from("ski_spec_notes")
-    .select("*", { count: "exact", head: true })
-    .eq("ski_spec_id", specId);
+    .from('ski_spec_notes')
+    .select('*', { count: 'exact', head: true })
+    .eq('ski_spec_id', specId);
 
   if (countError) {
     throw countError;
@@ -381,16 +381,16 @@ export async function getSkiSpec(
 Create the endpoint file:
 
 ```typescript
-import type { APIRoute } from "astro";
-import { z } from "zod";
-import { getSkiSpec } from "@/lib/services/ski-spec.service";
+import type { APIRoute } from 'astro';
+import { z } from 'zod';
+import { getSkiSpec } from '@/lib/services/ski-spec.service';
 
 // Disable prerendering for this API route
 export const prerender = false;
 
 // Path parameter validation schema
 const PathParamsSchema = z.object({
-  id: z.string().uuid("Invalid specification ID format"),
+  id: z.string().uuid('Invalid specification ID format'),
 });
 
 /**
@@ -403,13 +403,13 @@ export const GET: APIRoute = async (context) => {
   if (!paramsResult.success) {
     return new Response(
       JSON.stringify({
-        error: "Invalid specification ID format",
-        code: "VALIDATION_ERROR",
+        error: 'Invalid specification ID format',
+        code: 'VALIDATION_ERROR',
         timestamp: new Date().toISOString(),
       }),
       {
         status: 400,
-        headers: { "Content-Type": "application/json" },
+        headers: { 'Content-Type': 'application/json' },
       }
     );
   }
@@ -419,13 +419,13 @@ export const GET: APIRoute = async (context) => {
   if (!userId) {
     return new Response(
       JSON.stringify({
-        error: "Authentication required",
-        code: "UNAUTHORIZED",
+        error: 'Authentication required',
+        code: 'UNAUTHORIZED',
         timestamp: new Date().toISOString(),
       }),
       {
         status: 401,
-        headers: { "Content-Type": "application/json" },
+        headers: { 'Content-Type': 'application/json' },
       }
     );
   }
@@ -442,13 +442,13 @@ export const GET: APIRoute = async (context) => {
     if (!skiSpec) {
       return new Response(
         JSON.stringify({
-          error: "Ski specification not found",
-          code: "NOT_FOUND",
+          error: 'Ski specification not found',
+          code: 'NOT_FOUND',
           timestamp: new Date().toISOString(),
         }),
         {
           status: 404,
-          headers: { "Content-Type": "application/json" },
+          headers: { 'Content-Type': 'application/json' },
         }
       );
     }
@@ -456,25 +456,25 @@ export const GET: APIRoute = async (context) => {
     // Step 6: Return successful response
     return new Response(JSON.stringify(skiSpec), {
       status: 200,
-      headers: { "Content-Type": "application/json" },
+      headers: { 'Content-Type': 'application/json' },
     });
   } catch (error) {
     // Step 7: Handle unexpected errors
-    console.error("Failed to retrieve ski specification:", {
+    console.error('Failed to retrieve ski specification:', {
       userId,
       specId: paramsResult.data.id,
-      error: error instanceof Error ? error.message : "Unknown error",
+      error: error instanceof Error ? error.message : 'Unknown error',
     });
 
     return new Response(
       JSON.stringify({
-        error: "Internal server error",
-        code: "INTERNAL_ERROR",
+        error: 'Internal server error',
+        code: 'INTERNAL_ERROR',
         timestamp: new Date().toISOString(),
       }),
       {
         status: 500,
-        headers: { "Content-Type": "application/json" },
+        headers: { 'Content-Type': 'application/json' },
       }
     );
   }

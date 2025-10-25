@@ -1,10 +1,10 @@
-import type { SupabaseClient } from "@/db/supabase.client";
-import { SkiSpecService } from "@/lib/services/SkiSpecService";
-import { BusinessLogicError } from "@/types/error.types";
-import { Effect } from "effect";
-import { beforeEach, describe, expect, it } from "vitest";
+import type { SupabaseClient } from '@/db/supabase.client';
+import { SkiSpecService } from '@/lib/services/SkiSpecService';
+import { BusinessLogicError } from '@/types/error.types';
+import { Effect } from 'effect';
+import { beforeEach, describe, expect, it } from 'vitest';
 
-describe("SkiSpecService - Calculations", () => {
+describe('SkiSpecService - Calculations', () => {
   let service: SkiSpecService;
   let mockSupabase: SupabaseClient;
 
@@ -14,8 +14,8 @@ describe("SkiSpecService - Calculations", () => {
     service = new SkiSpecService(mockSupabase);
   });
 
-  describe("calculateSurfaceArea", () => {
-    it("calculates surface area correctly for typical ski dimensions", () => {
+  describe('calculateSurfaceArea', () => {
+    it('calculates surface area correctly for typical ski dimensions', () => {
       const dimensions = {
         length: 186,
         tip: 140,
@@ -33,7 +33,7 @@ describe("SkiSpecService - Calculations", () => {
       expect(result).toBe(2318.8);
     });
 
-    it("calculates surface area for narrow ski", () => {
+    it('calculates surface area for narrow ski', () => {
       const dimensions = {
         length: 170,
         tip: 110,
@@ -50,7 +50,7 @@ describe("SkiSpecService - Calculations", () => {
       expect(result).toBe(1671.67);
     });
 
-    it("calculates surface area for wide powder ski", () => {
+    it('calculates surface area for wide powder ski', () => {
       const dimensions = {
         length: 190,
         tip: 150,
@@ -67,7 +67,7 @@ describe("SkiSpecService - Calculations", () => {
       expect(result).toBe(2596.67);
     });
 
-    it("rounds result to 2 decimal places", () => {
+    it('rounds result to 2 decimal places', () => {
       const dimensions = {
         length: 175,
         tip: 115,
@@ -79,10 +79,10 @@ describe("SkiSpecService - Calculations", () => {
       const result = service.calculateSurfaceArea(dimensions);
 
       // Result should have at most 2 decimal places
-      expect(result.toString().split(".")[1]?.length || 0).toBeLessThanOrEqual(2);
+      expect(result.toString().split('.')[1]?.length || 0).toBeLessThanOrEqual(2);
     });
 
-    it("handles symmetric ski (tip = tail)", () => {
+    it('handles symmetric ski (tip = tail)', () => {
       const dimensions = {
         length: 180,
         tip: 130,
@@ -100,8 +100,8 @@ describe("SkiSpecService - Calculations", () => {
     });
   });
 
-  describe("calculateRelativeWeight", () => {
-    it("calculates relative weight correctly", async () => {
+  describe('calculateRelativeWeight', () => {
+    it('calculates relative weight correctly', async () => {
       const weight = 1800; // grams
       const surfaceArea = 2400; // cm²
 
@@ -111,17 +111,17 @@ describe("SkiSpecService - Calculations", () => {
       expect(result).toBe(0.75);
     });
 
-    it("rounds result to 2 decimal places", async () => {
+    it('rounds result to 2 decimal places', async () => {
       const weight = 1750;
       const surfaceArea = 2318.82;
 
       const result = await Effect.runPromise(service.calculateRelativeWeight(weight, surfaceArea));
 
       // Result should have at most 2 decimal places
-      expect(result.toString().split(".")[1]?.length || 0).toBeLessThanOrEqual(2);
+      expect(result.toString().split('.')[1]?.length || 0).toBeLessThanOrEqual(2);
     });
 
-    it("fails with BusinessLogicError when surface area is zero", async () => {
+    it('fails with BusinessLogicError when surface area is zero', async () => {
       const weight = 1800;
       const surfaceArea = 0;
 
@@ -130,17 +130,17 @@ describe("SkiSpecService - Calculations", () => {
       // Use Effect.either to capture the error
       const result = await Effect.runPromise(Effect.either(effect));
 
-      if (result._tag === "Left") {
+      if (result._tag === 'Left') {
         expect(result.left).toBeInstanceOf(BusinessLogicError);
-        expect(result.left.message).toBe("Surface area cannot be zero");
-        expect(result.left.code).toBe("INVALID_SURFACE_AREA");
+        expect(result.left.message).toBe('Surface area cannot be zero');
+        expect(result.left.code).toBe('INVALID_SURFACE_AREA');
         expect(result.left.context).toEqual({ weight, surfaceArea });
       } else {
-        throw new Error("Expected Left but got Right");
+        throw new Error('Expected Left but got Right');
       }
     });
 
-    it("handles lightweight ski", async () => {
+    it('handles lightweight ski', async () => {
       const weight = 1200;
       const surfaceArea = 2000;
 
@@ -150,7 +150,7 @@ describe("SkiSpecService - Calculations", () => {
       expect(result).toBe(0.6);
     });
 
-    it("handles heavy ski", async () => {
+    it('handles heavy ski', async () => {
       const weight = 2500;
       const surfaceArea = 2500;
 
@@ -161,12 +161,12 @@ describe("SkiSpecService - Calculations", () => {
     });
   });
 
-  describe("getCurrentAlgorithmVersion", () => {
-    it("returns semantic version string", () => {
+  describe('getCurrentAlgorithmVersion', () => {
+    it('returns semantic version string', () => {
       const version = service.getCurrentAlgorithmVersion();
 
       expect(version).toMatch(/^\d+\.\d+\.\d+$/);
-      expect(version).toBe("1.0.0");
+      expect(version).toBe('1.0.0');
     });
   });
 });

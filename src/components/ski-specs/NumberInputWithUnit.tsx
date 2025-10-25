@@ -1,8 +1,8 @@
-import React from "react";
-import { useFormContext } from "react-hook-form";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import type { CreateSkiSpecCommand } from "@/types/api.types";
+import React from 'react';
+import { useFormContext } from 'react-hook-form';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import type { CreateSkiSpecCommand } from '@/types/api.types';
 
 /**
  * Props for numeric input with unit display
@@ -47,7 +47,7 @@ export const NumberInputWithUnit: React.FC<NumberInputWithUnitProps> = ({
 
   return (
     <div className="space-y-2">
-      <Label htmlFor={name} className={hasError ? "text-destructive" : ""}>
+      <Label htmlFor={name} className={hasError ? 'text-destructive' : ''}>
         {label}
         {required && (
           <span className="text-destructive ml-1" aria-label="required">
@@ -67,7 +67,7 @@ export const NumberInputWithUnit: React.FC<NumberInputWithUnitProps> = ({
           aria-invalid={hasError}
           aria-describedby={hasError ? `${name}-error` : undefined}
           aria-required={required}
-          className={hasError ? "border-destructive pr-12" : "pr-12"}
+          className={hasError ? 'border-destructive pr-12' : 'pr-12'}
           {...register(name as keyof CreateSkiSpecCommand, {
             valueAsNumber: true, // Convert string to number
           })}

@@ -1,5 +1,5 @@
-import React, { useEffect } from "react";
-import { useAuth } from "@/components/hooks/useAuth";
+import React, { useEffect } from 'react';
+import { useAuth } from '@/components/hooks/useAuth';
 
 interface AuthGuardProps {
   /** Child components to render when authenticated */

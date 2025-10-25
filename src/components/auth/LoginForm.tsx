@@ -1,12 +1,12 @@
-import { Button } from "@/components/ui/button";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { useAuth } from "@/components/hooks/useAuth";
-import { LoginSchema, type LoginFormData } from "@/types/auth.types";
-import { zodResolver } from "@hookform/resolvers/zod";
-import React, { useState } from "react";
-import { useForm } from "react-hook-form";
-import { toast } from "sonner";
+import { Button } from '@/components/ui/button';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { useAuth } from '@/components/hooks/useAuth';
+import { LoginSchema, type LoginFormData } from '@/types/auth.types';
+import { zodResolver } from '@hookform/resolvers/zod';
+import React, { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { toast } from 'sonner';
 
 interface LoginFormProps {
   /** Optional redirect path after successful login (from URL param) */
@@ -35,8 +35,8 @@ export const LoginForm: React.FC<LoginFormProps> = ({ redirectTo }) => {
   const form = useForm<LoginFormData>({
     resolver: zodResolver(LoginSchema),
     defaultValues: {
-      email: "",
-      password: "",
+      email: '',
+      password: '',
     },
   });
 
@@ -50,20 +50,20 @@ export const LoginForm: React.FC<LoginFormProps> = ({ redirectTo }) => {
       });
 
       if (!success) {
-        toast.error(error?.message || "Failed to sign in");
+        toast.error(error?.message || 'Failed to sign in');
         return;
       }
 
       // Success - redirect to intended page or default
-      toast.success("Successfully logged in!");
+      toast.success('Successfully logged in!');
 
       // Force full page reload to refresh middleware and session
-      const destination = redirectTo || "/ski-specs";
+      const destination = redirectTo || '/ski-specs';
       window.location.href = destination;
     } catch (error) {
       // eslint-disable-next-line no-console
-      console.error("Login error:", error);
-      toast.error("An unexpected error occurred. Please try again.");
+      console.error('Login error:', error);
+      toast.error('An unexpected error occurred. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -116,7 +116,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ redirectTo }) => {
 
         {/* Submit button */}
         <Button type="submit" className="w-full" disabled={isLoading}>
-          {isLoading ? "Signing in..." : "Sign in"}
+          {isLoading ? 'Signing in...' : 'Sign in'}
         </Button>
 
         {/* Links */}
@@ -130,7 +130,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ redirectTo }) => {
             </a>
           </div>
           <div className="text-muted-foreground">
-            Don&apos;t have an account?{" "}
+            Don&apos;t have an account?{' '}
             <a
               href="/auth/register"
               className="text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"

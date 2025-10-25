@@ -41,7 +41,7 @@ The DELETE `/api/ski-specs/{id}` endpoint removes a ski specification and all it
 ```typescript
 // UUID validation schema (to be added)
 const UuidParamSchema = z.object({
-  id: z.string().uuid("Invalid UUID format"),
+  id: z.string().uuid('Invalid UUID format'),
 });
 ```
 
@@ -255,11 +255,11 @@ const validationResult = UuidParamSchema.safeParse({ id: params.id });
 if (!validationResult.success) {
   return new Response(
     JSON.stringify({
-      error: "Invalid UUID format",
-      code: "INVALID_UUID",
+      error: 'Invalid UUID format',
+      code: 'INVALID_UUID',
       timestamp: new Date().toISOString(),
     } satisfies ApiErrorResponse),
-    { status: 400, headers: { "Content-Type": "application/json" } }
+    { status: 400, headers: { 'Content-Type': 'application/json' } }
   );
 }
 
@@ -270,25 +270,25 @@ try {
 } catch (error) {
   // Service throws error if not found or not owned
   const dbError = error as { message?: string };
-  if (dbError?.message?.includes("not found")) {
+  if (dbError?.message?.includes('not found')) {
     return new Response(
       JSON.stringify({
-        error: "Ski specification not found",
-        code: "NOT_FOUND",
+        error: 'Ski specification not found',
+        code: 'NOT_FOUND',
         timestamp: new Date().toISOString(),
       } satisfies ApiErrorResponse),
-      { status: 404, headers: { "Content-Type": "application/json" } }
+      { status: 404, headers: { 'Content-Type': 'application/json' } }
     );
   }
 
   // Generic database error
   return new Response(
     JSON.stringify({
-      error: "Failed to delete specification",
-      code: "DATABASE_ERROR",
+      error: 'Failed to delete specification',
+      code: 'DATABASE_ERROR',
       timestamp: new Date().toISOString(),
     } satisfies ApiErrorResponse),
-    { status: 500, headers: { "Content-Type": "application/json" } }
+    { status: 500, headers: { 'Content-Type': 'application/json' } }
   );
 }
 ```
@@ -304,16 +304,16 @@ try {
 **Initial structure:**
 
 ```typescript
-import type { APIRoute } from "astro";
-import { z } from "zod";
-import { deleteSkiSpec } from "@/lib/services/ski-spec.service";
-import type { ApiErrorResponse } from "@/types";
+import type { APIRoute } from 'astro';
+import { z } from 'zod';
+import { deleteSkiSpec } from '@/lib/services/ski-spec.service';
+import type { ApiErrorResponse } from '@/types';
 
 export const prerender = false;
 
 // UUID validation schema
 const UuidParamSchema = z.object({
-  id: z.string().uuid("Invalid UUID format"),
+  id: z.string().uuid('Invalid UUID format'),
 });
 
 /**
@@ -375,11 +375,11 @@ export const DELETE: APIRoute = async ({ params, locals }) => {
     // Catch-all for unexpected errors
     return new Response(
       JSON.stringify({
-        error: "Internal server error",
-        code: "INTERNAL_ERROR",
+        error: 'Internal server error',
+        code: 'INTERNAL_ERROR',
         timestamp: new Date().toISOString(),
       } satisfies ApiErrorResponse),
-      { status: 500, headers: { "Content-Type": "application/json" } }
+      { status: 500, headers: { 'Content-Type': 'application/json' } }
     );
   }
 };
@@ -410,19 +410,19 @@ export const DELETE: APIRoute = async ({ params, locals }) => {
 export async function deleteSkiSpec(supabase: SupabaseClient<Database>, userId: string, specId: string): Promise<void> {
   // Step 1: Verify spec exists and belongs to user
   const { data: existingSpec, error: fetchError } = await supabase
-    .from("ski_specs")
-    .select("id")
-    .eq("id", specId)
-    .eq("user_id", userId)
+    .from('ski_specs')
+    .select('id')
+    .eq('id', specId)
+    .eq('user_id', userId)
     .single();
 
   // Step 2: Handle not found case
   if (fetchError || !existingSpec) {
-    throw new Error("Ski specification not found");
+    throw new Error('Ski specification not found');
   }
 
   // Step 3: Delete the specification
-  const { error: deleteError } = await supabase.from("ski_specs").delete().eq("id", specId).eq("user_id", userId);
+  const { error: deleteError } = await supabase.from('ski_specs').delete().eq('id', specId).eq('user_id', userId);
 
   // Step 4: Handle deletion errors
   if (deleteError) {
@@ -437,10 +437,10 @@ export async function deleteSkiSpec(supabase: SupabaseClient<Database>, userId: 
 export async function deleteSkiSpec(supabase: SupabaseClient<Database>, userId: string, specId: string): Promise<void> {
   // Delete and check affected rows in single operation
   const { error, count } = await supabase
-    .from("ski_specs")
-    .delete({ count: "exact" })
-    .eq("id", specId)
-    .eq("user_id", userId);
+    .from('ski_specs')
+    .delete({ count: 'exact' })
+    .eq('id', specId)
+    .eq('user_id', userId);
 
   if (error) {
     throw error;
@@ -448,7 +448,7 @@ export async function deleteSkiSpec(supabase: SupabaseClient<Database>, userId: 
 
   // If no rows affected, spec doesn't exist or user doesn't own it
   if (count === 0) {
-    throw new Error("Ski specification not found");
+    throw new Error('Ski specification not found');
   }
 }
 ```
@@ -474,24 +474,24 @@ try {
 } catch (error: unknown) {
   const dbError = error as { message?: string };
 
-  if (dbError?.message?.includes("not found")) {
+  if (dbError?.message?.includes('not found')) {
     return new Response(
       JSON.stringify({
-        error: "Ski specification not found",
-        code: "NOT_FOUND",
+        error: 'Ski specification not found',
+        code: 'NOT_FOUND',
         timestamp: new Date().toISOString(),
       } satisfies ApiErrorResponse),
-      { status: 404, headers: { "Content-Type": "application/json" } }
+      { status: 404, headers: { 'Content-Type': 'application/json' } }
     );
   }
 
   return new Response(
     JSON.stringify({
-      error: "Failed to delete specification",
-      code: "DATABASE_ERROR",
+      error: 'Failed to delete specification',
+      code: 'DATABASE_ERROR',
       timestamp: new Date().toISOString(),
     } satisfies ApiErrorResponse),
-    { status: 500, headers: { "Content-Type": "application/json" } }
+    { status: 500, headers: { 'Content-Type': 'application/json' } }
   );
 }
 ```

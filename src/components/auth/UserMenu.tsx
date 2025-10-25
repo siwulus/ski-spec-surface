@@ -1,5 +1,5 @@
-import { useAuth } from "@/components/hooks/useAuth";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { useAuth } from '@/components/hooks/useAuth';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -7,10 +7,10 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { LogOut } from "lucide-react";
-import React from "react";
-import { toast } from "sonner";
+} from '@/components/ui/dropdown-menu';
+import { LogOut } from 'lucide-react';
+import React from 'react';
+import { toast } from 'sonner';
 
 interface UserMenuProps {
   /** User email to display (passed from server-side) */
@@ -23,7 +23,7 @@ interface UserMenuProps {
  * @returns Two-letter initials (e.g., "JD" for john.doe@example.com)
  */
 const getUserInitials = (email: string): string => {
-  const parts = email.split("@")[0].split(".");
+  const parts = email.split('@')[0].split('.');
   if (parts.length >= 2) {
     return (parts[0][0] + parts[1][0]).toUpperCase();
   }
@@ -49,20 +49,20 @@ export const UserMenu: React.FC<UserMenuProps> = ({ userEmail }) => {
   const { user, signOut, isAuthenticated, isLoading } = useAuth();
 
   // Use email from props (server-side) or from auth hook (client-side)
-  const email = userEmail || user?.email || "";
-  const initials = email ? getUserInitials(email) : "U";
+  const email = userEmail || user?.email || '';
+  const initials = email ? getUserInitials(email) : 'U';
 
   const handleLogout = async (): Promise<void> => {
     try {
       await signOut();
-      toast.success("Successfully logged out");
+      toast.success('Successfully logged out');
 
       // Redirect to landing page
-      window.location.href = "/";
+      window.location.href = '/';
     } catch (error) {
       // eslint-disable-next-line no-console
-      console.error("Logout error:", error);
-      toast.error("An error occurred while logging out. Please try again.");
+      console.error('Logout error:', error);
+      toast.error('An error occurred while logging out. Please try again.');
     }
   };
 
@@ -90,7 +90,7 @@ export const UserMenu: React.FC<UserMenuProps> = ({ userEmail }) => {
 
         <DropdownMenuItem onClick={handleLogout} disabled={!isAuthenticated || isLoading} className="cursor-pointer">
           <LogOut className="mr-2 size-4" />
-          <span>{isLoading ? "Logging out..." : "Log out"}</span>
+          <span>{isLoading ? 'Logging out...' : 'Log out'}</span>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

@@ -251,7 +251,7 @@ try {
     return new Response(
       JSON.stringify({
         error: error.message,
-        code: "NOT_FOUND",
+        code: 'NOT_FOUND',
         timestamp: new Date().toISOString(),
       }),
       { status: 404 }
@@ -263,7 +263,7 @@ try {
     return new Response(
       JSON.stringify({
         error: error.message,
-        code: "VALIDATION_ERROR",
+        code: 'VALIDATION_ERROR',
         timestamp: new Date().toISOString(),
       }),
       { status: 400 }
@@ -274,8 +274,8 @@ try {
   console.error(`Note deletion failed - Internal error: userId=${userId}, specId=${specId}, noteId=${noteId}`, error);
   return new Response(
     JSON.stringify({
-      error: "Internal server error",
-      code: "INTERNAL_ERROR",
+      error: 'Internal server error',
+      code: 'INTERNAL_ERROR',
       timestamp: new Date().toISOString(),
     }),
     { status: 500 }
@@ -336,9 +336,9 @@ async deleteNote(userId: string, specId: string, noteId: string): Promise<void> 
 Create file: `src/pages/api/ski-specs/[specId]/notes/[noteId].ts`
 
 ```typescript
-import type { APIRoute } from "astro";
-import { SkiSpecService } from "@/lib/services/ski-spec.service";
-import { supabase } from "@/db/supabase.client";
+import type { APIRoute } from 'astro';
+import { SkiSpecService } from '@/lib/services/ski-spec.service';
+import { supabase } from '@/db/supabase.client';
 
 export const DELETE: APIRoute = async ({ params, locals }) => {
   try {
@@ -348,11 +348,11 @@ export const DELETE: APIRoute = async ({ params, locals }) => {
     if (!user) {
       return new Response(
         JSON.stringify({
-          error: "Authentication required",
-          code: "UNAUTHORIZED",
+          error: 'Authentication required',
+          code: 'UNAUTHORIZED',
           timestamp: new Date().toISOString(),
         }),
-        { status: 401, headers: { "Content-Type": "application/json" } }
+        { status: 401, headers: { 'Content-Type': 'application/json' } }
       );
     }
 
@@ -362,11 +362,11 @@ export const DELETE: APIRoute = async ({ params, locals }) => {
     if (!specId || !noteId) {
       return new Response(
         JSON.stringify({
-          error: "Missing required parameters",
-          code: "VALIDATION_ERROR",
+          error: 'Missing required parameters',
+          code: 'VALIDATION_ERROR',
           timestamp: new Date().toISOString(),
         }),
-        { status: 400, headers: { "Content-Type": "application/json" } }
+        { status: 400, headers: { 'Content-Type': 'application/json' } }
       );
     }
 
@@ -376,22 +376,22 @@ export const DELETE: APIRoute = async ({ params, locals }) => {
     if (!uuidRegex.test(specId)) {
       return new Response(
         JSON.stringify({
-          error: "Invalid ski specification ID format",
-          code: "VALIDATION_ERROR",
+          error: 'Invalid ski specification ID format',
+          code: 'VALIDATION_ERROR',
           timestamp: new Date().toISOString(),
         }),
-        { status: 400, headers: { "Content-Type": "application/json" } }
+        { status: 400, headers: { 'Content-Type': 'application/json' } }
       );
     }
 
     if (!uuidRegex.test(noteId)) {
       return new Response(
         JSON.stringify({
-          error: "Invalid note ID format",
-          code: "VALIDATION_ERROR",
+          error: 'Invalid note ID format',
+          code: 'VALIDATION_ERROR',
           timestamp: new Date().toISOString(),
         }),
-        { status: 400, headers: { "Content-Type": "application/json" } }
+        { status: 400, headers: { 'Content-Type': 'application/json' } }
       );
     }
 
@@ -403,27 +403,27 @@ export const DELETE: APIRoute = async ({ params, locals }) => {
     return new Response(null, { status: 204 });
   } catch (error) {
     // Handle NotFoundError
-    if (error instanceof Error && error.name === "NotFoundError") {
+    if (error instanceof Error && error.name === 'NotFoundError') {
       console.error(`Note deletion failed - Not found:`, error.message);
       return new Response(
         JSON.stringify({
           error: error.message,
-          code: "NOT_FOUND",
+          code: 'NOT_FOUND',
           timestamp: new Date().toISOString(),
         }),
-        { status: 404, headers: { "Content-Type": "application/json" } }
+        { status: 404, headers: { 'Content-Type': 'application/json' } }
       );
     }
 
     // Handle unexpected errors
-    console.error("Note deletion failed - Internal error:", error);
+    console.error('Note deletion failed - Internal error:', error);
     return new Response(
       JSON.stringify({
-        error: "Internal server error",
-        code: "INTERNAL_ERROR",
+        error: 'Internal server error',
+        code: 'INTERNAL_ERROR',
         timestamp: new Date().toISOString(),
       }),
-      { status: 500, headers: { "Content-Type": "application/json" } }
+      { status: 500, headers: { 'Content-Type': 'application/json' } }
     );
   }
 };
@@ -437,14 +437,14 @@ Create/update `src/lib/errors.ts`:
 export class NotFoundError extends Error {
   constructor(message: string) {
     super(message);
-    this.name = "NotFoundError";
+    this.name = 'NotFoundError';
   }
 }
 
 export class ValidationError extends Error {
   constructor(message: string) {
     super(message);
-    this.name = "ValidationError";
+    this.name = 'ValidationError';
   }
 }
 ```

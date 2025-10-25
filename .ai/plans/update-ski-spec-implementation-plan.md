@@ -446,8 +446,8 @@ All errors follow the `ApiErrorResponse` schema:
 if (!user) {
   return new Response(
     JSON.stringify({
-      error: "Authentication required",
-      code: "UNAUTHORIZED",
+      error: 'Authentication required',
+      code: 'UNAUTHORIZED',
       timestamp: new Date().toISOString(),
     }),
     { status: 401 }
@@ -458,8 +458,8 @@ if (!user) {
 if (!isValidUUID(id)) {
   return new Response(
     JSON.stringify({
-      error: "Invalid specification ID format",
-      code: "VALIDATION_ERROR",
+      error: 'Invalid specification ID format',
+      code: 'VALIDATION_ERROR',
       timestamp: new Date().toISOString(),
     }),
     { status: 400 }
@@ -471,8 +471,8 @@ const validation = UpdateSkiSpecCommandSchema.safeParse(body);
 if (!validation.success) {
   return new Response(
     JSON.stringify({
-      error: "Validation failed",
-      code: "VALIDATION_ERROR",
+      error: 'Validation failed',
+      code: 'VALIDATION_ERROR',
       details: formatZodErrors(validation.error),
       timestamp: new Date().toISOString(),
     }),
@@ -648,9 +648,9 @@ export const prerender = false;
 **Handler Implementation**:
 
 ```typescript
-import type { APIRoute } from "astro";
-import { UpdateSkiSpecCommandSchema } from "@/types";
-import { updateSkiSpec } from "@/lib/services/ski-spec.service";
+import type { APIRoute } from 'astro';
+import { UpdateSkiSpecCommandSchema } from '@/types';
+import { updateSkiSpec } from '@/lib/services/ski-spec.service';
 
 export const PUT: APIRoute = async (context) => {
   // Implementation here
@@ -678,8 +678,8 @@ export const PUT: APIRoute = async (context) => {
     if (!id) {
       return new Response(
         JSON.stringify({
-          error: "Specification ID is required",
-          code: "VALIDATION_ERROR",
+          error: 'Specification ID is required',
+          code: 'VALIDATION_ERROR',
           timestamp: new Date().toISOString(),
         }),
         { status: 400 }
@@ -691,8 +691,8 @@ export const PUT: APIRoute = async (context) => {
     if (!uuidRegex.test(id)) {
       return new Response(
         JSON.stringify({
-          error: "Invalid specification ID format",
-          code: "VALIDATION_ERROR",
+          error: 'Invalid specification ID format',
+          code: 'VALIDATION_ERROR',
           timestamp: new Date().toISOString(),
         }),
         { status: 400 }
@@ -708,8 +708,8 @@ export const PUT: APIRoute = async (context) => {
     if (authError || !user) {
       return new Response(
         JSON.stringify({
-          error: "Authentication required",
-          code: "UNAUTHORIZED",
+          error: 'Authentication required',
+          code: 'UNAUTHORIZED',
           timestamp: new Date().toISOString(),
         }),
         { status: 401 }
@@ -723,8 +723,8 @@ export const PUT: APIRoute = async (context) => {
     } catch {
       return new Response(
         JSON.stringify({
-          error: "Invalid JSON in request body",
-          code: "VALIDATION_ERROR",
+          error: 'Invalid JSON in request body',
+          code: 'VALIDATION_ERROR',
           timestamp: new Date().toISOString(),
         }),
         { status: 400 }
@@ -735,14 +735,14 @@ export const PUT: APIRoute = async (context) => {
     const validation = UpdateSkiSpecCommandSchema.safeParse(body);
     if (!validation.success) {
       const details = validation.error.errors.map((err) => ({
-        field: err.path.join("."),
+        field: err.path.join('.'),
         message: err.message,
       }));
 
       return new Response(
         JSON.stringify({
-          error: "Validation failed",
-          code: "VALIDATION_ERROR",
+          error: 'Validation failed',
+          code: 'VALIDATION_ERROR',
           details,
           timestamp: new Date().toISOString(),
         }),
@@ -757,27 +757,27 @@ export const PUT: APIRoute = async (context) => {
     return new Response(JSON.stringify(updatedSpec), {
       status: 200,
       headers: {
-        "Content-Type": "application/json",
+        'Content-Type': 'application/json',
       },
     });
   } catch (error: any) {
     // Handle specific errors
-    if (error.message === "Specification not found") {
+    if (error.message === 'Specification not found') {
       return new Response(
         JSON.stringify({
-          error: "Ski specification not found",
-          code: "NOT_FOUND",
+          error: 'Ski specification not found',
+          code: 'NOT_FOUND',
           timestamp: new Date().toISOString(),
         }),
         { status: 404 }
       );
     }
 
-    if (error.message === "Name already exists") {
+    if (error.message === 'Name already exists') {
       return new Response(
         JSON.stringify({
-          error: "A specification with this name already exists",
-          code: "CONFLICT",
+          error: 'A specification with this name already exists',
+          code: 'CONFLICT',
           timestamp: new Date().toISOString(),
         }),
         { status: 409 }
@@ -785,11 +785,11 @@ export const PUT: APIRoute = async (context) => {
     }
 
     // Generic error
-    console.error("Error updating ski specification:", error);
+    console.error('Error updating ski specification:', error);
     return new Response(
       JSON.stringify({
-        error: "Internal server error",
-        code: "INTERNAL_ERROR",
+        error: 'Internal server error',
+        code: 'INTERNAL_ERROR',
         timestamp: new Date().toISOString(),
       }),
       { status: 500 }
@@ -846,8 +846,8 @@ if (!isValidUUID(id)) {
 **File**: `src/lib/utils.ts`
 
 ```typescript
-import type { ZodError } from "zod";
-import type { ValidationErrorDetail } from "@/types";
+import type { ZodError } from 'zod';
+import type { ValidationErrorDetail } from '@/types';
 
 /**
  * Formats Zod validation errors into API error detail format.
@@ -856,7 +856,7 @@ import type { ValidationErrorDetail } from "@/types";
  */
 export function formatZodErrors(error: ZodError): ValidationErrorDetail[] {
   return error.errors.map((err) => ({
-    field: err.path.join(".") || "unknown",
+    field: err.path.join('.') || 'unknown',
     message: err.message,
   }));
 }
@@ -865,14 +865,14 @@ export function formatZodErrors(error: ZodError): ValidationErrorDetail[] {
 Then use in endpoint:
 
 ```typescript
-import { formatZodErrors } from "@/lib/utils";
+import { formatZodErrors } from '@/lib/utils';
 
 // In validation error handling
 if (!validation.success) {
   return new Response(
     JSON.stringify({
-      error: "Validation failed",
-      code: "VALIDATION_ERROR",
+      error: 'Validation failed',
+      code: 'VALIDATION_ERROR',
       details: formatZodErrors(validation.error),
       timestamp: new Date().toISOString(),
     }),

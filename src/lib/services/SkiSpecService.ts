@@ -1,6 +1,6 @@
-import { Effect, pipe } from "effect";
-import type { SupabaseClient } from "@/db/supabase.client";
-import type { Database } from "@/db/database.types";
+import { Effect, pipe } from 'effect';
+import type { SupabaseClient } from '@/db/supabase.client';
+import type { Database } from '@/db/database.types';
 import type {
   CreateSkiSpecCommand,
   SkiSpecDTO,
@@ -10,14 +10,14 @@ import type {
   UpdateNoteCommand,
   NoteDTO,
   ListNotesQuery,
-} from "@/types/api.types";
+} from '@/types/api.types';
 import {
   NotFoundError,
   ConflictError,
   DatabaseError,
   BusinessLogicError,
   type SkiSpecError,
-} from "@/types/error.types";
+} from '@/types/error.types';
 
 /**
  * Service class for managing ski specifications and notes.
@@ -68,8 +68,8 @@ export class SkiSpecService {
   calculateRelativeWeight(weight: number, surfaceArea: number): Effect.Effect<number, BusinessLogicError> {
     if (surfaceArea === 0) {
       return Effect.fail(
-        new BusinessLogicError("Surface area cannot be zero", {
-          code: "INVALID_SURFACE_AREA",
+        new BusinessLogicError('Surface area cannot be zero', {
+          code: 'INVALID_SURFACE_AREA',
           context: { weight, surfaceArea },
         })
       );
@@ -93,7 +93,7 @@ export class SkiSpecService {
    * @returns Algorithm version string (semantic versioning)
    */
   getCurrentAlgorithmVersion(): string {
-    return "1.0.0";
+    return '1.0.0';
   }
 
   /**
@@ -148,11 +148,11 @@ export class SkiSpecService {
       // Step 4: Insert into database
       Effect.flatMap((insertData) =>
         Effect.tryPromise({
-          try: () => this.supabase.from("ski_specs").insert(insertData).select().single(),
+          try: () => this.supabase.from('ski_specs').insert(insertData).select().single(),
           catch: (error) =>
             this.handleDatabaseError(error, {
-              operation: "createSkiSpec",
-              table: "ski_specs",
+              operation: 'createSkiSpec',
+              table: 'ski_specs',
               userId,
             }),
         })
@@ -163,8 +163,8 @@ export class SkiSpecService {
         if (error) {
           return Effect.fail(
             this.handleDatabaseError(error, {
-              operation: "createSkiSpec",
-              table: "ski_specs",
+              operation: 'createSkiSpec',
+              table: 'ski_specs',
               userId,
             })
           );
@@ -172,9 +172,9 @@ export class SkiSpecService {
 
         if (!data) {
           return Effect.fail(
-            new DatabaseError("Failed to create ski specification", {
-              operation: "createSkiSpec",
-              table: "ski_specs",
+            new DatabaseError('Failed to create ski specification', {
+              operation: 'createSkiSpec',
+              table: 'ski_specs',
             })
           );
         }
@@ -204,11 +204,11 @@ export class SkiSpecService {
     return pipe(
       // Step 1: Query ski spec with ownership validation
       Effect.tryPromise({
-        try: () => this.supabase.from("ski_specs").select("*").eq("id", specId).eq("user_id", userId).single(),
+        try: () => this.supabase.from('ski_specs').select('*').eq('id', specId).eq('user_id', userId).single(),
         catch: (error) =>
           this.handleDatabaseError(error, {
-            operation: "getSkiSpec",
-            table: "ski_specs",
+            operation: 'getSkiSpec',
+            table: 'ski_specs',
             userId,
             resourceId: specId,
           }),
@@ -216,10 +216,10 @@ export class SkiSpecService {
 
       // Step 2: Handle PGRST116 (not found) error
       Effect.flatMap(({ data, error }) => {
-        if (error?.code === "PGRST116") {
+        if (error?.code === 'PGRST116') {
           return Effect.fail(
-            new NotFoundError("Ski specification not found", {
-              resourceType: "ski_spec",
+            new NotFoundError('Ski specification not found', {
+              resourceType: 'ski_spec',
               resourceId: specId,
             })
           );
@@ -228,8 +228,8 @@ export class SkiSpecService {
         if (error) {
           return Effect.fail(
             this.handleDatabaseError(error, {
-              operation: "getSkiSpec",
-              table: "ski_specs",
+              operation: 'getSkiSpec',
+              table: 'ski_specs',
               userId,
               resourceId: specId,
             })
@@ -270,11 +270,11 @@ export class SkiSpecService {
   deleteSkiSpec(userId: string, specId: string): Effect.Effect<void, SkiSpecError> {
     return pipe(
       Effect.tryPromise({
-        try: () => this.supabase.from("ski_specs").delete({ count: "exact" }).eq("id", specId).eq("user_id", userId),
+        try: () => this.supabase.from('ski_specs').delete({ count: 'exact' }).eq('id', specId).eq('user_id', userId),
         catch: (error) =>
           this.handleDatabaseError(error, {
-            operation: "deleteSkiSpec",
-            table: "ski_specs",
+            operation: 'deleteSkiSpec',
+            table: 'ski_specs',
             userId,
             resourceId: specId,
           }),
@@ -284,8 +284,8 @@ export class SkiSpecService {
         if (error) {
           return Effect.fail(
             this.handleDatabaseError(error, {
-              operation: "deleteSkiSpec",
-              table: "ski_specs",
+              operation: 'deleteSkiSpec',
+              table: 'ski_specs',
               userId,
               resourceId: specId,
             })
@@ -294,8 +294,8 @@ export class SkiSpecService {
 
         if (count === 0) {
           return Effect.fail(
-            new NotFoundError("Ski specification not found", {
-              resourceType: "ski_spec",
+            new NotFoundError('Ski specification not found', {
+              resourceType: 'ski_spec',
               resourceId: specId,
             })
           );
@@ -329,7 +329,7 @@ export class SkiSpecService {
       // Step 1: Build and execute query
       Effect.tryPromise({
         try: async () => {
-          let dbQuery = this.supabase.from("ski_specs").select("*", { count: "exact" }).eq("user_id", userId);
+          let dbQuery = this.supabase.from('ski_specs').select('*', { count: 'exact' }).eq('user_id', userId);
 
           // Apply search filter
           if (query.search) {
@@ -341,7 +341,7 @@ export class SkiSpecService {
 
           // Apply sorting
           dbQuery = dbQuery.order(query.sort_by, {
-            ascending: query.sort_order === "asc",
+            ascending: query.sort_order === 'asc',
           });
 
           // Apply pagination
@@ -352,8 +352,8 @@ export class SkiSpecService {
         },
         catch: (error) =>
           this.handleDatabaseError(error, {
-            operation: "listSkiSpecs",
-            table: "ski_specs",
+            operation: 'listSkiSpecs',
+            table: 'ski_specs',
             userId,
           }),
       }),
@@ -363,8 +363,8 @@ export class SkiSpecService {
         if (error) {
           return Effect.fail(
             this.handleDatabaseError(error, {
-              operation: "listSkiSpecs",
-              table: "ski_specs",
+              operation: 'listSkiSpecs',
+              table: 'ski_specs',
               userId,
             })
           );
@@ -468,11 +468,11 @@ export class SkiSpecService {
       Effect.flatMap((updateData) =>
         Effect.tryPromise({
           try: () =>
-            this.supabase.from("ski_specs").update(updateData).eq("id", specId).eq("user_id", userId).select().single(),
+            this.supabase.from('ski_specs').update(updateData).eq('id', specId).eq('user_id', userId).select().single(),
           catch: (error) =>
             this.handleDatabaseError(error, {
-              operation: "updateSkiSpec",
-              table: "ski_specs",
+              operation: 'updateSkiSpec',
+              table: 'ski_specs',
               userId,
               resourceId: specId,
             }),
@@ -484,8 +484,8 @@ export class SkiSpecService {
         if (error) {
           return Effect.fail(
             this.handleDatabaseError(error, {
-              operation: "updateSkiSpec",
-              table: "ski_specs",
+              operation: 'updateSkiSpec',
+              table: 'ski_specs',
               userId,
               resourceId: specId,
             })
@@ -494,9 +494,9 @@ export class SkiSpecService {
 
         if (!data) {
           return Effect.fail(
-            new DatabaseError("Update failed", {
-              operation: "updateSkiSpec",
-              table: "ski_specs",
+            new DatabaseError('Update failed', {
+              operation: 'updateSkiSpec',
+              table: 'ski_specs',
             })
           );
         }
@@ -538,11 +538,11 @@ export class SkiSpecService {
     return pipe(
       // Step 1: Verify specification exists and user owns it
       Effect.tryPromise({
-        try: () => this.supabase.from("ski_specs").select("id").eq("id", specId).eq("user_id", userId).single(),
+        try: () => this.supabase.from('ski_specs').select('id').eq('id', specId).eq('user_id', userId).single(),
         catch: (error) =>
           this.handleDatabaseError(error, {
-            operation: "createNote",
-            table: "ski_specs",
+            operation: 'createNote',
+            table: 'ski_specs',
             userId,
             resourceId: specId,
           }),
@@ -550,10 +550,10 @@ export class SkiSpecService {
 
       // Step 2: Validate spec exists
       Effect.flatMap(({ data: spec, error: specError }) => {
-        if (specError?.code === "PGRST116" || !spec) {
+        if (specError?.code === 'PGRST116' || !spec) {
           return Effect.fail(
-            new NotFoundError("Ski specification not found", {
-              resourceType: "ski_spec",
+            new NotFoundError('Ski specification not found', {
+              resourceType: 'ski_spec',
               resourceId: specId,
             })
           );
@@ -562,8 +562,8 @@ export class SkiSpecService {
         if (specError) {
           return Effect.fail(
             this.handleDatabaseError(specError, {
-              operation: "createNote",
-              table: "ski_specs",
+              operation: 'createNote',
+              table: 'ski_specs',
               userId,
               resourceId: specId,
             })
@@ -578,7 +578,7 @@ export class SkiSpecService {
         Effect.tryPromise({
           try: () =>
             this.supabase
-              .from("ski_spec_notes")
+              .from('ski_spec_notes')
               .insert({
                 ski_spec_id: specId,
                 content: command.content.trim(),
@@ -587,8 +587,8 @@ export class SkiSpecService {
               .single(),
           catch: (error) =>
             this.handleDatabaseError(error, {
-              operation: "createNote",
-              table: "ski_spec_notes",
+              operation: 'createNote',
+              table: 'ski_spec_notes',
               userId,
               resourceId: specId,
             }),
@@ -600,8 +600,8 @@ export class SkiSpecService {
         if (error) {
           return Effect.fail(
             this.handleDatabaseError(error, {
-              operation: "createNote",
-              table: "ski_spec_notes",
+              operation: 'createNote',
+              table: 'ski_spec_notes',
               userId,
               resourceId: specId,
             })
@@ -610,9 +610,9 @@ export class SkiSpecService {
 
         if (!data) {
           return Effect.fail(
-            new DatabaseError("Failed to create note", {
-              operation: "createNote",
-              table: "ski_spec_notes",
+            new DatabaseError('Failed to create note', {
+              operation: 'createNote',
+              table: 'ski_spec_notes',
             })
           );
         }
@@ -644,11 +644,11 @@ export class SkiSpecService {
     return pipe(
       // Step 1: Verify ski specification exists and user owns it
       Effect.tryPromise({
-        try: () => this.supabase.from("ski_specs").select("id").eq("id", specId).eq("user_id", userId).single(),
+        try: () => this.supabase.from('ski_specs').select('id').eq('id', specId).eq('user_id', userId).single(),
         catch: (error) =>
           this.handleDatabaseError(error, {
-            operation: "getNoteById",
-            table: "ski_specs",
+            operation: 'getNoteById',
+            table: 'ski_specs',
             userId,
             resourceId: specId,
           }),
@@ -656,10 +656,10 @@ export class SkiSpecService {
 
       // Step 2: Validate spec exists
       Effect.flatMap(({ data: spec, error: specError }) => {
-        if (specError?.code === "PGRST116" || !spec) {
+        if (specError?.code === 'PGRST116' || !spec) {
           return Effect.fail(
-            new NotFoundError("Note not found", {
-              resourceType: "note",
+            new NotFoundError('Note not found', {
+              resourceType: 'note',
               resourceId: noteId,
             })
           );
@@ -668,8 +668,8 @@ export class SkiSpecService {
         if (specError) {
           return Effect.fail(
             this.handleDatabaseError(specError, {
-              operation: "getNoteById",
-              table: "ski_specs",
+              operation: 'getNoteById',
+              table: 'ski_specs',
               userId,
               resourceId: specId,
             })
@@ -683,11 +683,11 @@ export class SkiSpecService {
       Effect.flatMap(() =>
         Effect.tryPromise({
           try: () =>
-            this.supabase.from("ski_spec_notes").select("*").eq("id", noteId).eq("ski_spec_id", specId).single(),
+            this.supabase.from('ski_spec_notes').select('*').eq('id', noteId).eq('ski_spec_id', specId).single(),
           catch: (error) =>
             this.handleDatabaseError(error, {
-              operation: "getNoteById",
-              table: "ski_spec_notes",
+              operation: 'getNoteById',
+              table: 'ski_spec_notes',
               userId,
               resourceId: noteId,
             }),
@@ -696,10 +696,10 @@ export class SkiSpecService {
 
       // Step 4: Validate note exists
       Effect.flatMap(({ data: note, error: noteError }) => {
-        if (noteError?.code === "PGRST116" || !note) {
+        if (noteError?.code === 'PGRST116' || !note) {
           return Effect.fail(
-            new NotFoundError("Note not found", {
-              resourceType: "note",
+            new NotFoundError('Note not found', {
+              resourceType: 'note',
               resourceId: noteId,
             })
           );
@@ -708,8 +708,8 @@ export class SkiSpecService {
         if (noteError) {
           return Effect.fail(
             this.handleDatabaseError(noteError, {
-              operation: "getNoteById",
-              table: "ski_spec_notes",
+              operation: 'getNoteById',
+              table: 'ski_spec_notes',
               userId,
               resourceId: noteId,
             })
@@ -749,11 +749,11 @@ export class SkiSpecService {
     return pipe(
       // Step 1: Verify ski specification exists and user owns it
       Effect.tryPromise({
-        try: () => this.supabase.from("ski_specs").select("id").eq("id", specId).eq("user_id", userId).single(),
+        try: () => this.supabase.from('ski_specs').select('id').eq('id', specId).eq('user_id', userId).single(),
         catch: (error) =>
           this.handleDatabaseError(error, {
-            operation: "updateNote",
-            table: "ski_specs",
+            operation: 'updateNote',
+            table: 'ski_specs',
             userId,
             resourceId: specId,
           }),
@@ -761,10 +761,10 @@ export class SkiSpecService {
 
       // Step 2: Validate spec exists
       Effect.flatMap(({ data: spec, error: specError }) => {
-        if (specError?.code === "PGRST116" || !spec) {
+        if (specError?.code === 'PGRST116' || !spec) {
           return Effect.fail(
-            new NotFoundError("Note not found", {
-              resourceType: "note",
+            new NotFoundError('Note not found', {
+              resourceType: 'note',
               resourceId: noteId,
             })
           );
@@ -773,8 +773,8 @@ export class SkiSpecService {
         if (specError) {
           return Effect.fail(
             this.handleDatabaseError(specError, {
-              operation: "updateNote",
-              table: "ski_specs",
+              operation: 'updateNote',
+              table: 'ski_specs',
               userId,
               resourceId: specId,
             })
@@ -789,19 +789,19 @@ export class SkiSpecService {
         Effect.tryPromise({
           try: () =>
             this.supabase
-              .from("ski_spec_notes")
+              .from('ski_spec_notes')
               .update({
                 content: command.content,
                 updated_at: new Date().toISOString(),
               })
-              .eq("id", noteId)
-              .eq("ski_spec_id", specId)
+              .eq('id', noteId)
+              .eq('ski_spec_id', specId)
               .select()
               .single(),
           catch: (error) =>
             this.handleDatabaseError(error, {
-              operation: "updateNote",
-              table: "ski_spec_notes",
+              operation: 'updateNote',
+              table: 'ski_spec_notes',
               userId,
               resourceId: noteId,
             }),
@@ -810,10 +810,10 @@ export class SkiSpecService {
 
       // Step 4: Validate response
       Effect.flatMap(({ data: updatedNote, error: updateError }) => {
-        if (updateError?.code === "PGRST116" || !updatedNote) {
+        if (updateError?.code === 'PGRST116' || !updatedNote) {
           return Effect.fail(
-            new NotFoundError("Note not found", {
-              resourceType: "note",
+            new NotFoundError('Note not found', {
+              resourceType: 'note',
               resourceId: noteId,
             })
           );
@@ -822,8 +822,8 @@ export class SkiSpecService {
         if (updateError) {
           return Effect.fail(
             this.handleDatabaseError(updateError, {
-              operation: "updateNote",
-              table: "ski_spec_notes",
+              operation: 'updateNote',
+              table: 'ski_spec_notes',
               userId,
               resourceId: noteId,
             })
@@ -857,11 +857,11 @@ export class SkiSpecService {
     return pipe(
       // Step 1: Verify ski specification exists and user owns it
       Effect.tryPromise({
-        try: () => this.supabase.from("ski_specs").select("id").eq("id", specId).eq("user_id", userId).single(),
+        try: () => this.supabase.from('ski_specs').select('id').eq('id', specId).eq('user_id', userId).single(),
         catch: (error) =>
           this.handleDatabaseError(error, {
-            operation: "deleteNote",
-            table: "ski_specs",
+            operation: 'deleteNote',
+            table: 'ski_specs',
             userId,
             resourceId: specId,
           }),
@@ -869,10 +869,10 @@ export class SkiSpecService {
 
       // Step 2: Validate spec exists
       Effect.flatMap(({ data: spec, error: specError }) => {
-        if (specError?.code === "PGRST116" || !spec) {
+        if (specError?.code === 'PGRST116' || !spec) {
           return Effect.fail(
-            new NotFoundError("Note not found", {
-              resourceType: "note",
+            new NotFoundError('Note not found', {
+              resourceType: 'note',
               resourceId: noteId,
             })
           );
@@ -881,8 +881,8 @@ export class SkiSpecService {
         if (specError) {
           return Effect.fail(
             this.handleDatabaseError(specError, {
-              operation: "deleteNote",
-              table: "ski_specs",
+              operation: 'deleteNote',
+              table: 'ski_specs',
               userId,
               resourceId: specId,
             })
@@ -896,11 +896,11 @@ export class SkiSpecService {
       Effect.flatMap(() =>
         Effect.tryPromise({
           try: () =>
-            this.supabase.from("ski_spec_notes").select("id").eq("id", noteId).eq("ski_spec_id", specId).single(),
+            this.supabase.from('ski_spec_notes').select('id').eq('id', noteId).eq('ski_spec_id', specId).single(),
           catch: (error) =>
             this.handleDatabaseError(error, {
-              operation: "deleteNote",
-              table: "ski_spec_notes",
+              operation: 'deleteNote',
+              table: 'ski_spec_notes',
               userId,
               resourceId: noteId,
             }),
@@ -909,10 +909,10 @@ export class SkiSpecService {
 
       // Step 4: Validate note exists
       Effect.flatMap(({ data: note, error: noteError }) => {
-        if (noteError?.code === "PGRST116" || !note) {
+        if (noteError?.code === 'PGRST116' || !note) {
           return Effect.fail(
-            new NotFoundError("Note not found", {
-              resourceType: "note",
+            new NotFoundError('Note not found', {
+              resourceType: 'note',
               resourceId: noteId,
             })
           );
@@ -921,8 +921,8 @@ export class SkiSpecService {
         if (noteError) {
           return Effect.fail(
             this.handleDatabaseError(noteError, {
-              operation: "deleteNote",
-              table: "ski_spec_notes",
+              operation: 'deleteNote',
+              table: 'ski_spec_notes',
               userId,
               resourceId: noteId,
             })
@@ -935,12 +935,12 @@ export class SkiSpecService {
       // Step 5: Delete the note
       Effect.flatMap(() =>
         Effect.tryPromise({
-          try: () => this.supabase.from("ski_spec_notes").delete().eq("id", noteId),
+          try: () => this.supabase.from('ski_spec_notes').delete().eq('id', noteId),
           catch: (error) =>
-            new DatabaseError("Failed to delete note", {
+            new DatabaseError('Failed to delete note', {
               cause: error instanceof Error ? error : undefined,
-              operation: "deleteNote",
-              table: "ski_spec_notes",
+              operation: 'deleteNote',
+              table: 'ski_spec_notes',
             }),
         })
       ),
@@ -951,8 +951,8 @@ export class SkiSpecService {
           return Effect.fail(
             new DatabaseError(`Failed to delete note: ${deleteError.message}`, {
               cause: deleteError,
-              operation: "deleteNote",
-              table: "ski_spec_notes",
+              operation: 'deleteNote',
+              table: 'ski_spec_notes',
             })
           );
         }
@@ -986,11 +986,11 @@ export class SkiSpecService {
     return pipe(
       // Step 1: Verify specification exists and user owns it
       Effect.tryPromise({
-        try: () => this.supabase.from("ski_specs").select("id").eq("id", specId).eq("user_id", userId).single(),
+        try: () => this.supabase.from('ski_specs').select('id').eq('id', specId).eq('user_id', userId).single(),
         catch: (error) =>
           this.handleDatabaseError(error, {
-            operation: "listNotes",
-            table: "ski_specs",
+            operation: 'listNotes',
+            table: 'ski_specs',
             userId,
             resourceId: specId,
           }),
@@ -998,10 +998,10 @@ export class SkiSpecService {
 
       // Step 2: Validate spec exists
       Effect.flatMap(({ data: spec, error: specError }) => {
-        if (specError?.code === "PGRST116" || !spec) {
+        if (specError?.code === 'PGRST116' || !spec) {
           return Effect.fail(
-            new NotFoundError("Ski specification not found", {
-              resourceType: "ski_spec",
+            new NotFoundError('Ski specification not found', {
+              resourceType: 'ski_spec',
               resourceId: specId,
             })
           );
@@ -1010,8 +1010,8 @@ export class SkiSpecService {
         if (specError) {
           return Effect.fail(
             this.handleDatabaseError(specError, {
-              operation: "listNotes",
-              table: "ski_specs",
+              operation: 'listNotes',
+              table: 'ski_specs',
               userId,
               resourceId: specId,
             })
@@ -1028,15 +1028,15 @@ export class SkiSpecService {
         return Effect.tryPromise({
           try: () =>
             this.supabase
-              .from("ski_spec_notes")
-              .select("*", { count: "exact" })
-              .eq("ski_spec_id", specId)
-              .order("created_at", { ascending: false })
+              .from('ski_spec_notes')
+              .select('*', { count: 'exact' })
+              .eq('ski_spec_id', specId)
+              .order('created_at', { ascending: false })
               .range(offset, offset + query.limit - 1),
           catch: (error) =>
             this.handleDatabaseError(error, {
-              operation: "listNotes",
-              table: "ski_spec_notes",
+              operation: 'listNotes',
+              table: 'ski_spec_notes',
               userId,
               resourceId: specId,
             }),
@@ -1048,8 +1048,8 @@ export class SkiSpecService {
         if (error) {
           return Effect.fail(
             this.handleDatabaseError(error, {
-              operation: "listNotes",
-              table: "ski_spec_notes",
+              operation: 'listNotes',
+              table: 'ski_spec_notes',
               userId,
               resourceId: specId,
             })
@@ -1074,7 +1074,7 @@ export class SkiSpecService {
   checkDatabaseConnection(): Effect.Effect<boolean, never> {
     return pipe(
       Effect.tryPromise({
-        try: () => this.supabase.from("ski_specs").select("id").limit(1),
+        try: () => this.supabase.from('ski_specs').select('id').limit(1),
         catch: () => false as const,
       }),
       Effect.map(({ error }) => !error),
@@ -1093,23 +1093,23 @@ export class SkiSpecService {
   private verifySpecOwnership(
     userId: string,
     specId: string
-  ): Effect.Effect<Database["public"]["Tables"]["ski_specs"]["Row"], SkiSpecError> {
+  ): Effect.Effect<Database['public']['Tables']['ski_specs']['Row'], SkiSpecError> {
     return pipe(
       Effect.tryPromise({
-        try: () => this.supabase.from("ski_specs").select("*").eq("id", specId).eq("user_id", userId).single(),
+        try: () => this.supabase.from('ski_specs').select('*').eq('id', specId).eq('user_id', userId).single(),
         catch: (error) =>
           this.handleDatabaseError(error, {
-            operation: "verifySpecOwnership",
-            table: "ski_specs",
+            operation: 'verifySpecOwnership',
+            table: 'ski_specs',
             userId,
             resourceId: specId,
           }),
       }),
       Effect.flatMap(({ data, error }) => {
-        if (error?.code === "PGRST116" || !data) {
+        if (error?.code === 'PGRST116' || !data) {
           return Effect.fail(
-            new NotFoundError("Ski specification not found", {
-              resourceType: "ski_spec",
+            new NotFoundError('Ski specification not found', {
+              resourceType: 'ski_spec',
               resourceId: specId,
             })
           );
@@ -1118,8 +1118,8 @@ export class SkiSpecService {
         if (error) {
           return Effect.fail(
             this.handleDatabaseError(error, {
-              operation: "verifySpecOwnership",
-              table: "ski_specs",
+              operation: 'verifySpecOwnership',
+              table: 'ski_specs',
               userId,
               resourceId: specId,
             })
@@ -1152,16 +1152,16 @@ export class SkiSpecService {
       Effect.tryPromise({
         try: () =>
           this.supabase
-            .from("ski_specs")
-            .select("id")
-            .eq("user_id", userId)
-            .eq("name", trimmedName)
-            .neq("id", excludeId)
+            .from('ski_specs')
+            .select('id')
+            .eq('user_id', userId)
+            .eq('name', trimmedName)
+            .neq('id', excludeId)
             .maybeSingle(),
         catch: (error) =>
           this.handleDatabaseError(error, {
-            operation: "checkNameUniqueness",
-            table: "ski_specs",
+            operation: 'checkNameUniqueness',
+            table: 'ski_specs',
             userId,
           }),
       }),
@@ -1169,8 +1169,8 @@ export class SkiSpecService {
         if (error) {
           return Effect.fail(
             this.handleDatabaseError(error, {
-              operation: "checkNameUniqueness",
-              table: "ski_specs",
+              operation: 'checkNameUniqueness',
+              table: 'ski_specs',
               userId,
             })
           );
@@ -1178,10 +1178,10 @@ export class SkiSpecService {
 
         if (data) {
           return Effect.fail(
-            new ConflictError("Specification with this name already exists", {
-              code: "DUPLICATE_NAME",
-              conflictingField: "name",
-              resourceType: "ski_spec",
+            new ConflictError('Specification with this name already exists', {
+              code: 'DUPLICATE_NAME',
+              conflictingField: 'name',
+              resourceType: 'ski_spec',
             })
           );
         }
@@ -1199,21 +1199,21 @@ export class SkiSpecService {
     return pipe(
       Effect.tryPromise({
         try: () =>
-          this.supabase.from("ski_spec_notes").select("*", { count: "exact", head: true }).eq("ski_spec_id", specId),
+          this.supabase.from('ski_spec_notes').select('*', { count: 'exact', head: true }).eq('ski_spec_id', specId),
         catch: (error) =>
-          new DatabaseError("Failed to count notes", {
+          new DatabaseError('Failed to count notes', {
             cause: error instanceof Error ? error : undefined,
-            operation: "getNotesCount",
-            table: "ski_spec_notes",
+            operation: 'getNotesCount',
+            table: 'ski_spec_notes',
           }),
       }),
       Effect.flatMap(({ count, error }) => {
         if (error) {
           return Effect.fail(
-            new DatabaseError("Failed to count notes", {
+            new DatabaseError('Failed to count notes', {
               cause: error,
-              operation: "getNotesCount",
-              table: "ski_spec_notes",
+              operation: 'getNotesCount',
+              table: 'ski_spec_notes',
             })
           );
         }
@@ -1239,16 +1239,16 @@ export class SkiSpecService {
     const dbError = error as { code?: string; message?: string };
 
     // UNIQUE constraint violation (23505) -> ConflictError
-    if (dbError?.code === "23505") {
-      return new ConflictError("Duplicate record", {
-        code: "DUPLICATE_RECORD",
+    if (dbError?.code === '23505') {
+      return new ConflictError('Duplicate record', {
+        code: 'DUPLICATE_RECORD',
         resourceType: context.table,
         context,
       });
     }
 
     // PGRST116 (not found) -> NotFoundError
-    if (dbError?.code === "PGRST116") {
+    if (dbError?.code === 'PGRST116') {
       return new NotFoundError(`${context.table} not found`, {
         resourceType: context.table,
         resourceId: context.resourceId,

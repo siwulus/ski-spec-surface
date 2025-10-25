@@ -42,8 +42,8 @@ Your final output should include:
 ```typescript
 // Example structure (replace with actual types):
 
-import { z } from "zod";
-import { expectTypeOf } from "expect-type";
+import { z } from 'zod';
+import { expectTypeOf } from 'expect-type';
 
 // DTO Type Definition
 export interface UserCreateDto {
@@ -65,7 +65,7 @@ expectTypeOf<z.infer<typeof UserCreateDtoSchema>>().toEqualTypeOf<UserCreateDto>
 // Command Model example
 export interface UpdateUserCommand {
   id: string;
-  updates: Partial<Pick<User, "name" | "email" | "age">>;
+  updates: Partial<Pick<User, 'name' | 'email' | 'age'>>;
 }
 
 export const UpdateUserCommandSchema = z.object({

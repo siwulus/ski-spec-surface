@@ -349,7 +349,7 @@ All errors follow ApiErrorResponse schema:
 **File:** `src/pages/api/ski-specs/[specId]/notes/[noteId].ts`
 
 ```typescript
-import type { APIRoute } from "astro";
+import type { APIRoute } from 'astro';
 
 export const PUT: APIRoute = async ({ params, request, locals }) => {
   // Implementation follows in subsequent steps
@@ -367,22 +367,22 @@ const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}
 if (!specId || !uuidRegex.test(specId)) {
   return new Response(
     JSON.stringify({
-      error: "Invalid UUID format",
-      code: "VALIDATION_ERROR",
+      error: 'Invalid UUID format',
+      code: 'VALIDATION_ERROR',
       timestamp: new Date().toISOString(),
     }),
-    { status: 400, headers: { "Content-Type": "application/json" } }
+    { status: 400, headers: { 'Content-Type': 'application/json' } }
   );
 }
 
 if (!noteId || !uuidRegex.test(noteId)) {
   return new Response(
     JSON.stringify({
-      error: "Invalid UUID format",
-      code: "VALIDATION_ERROR",
+      error: 'Invalid UUID format',
+      code: 'VALIDATION_ERROR',
       timestamp: new Date().toISOString(),
     }),
-    { status: 400, headers: { "Content-Type": "application/json" } }
+    { status: 400, headers: { 'Content-Type': 'application/json' } }
   );
 }
 ```
@@ -395,11 +395,11 @@ const userId = locals.user?.id;
 if (!userId) {
   return new Response(
     JSON.stringify({
-      error: "Authentication required",
-      code: "UNAUTHORIZED",
+      error: 'Authentication required',
+      code: 'UNAUTHORIZED',
       timestamp: new Date().toISOString(),
     }),
-    { status: 401, headers: { "Content-Type": "application/json" } }
+    { status: 401, headers: { 'Content-Type': 'application/json' } }
   );
 }
 ```
@@ -407,7 +407,7 @@ if (!userId) {
 ### Step 4: Parse and Validate Request Body
 
 ```typescript
-import { UpdateNoteCommandSchema } from "@/types";
+import { UpdateNoteCommandSchema } from '@/types';
 
 let requestBody;
 try {
@@ -415,11 +415,11 @@ try {
 } catch (error) {
   return new Response(
     JSON.stringify({
-      error: "Invalid request body",
-      code: "VALIDATION_ERROR",
+      error: 'Invalid request body',
+      code: 'VALIDATION_ERROR',
       timestamp: new Date().toISOString(),
     }),
-    { status: 400, headers: { "Content-Type": "application/json" } }
+    { status: 400, headers: { 'Content-Type': 'application/json' } }
   );
 }
 
@@ -427,18 +427,18 @@ const validation = UpdateNoteCommandSchema.safeParse(requestBody);
 
 if (!validation.success) {
   const details = validation.error.errors.map((err) => ({
-    field: err.path.join("."),
+    field: err.path.join('.'),
     message: err.message,
   }));
 
   return new Response(
     JSON.stringify({
-      error: "Validation failed",
-      code: "VALIDATION_ERROR",
+      error: 'Validation failed',
+      code: 'VALIDATION_ERROR',
       details,
       timestamp: new Date().toISOString(),
     }),
-    { status: 400, headers: { "Content-Type": "application/json" } }
+    { status: 400, headers: { 'Content-Type': 'application/json' } }
   );
 }
 
@@ -462,30 +462,30 @@ export async function updateNote(
 
   // Step 1: Verify ski spec ownership
   const { data: skiSpec, error: specError } = await supabase
-    .from("ski_specs")
-    .select("id")
-    .eq("id", specId)
-    .eq("user_id", userId)
+    .from('ski_specs')
+    .select('id')
+    .eq('id', specId)
+    .eq('user_id', userId)
     .single();
 
   if (specError || !skiSpec) {
-    throw new Error("NOT_FOUND");
+    throw new Error('NOT_FOUND');
   }
 
   // Step 2: Update note (RLS will verify it belongs to this ski spec)
   const { data: updatedNote, error: updateError } = await supabase
-    .from("ski_spec_notes")
+    .from('ski_spec_notes')
     .update({
       content: data.content,
       updated_at: new Date().toISOString(), // Explicitly set if no trigger
     })
-    .eq("id", noteId)
-    .eq("ski_spec_id", specId)
+    .eq('id', noteId)
+    .eq('ski_spec_id', specId)
     .select()
     .single();
 
   if (updateError || !updatedNote) {
-    throw new Error("NOT_FOUND");
+    throw new Error('NOT_FOUND');
   }
 
   return updatedNote;
@@ -495,35 +495,35 @@ export async function updateNote(
 ### Step 6: Call Service from Endpoint
 
 ```typescript
-import { updateNote } from "@/lib/services/ski-spec.service";
+import { updateNote } from '@/lib/services/ski-spec.service';
 
 try {
   const note = await updateNote(userId, specId, noteId, updateData);
 
   return new Response(JSON.stringify(note), {
     status: 200,
-    headers: { "Content-Type": "application/json" },
+    headers: { 'Content-Type': 'application/json' },
   });
 } catch (error) {
-  if (error instanceof Error && error.message === "NOT_FOUND") {
+  if (error instanceof Error && error.message === 'NOT_FOUND') {
     return new Response(
       JSON.stringify({
-        error: "Note or specification not found",
-        code: "NOT_FOUND",
+        error: 'Note or specification not found',
+        code: 'NOT_FOUND',
         timestamp: new Date().toISOString(),
       }),
-      { status: 404, headers: { "Content-Type": "application/json" } }
+      { status: 404, headers: { 'Content-Type': 'application/json' } }
     );
   }
 
-  console.error("Error updating note:", error);
+  console.error('Error updating note:', error);
   return new Response(
     JSON.stringify({
-      error: "An error occurred while updating the note",
-      code: "INTERNAL_ERROR",
+      error: 'An error occurred while updating the note',
+      code: 'INTERNAL_ERROR',
       timestamp: new Date().toISOString(),
     }),
-    { status: 500, headers: { "Content-Type": "application/json" } }
+    { status: 500, headers: { 'Content-Type': 'application/json' } }
   );
 }
 ```

@@ -1,14 +1,14 @@
-import { getUserIdEffect } from "@/lib/utils/auth";
-import { catchAllSkiSpecErrors } from "@/lib/utils/error";
-import { parseJsonBody, parseQueryParams, type QueryCoercer } from "@/lib/utils/zod";
+import { getUserIdEffect } from '@/lib/utils/auth';
+import { catchAllSkiSpecErrors } from '@/lib/utils/error';
+import { parseJsonBody, parseQueryParams, type QueryCoercer } from '@/lib/utils/zod';
 import {
   CreateSkiSpecCommandSchema,
   ListSkiSpecsQuerySchema,
   type PaginationMeta,
   type SkiSpecListResponse,
-} from "@/types/api.types";
-import type { APIRoute } from "astro";
-import { Effect, pipe } from "effect";
+} from '@/types/api.types';
+import type { APIRoute } from 'astro';
+import { Effect, pipe } from 'effect';
 
 export const prerender = false;
 
@@ -21,15 +21,15 @@ export const prerender = false;
  * Converts string query params to appropriate types for Zod validation.
  */
 const coerceListQuery: QueryCoercer = (params) => {
-  const page = params.get("page");
-  const limit = params.get("limit");
+  const page = params.get('page');
+  const limit = params.get('limit');
 
   return {
     page: page ? parseInt(page, 10) : undefined,
     limit: limit ? parseInt(limit, 10) : undefined,
-    sort_by: params.get("sort_by") || undefined,
-    sort_order: params.get("sort_order") || undefined,
-    search: params.get("search") || undefined,
+    sort_by: params.get('sort_by') || undefined,
+    sort_order: params.get('sort_order') || undefined,
+    search: params.get('search') || undefined,
   };
 };
 
@@ -85,14 +85,14 @@ export const GET: APIRoute = async ({ url, locals }) => {
 
       return new Response(JSON.stringify(response), {
         status: 200,
-        headers: { "Content-Type": "application/json" },
+        headers: { 'Content-Type': 'application/json' },
       });
     }),
 
     // Step 5: Handle all errors consistently with structured logging
     catchAllSkiSpecErrors({
-      endpoint: "/api/ski-specs",
-      method: "GET",
+      endpoint: '/api/ski-specs',
+      method: 'GET',
       userId: user?.id,
     })
   );
@@ -131,14 +131,14 @@ export const POST: APIRoute = async ({ request, locals }) => {
     Effect.map((skiSpec) => {
       return new Response(JSON.stringify(skiSpec), {
         status: 201,
-        headers: { "Content-Type": "application/json" },
+        headers: { 'Content-Type': 'application/json' },
       });
     }),
 
     // Step 5: Handle all errors consistently with structured logging
     catchAllSkiSpecErrors({
-      endpoint: "/api/ski-specs",
-      method: "POST",
+      endpoint: '/api/ski-specs',
+      method: 'POST',
       userId: user?.id,
     })
   );

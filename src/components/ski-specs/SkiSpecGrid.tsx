@@ -1,17 +1,17 @@
-import * as React from "react";
-import type { ListSkiSpecsQuery } from "@/types/api.types";
-import { SkiSpecCard } from "@/components/ski-specs/SkiSpecCard";
-import { SkiSpecGridSkeleton } from "@/components/ski-specs/SkiSpecGridSkeleton";
-import { SkiSpecToolbar } from "@/components/ski-specs/SkiSpecToolbar";
-import { SkiSpecPagination } from "@/components/ski-specs/SkiSpecPagination";
-import { SkiSpecFormDialog } from "@/components/ski-specs/SkiSpecFormDialog";
-import { Button } from "@/components/ui/button";
-import { PlusIcon } from "lucide-react";
-import { useSkiSpecs } from "../hooks/useSkiSpecs";
-import { useSkiSpecsUrlState } from "../hooks/useSkiSpecsUrlState";
-import { useSkiSpecMutation } from "../hooks/useSkiSpecMutation";
-import { toast } from "sonner";
-import { DeleteSkiSpecDialog } from "./DeleteSkiSpecDialog";
+import * as React from 'react';
+import type { ListSkiSpecsQuery } from '@/types/api.types';
+import { SkiSpecCard } from '@/components/ski-specs/SkiSpecCard';
+import { SkiSpecGridSkeleton } from '@/components/ski-specs/SkiSpecGridSkeleton';
+import { SkiSpecToolbar } from '@/components/ski-specs/SkiSpecToolbar';
+import { SkiSpecPagination } from '@/components/ski-specs/SkiSpecPagination';
+import { SkiSpecFormDialog } from '@/components/ski-specs/SkiSpecFormDialog';
+import { Button } from '@/components/ui/button';
+import { PlusIcon } from 'lucide-react';
+import { useSkiSpecs } from '../hooks/useSkiSpecs';
+import { useSkiSpecsUrlState } from '../hooks/useSkiSpecsUrlState';
+import { useSkiSpecMutation } from '../hooks/useSkiSpecMutation';
+import { toast } from 'sonner';
+import { DeleteSkiSpecDialog } from './DeleteSkiSpecDialog';
 
 interface EmptyStateProps {
   onAddClick: () => void;
@@ -50,14 +50,14 @@ export const SkiSpecGrid: React.FC = () => {
   );
 
   const handleSortByChange = React.useCallback(
-    (sort_by: ListSkiSpecsQuery["sort_by"]) => {
+    (sort_by: ListSkiSpecsQuery['sort_by']) => {
       updateQueryState({ sort_by });
     },
     [updateQueryState]
   );
 
   const handleSortOrderChange = React.useCallback(
-    (sort_order: ListSkiSpecsQuery["sort_order"]) => {
+    (sort_order: ListSkiSpecsQuery['sort_order']) => {
       updateQueryState({ sort_order });
     },
     [updateQueryState]
@@ -67,7 +67,7 @@ export const SkiSpecGrid: React.FC = () => {
     (page: number) => {
       updateQueryState({ page });
       // Scroll to top after page change
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     },
     [updateQueryState]
   );
@@ -102,8 +102,8 @@ export const SkiSpecGrid: React.FC = () => {
       setDeletingSpecId(null);
       refetch();
     } catch (error) {
-      toast.error("Error deleting specification", {
-        description: error instanceof Error ? error.message : "Unknown error",
+      toast.error('Error deleting specification', {
+        description: error instanceof Error ? error.message : 'Unknown error',
       });
       // Error already handled in useSkiSpecMutation
     }
@@ -123,9 +123,9 @@ export const SkiSpecGrid: React.FC = () => {
       </div>
 
       <SkiSpecToolbar
-        search={queryState.search || ""}
-        sortBy={queryState.sort_by || "created_at"}
-        sortOrder={queryState.sort_order || "desc"}
+        search={queryState.search || ''}
+        sortBy={queryState.sort_by || 'created_at'}
+        sortOrder={queryState.sort_order || 'desc'}
         limit={queryState.limit || 20}
         onSearchChange={handleSearchChange}
         onSortByChange={handleSortByChange}
@@ -168,14 +168,14 @@ export const SkiSpecGrid: React.FC = () => {
 
       {/* Unified Specification Dialog */}
       <SkiSpecFormDialog
-        open={dialogAction === "new" || dialogAction === "edit"}
+        open={dialogAction === 'new' || dialogAction === 'edit'}
         onOpenChange={(open) => {
           if (!open) {
             closeDialog();
             refetch();
           }
         }}
-        mode={dialogAction === "edit" ? "edit" : "create"}
+        mode={dialogAction === 'edit' ? 'edit' : 'create'}
         specId={editingId || undefined}
       />
 

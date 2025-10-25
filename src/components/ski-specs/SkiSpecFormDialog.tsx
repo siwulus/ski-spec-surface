@@ -1,10 +1,10 @@
-import { useSkiSpecMutation } from "@/components/hooks/useSkiSpecMutation";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import type { CreateSkiSpecCommand, SkiSpecDTO, UpdateSkiSpecCommand } from "@/types/api.types";
-import { Loader2 } from "lucide-react";
-import React, { useEffect, useState } from "react";
-import { SkiSpecForm } from "./SkiSpecForm";
-import { UnsavedChangesDialog } from "./UnsavedChangesDialog";
+import { useSkiSpecMutation } from '@/components/hooks/useSkiSpecMutation';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import type { CreateSkiSpecCommand, SkiSpecDTO, UpdateSkiSpecCommand } from '@/types/api.types';
+import { Loader2 } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { SkiSpecForm } from './SkiSpecForm';
+import { UnsavedChangesDialog } from './UnsavedChangesDialog';
 
 /**
  * Props for the main dialog component
@@ -15,7 +15,7 @@ export interface SkiSpecFormDialogProps {
   /** Open state change handler */
   onOpenChange: (open: boolean) => void;
   /** Form mode - 'create' or 'edit' */
-  mode: "create" | "edit";
+  mode: 'create' | 'edit';
   /** Spec ID for edit mode */
   specId?: string;
 }
@@ -34,12 +34,12 @@ export const SkiSpecFormDialog: React.FC<SkiSpecFormDialogProps> = ({ open, onOp
 
   // Fetch initial data when dialog opens in edit mode
   useEffect(() => {
-    if (open && mode === "edit" && specId) {
+    if (open && mode === 'edit' && specId) {
       getSkiSpec(specId)
         .then(setEditData)
         .catch((error) => {
           // eslint-disable-next-line no-console
-          console.error("Failed to fetch ski spec:", error);
+          console.error('Failed to fetch ski spec:', error);
           setEditData(undefined);
         });
     } else if (!open) {
@@ -51,7 +51,7 @@ export const SkiSpecFormDialog: React.FC<SkiSpecFormDialogProps> = ({ open, onOp
   // Handle form submission
   const handleCreateUpdateSubmit = async (data: CreateSkiSpecCommand | UpdateSkiSpecCommand) => {
     try {
-      if (mode === "edit" && specId) {
+      if (mode === 'edit' && specId) {
         await updateSkiSpec(specId, data);
       } else {
         await createSkiSpec(data);
@@ -95,8 +95,8 @@ export const SkiSpecFormDialog: React.FC<SkiSpecFormDialogProps> = ({ open, onOp
   };
 
   // Determine if we should show content or loading state
-  const isLoading = mode === "edit" && !editData;
-  const showContent = mode === "create" || (mode === "edit" && editData);
+  const isLoading = mode === 'edit' && !editData;
+  const showContent = mode === 'create' || (mode === 'edit' && editData);
 
   return (
     <>
@@ -104,7 +104,7 @@ export const SkiSpecFormDialog: React.FC<SkiSpecFormDialogProps> = ({ open, onOp
         <DialogContent
           className="max-w-2xl max-h-[90vh] overflow-y-auto"
           aria-labelledby="dialog-title"
-          aria-describedby={isLoading ? undefined : "dialog-description"}
+          aria-describedby={isLoading ? undefined : 'dialog-description'}
         >
           {isLoading ? (
             // Show centered spinner while loading
@@ -117,7 +117,7 @@ export const SkiSpecFormDialog: React.FC<SkiSpecFormDialogProps> = ({ open, onOp
             <>
               <DialogHeader>
                 <DialogTitle id="dialog-title">
-                  {mode === "create" ? "Add New Specification" : "Edit Specification"}
+                  {mode === 'create' ? 'Add New Specification' : 'Edit Specification'}
                 </DialogTitle>
                 <DialogDescription id="dialog-description">
                   Enter the technical parameters of the skis. All fields marked with an asterisk (*) are required.
@@ -126,11 +126,11 @@ export const SkiSpecFormDialog: React.FC<SkiSpecFormDialogProps> = ({ open, onOp
 
               {showContent && (
                 <SkiSpecForm
-                  key={mode === "edit" ? specId : "new"}
+                  key={mode === 'edit' ? specId : 'new'}
                   onSubmit={handleCreateUpdateSubmit}
                   onCancel={handleCreateUpdateCancel}
                   defaultValues={
-                    mode === "edit" && editData
+                    mode === 'edit' && editData
                       ? {
                           name: editData.name,
                           description: editData.description,

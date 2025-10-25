@@ -48,15 +48,15 @@ Update the main layout to include header and toast provider:
 
 ```astro
 ---
-import "../styles/global.css";
-import Header from "@/components/Header.astro";
-import { Toaster } from "@/components/ui/sonner";
+import '../styles/global.css';
+import Header from '@/components/Header.astro';
+import { Toaster } from '@/components/ui/sonner';
 
 interface Props {
   title?: string;
 }
 
-const { title = "Ski Surface Spec" } = Astro.props;
+const { title = 'Ski Surface Spec' } = Astro.props;
 const currentPath = Astro.url.pathname;
 ---
 
@@ -92,7 +92,7 @@ const currentPath = Astro.url.pathname;
 
 ```astro
 ---
-import Navigation from "@/components/Navigation";
+import Navigation from '@/components/Navigation';
 
 interface Props {
   currentPath: string;
@@ -199,7 +199,7 @@ export default function Navigation({ currentPath }: NavigationProps) {
 **File**: `src/lib/toast.ts`
 
 ```typescript
-import { toast as sonnerToast } from "sonner";
+import { toast as sonnerToast } from 'sonner';
 
 export const toast = {
   success: (message: string, description?: string) => {
@@ -220,13 +220,13 @@ export const toast = {
 **Usage in components**:
 
 ```typescript
-import { toast } from "@/lib/toast";
+import { toast } from '@/lib/toast';
 
 // Success toast
-toast.success("Specification created", "Your ski spec was saved successfully");
+toast.success('Specification created', 'Your ski spec was saved successfully');
 
 // Error toast
-toast.error("Failed to save", "Please check your input and try again");
+toast.error('Failed to save', 'Please check your input and try again');
 ```
 
 ## Accessibility Considerations

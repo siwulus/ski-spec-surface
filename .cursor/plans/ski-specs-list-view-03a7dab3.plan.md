@@ -16,8 +16,8 @@ Replace the current ToastTest section with:
 
 ```astro
 ---
-import Layout from "../layouts/Layout.astro";
-import SkiSpecList from "../components/SkiSpecList";
+import Layout from '../layouts/Layout.astro';
+import SkiSpecList from '../components/SkiSpecList';
 ---
 
 <Layout title="Ski Specifications">
@@ -126,7 +126,7 @@ interface SkiSpecCardProps {
   <CardFooter className="border-t">
     <div className="flex items-center justify-between w-full">
       <span className="text-sm text-muted-foreground">
-        {spec.notes_count} {spec.notes_count === 1 ? "note" : "notes"}
+        {spec.notes_count} {spec.notes_count === 1 ? 'note' : 'notes'}
       </span>
     </div>
   </CardFooter>
@@ -227,19 +227,19 @@ const SpecValue: React.FC<SpecValueProps> = ({ label, value, unit }) => (
 
 ```typescript
 const fetchSkiSpecs = async (): Promise<SkiSpecDTO[]> => {
-  const response = await fetch("/api/ski-specs?page=1&limit=100&sort_by=created_at&sort_order=desc", {
-    method: "GET",
-    credentials: "include",
+  const response = await fetch('/api/ski-specs?page=1&limit=100&sort_by=created_at&sort_order=desc', {
+    method: 'GET',
+    credentials: 'include',
     headers: {
-      "Content-Type": "application/json",
+      'Content-Type': 'application/json',
     },
   });
 
   if (!response.ok) {
     if (response.status === 401) {
-      throw new Error("Authentication required");
+      throw new Error('Authentication required');
     }
-    throw new Error("Failed to fetch ski specifications");
+    throw new Error('Failed to fetch ski specifications');
   }
 
   const data: SkiSpecListResponse = await response.json();
@@ -259,8 +259,8 @@ const fetchSkiSpecs = async (): Promise<SkiSpecDTO[]> => {
 ### Import Statements
 
 ```typescript
-import type { SkiSpecDTO } from "@/types/api.types";
-import type { SkiSpecListResponse } from "@/types/api.types";
+import type { SkiSpecDTO } from '@/types/api.types';
+import type { SkiSpecListResponse } from '@/types/api.types';
 ```
 
 ### Component Props

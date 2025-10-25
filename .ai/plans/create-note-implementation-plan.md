@@ -96,7 +96,7 @@ This endpoint creates a new note for a specific ski specification. Notes allow u
 - **UuidParamSchema**: Validates path parameter UUID format
   ```typescript
   const UuidParamSchema = z.object({
-    specId: z.string().uuid("Invalid UUID format"),
+    specId: z.string().uuid('Invalid UUID format'),
   });
   ```
 
@@ -337,32 +337,32 @@ try {
   const dbError = error as { message?: string; code?: string };
 
   // Handle specific error cases
-  if (dbError?.message?.includes("Specification not found")) {
+  if (dbError?.message?.includes('Specification not found')) {
     return new Response(
       JSON.stringify({
-        error: "Ski specification not found",
-        code: "NOT_FOUND",
+        error: 'Ski specification not found',
+        code: 'NOT_FOUND',
         timestamp: new Date().toISOString(),
       }),
-      { status: 404, headers: { "Content-Type": "application/json" } }
+      { status: 404, headers: { 'Content-Type': 'application/json' } }
     );
   }
 
   // Log unexpected errors
-  console.error("Failed to create note:", {
+  console.error('Failed to create note:', {
     userId,
     specId,
-    error: dbError?.message || "Unknown error",
+    error: dbError?.message || 'Unknown error',
   });
 
   // Generic error response
   return new Response(
     JSON.stringify({
-      error: "Internal server error",
-      code: "INTERNAL_ERROR",
+      error: 'Internal server error',
+      code: 'INTERNAL_ERROR',
       timestamp: new Date().toISOString(),
     }),
-    { status: 500, headers: { "Content-Type": "application/json" } }
+    { status: 500, headers: { 'Content-Type': 'application/json' } }
   );
 }
 ```
@@ -373,18 +373,18 @@ When Zod validation fails, format errors as:
 
 ```typescript
 const details = validationError.issues.map((err) => ({
-  field: err.path.join("."),
+  field: err.path.join('.'),
   message: err.message,
 }));
 
 return new Response(
   JSON.stringify({
-    error: "Validation failed",
-    code: "VALIDATION_ERROR",
+    error: 'Validation failed',
+    code: 'VALIDATION_ERROR',
     details,
     timestamp: new Date().toISOString(),
   }),
-  { status: 400, headers: { "Content-Type": "application/json" } }
+  { status: 400, headers: { 'Content-Type': 'application/json' } }
 );
 ```
 
@@ -425,15 +425,15 @@ export async function createNote(
 ): Promise<NoteDTO> {
   // Step 1: Verify specification exists and user owns it
   const { data: spec, error: specError } = await supabase
-    .from("ski_specs")
-    .select("id")
-    .eq("id", specId)
-    .eq("user_id", userId)
+    .from('ski_specs')
+    .select('id')
+    .eq('id', specId)
+    .eq('user_id', userId)
     .single();
 
   // Handle not found (PGRST116) or other fetch errors
-  if (specError?.code === "PGRST116" || !spec) {
-    throw new Error("Specification not found");
+  if (specError?.code === 'PGRST116' || !spec) {
+    throw new Error('Specification not found');
   }
 
   if (specError) {
@@ -447,7 +447,7 @@ export async function createNote(
   };
 
   // Step 3: Insert note into database
-  const { data, error } = await supabase.from("ski_spec_notes").insert(noteData).select().single();
+  const { data, error } = await supabase.from('ski_spec_notes').insert(noteData).select().single();
 
   // Step 4: Handle errors
   if (error) {
@@ -455,7 +455,7 @@ export async function createNote(
   }
 
   if (!data) {
-    throw new Error("Failed to create note");
+    throw new Error('Failed to create note');
   }
 
   // Step 5: Return created note as DTO
@@ -466,7 +466,7 @@ export async function createNote(
 **Update imports** at the top of the file:
 
 ```typescript
-import type { CreateNoteCommand, NoteDTO } from "@/types";
+import type { CreateNoteCommand, NoteDTO } from '@/types';
 ```
 
 ### Step 2: Create API Endpoint File
@@ -482,10 +482,10 @@ mkdir -p src/pages/api/ski-specs/[specId]/notes
 Create the file with the following content:
 
 ```typescript
-import type { APIRoute } from "astro";
-import { z } from "zod";
-import { createNote } from "@/lib/services/ski-spec.service";
-import { CreateNoteCommandSchema, type ApiErrorResponse } from "@/types";
+import type { APIRoute } from 'astro';
+import { z } from 'zod';
+import { createNote } from '@/lib/services/ski-spec.service';
+import { CreateNoteCommandSchema, type ApiErrorResponse } from '@/types';
 
 export const prerender = false;
 
@@ -493,7 +493,7 @@ export const prerender = false;
  * UUID validation schema for path parameter
  */
 const UuidParamSchema = z.object({
-  specId: z.string().uuid("Invalid UUID format"),
+  specId: z.string().uuid('Invalid UUID format'),
 });
 
 /**
@@ -524,11 +524,11 @@ export const POST: APIRoute = async ({ params, request, locals }) => {
     if (!userId) {
       return new Response(
         JSON.stringify({
-          error: "Authentication required",
-          code: "UNAUTHORIZED",
+          error: 'Authentication required',
+          code: 'UNAUTHORIZED',
           timestamp: new Date().toISOString(),
         } satisfies ApiErrorResponse),
-        { status: 401, headers: { "Content-Type": "application/json" } }
+        { status: 401, headers: { 'Content-Type': 'application/json' } }
       );
     }
 
@@ -538,11 +538,11 @@ export const POST: APIRoute = async ({ params, request, locals }) => {
     if (!validationResult.success) {
       return new Response(
         JSON.stringify({
-          error: "Invalid specification ID format",
-          code: "VALIDATION_ERROR",
+          error: 'Invalid specification ID format',
+          code: 'VALIDATION_ERROR',
           timestamp: new Date().toISOString(),
         } satisfies ApiErrorResponse),
-        { status: 400, headers: { "Content-Type": "application/json" } }
+        { status: 400, headers: { 'Content-Type': 'application/json' } }
       );
     }
 
@@ -555,11 +555,11 @@ export const POST: APIRoute = async ({ params, request, locals }) => {
     } catch {
       return new Response(
         JSON.stringify({
-          error: "Invalid request body",
-          code: "INVALID_JSON",
+          error: 'Invalid request body',
+          code: 'INVALID_JSON',
           timestamp: new Date().toISOString(),
         } satisfies ApiErrorResponse),
-        { status: 400, headers: { "Content-Type": "application/json" } }
+        { status: 400, headers: { 'Content-Type': 'application/json' } }
       );
     }
 
@@ -568,18 +568,18 @@ export const POST: APIRoute = async ({ params, request, locals }) => {
 
     if (!commandValidation.success) {
       const details = commandValidation.error.issues.map((err) => ({
-        field: err.path.join("."),
+        field: err.path.join('.'),
         message: err.message,
       }));
 
       return new Response(
         JSON.stringify({
-          error: "Validation failed",
-          code: "VALIDATION_ERROR",
+          error: 'Validation failed',
+          code: 'VALIDATION_ERROR',
           details,
           timestamp: new Date().toISOString(),
         } satisfies ApiErrorResponse),
-        { status: 400, headers: { "Content-Type": "application/json" } }
+        { status: 400, headers: { 'Content-Type': 'application/json' } }
       );
     }
 
@@ -590,50 +590,50 @@ export const POST: APIRoute = async ({ params, request, locals }) => {
       // Step 7: Return success response (201 Created)
       return new Response(JSON.stringify(createdNote), {
         status: 201,
-        headers: { "Content-Type": "application/json" },
+        headers: { 'Content-Type': 'application/json' },
       });
     } catch (error: unknown) {
       const dbError = error as { message?: string };
 
       // Handle "Specification not found" (includes unauthorized access)
-      if (dbError?.message?.includes("Specification not found")) {
+      if (dbError?.message?.includes('Specification not found')) {
         return new Response(
           JSON.stringify({
-            error: "Ski specification not found",
-            code: "NOT_FOUND",
+            error: 'Ski specification not found',
+            code: 'NOT_FOUND',
             timestamp: new Date().toISOString(),
           } satisfies ApiErrorResponse),
-          { status: 404, headers: { "Content-Type": "application/json" } }
+          { status: 404, headers: { 'Content-Type': 'application/json' } }
         );
       }
 
       // Log error for debugging
       // eslint-disable-next-line no-console
-      console.error("Failed to create note:", {
+      console.error('Failed to create note:', {
         userId,
         specId,
-        error: dbError?.message || "Unknown error",
+        error: dbError?.message || 'Unknown error',
       });
 
       // Handle generic database errors
       return new Response(
         JSON.stringify({
-          error: "Failed to create note",
-          code: "INTERNAL_ERROR",
+          error: 'Failed to create note',
+          code: 'INTERNAL_ERROR',
           timestamp: new Date().toISOString(),
         } satisfies ApiErrorResponse),
-        { status: 500, headers: { "Content-Type": "application/json" } }
+        { status: 500, headers: { 'Content-Type': 'application/json' } }
       );
     }
   } catch {
     // Catch-all for unexpected errors
     return new Response(
       JSON.stringify({
-        error: "Internal server error",
-        code: "INTERNAL_ERROR",
+        error: 'Internal server error',
+        code: 'INTERNAL_ERROR',
         timestamp: new Date().toISOString(),
       } satisfies ApiErrorResponse),
-      { status: 500, headers: { "Content-Type": "application/json" } }
+      { status: 500, headers: { 'Content-Type': 'application/json' } }
     );
   }
 };

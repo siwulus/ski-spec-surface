@@ -42,11 +42,11 @@ Query parameters arrive as strings and must be coerced to appropriate types:
 
 ```typescript
 const rawQuery = {
-  page: url.searchParams.get("page"),
-  limit: url.searchParams.get("limit"),
-  sort_by: url.searchParams.get("sort_by"),
-  sort_order: url.searchParams.get("sort_order"),
-  search: url.searchParams.get("search"),
+  page: url.searchParams.get('page'),
+  limit: url.searchParams.get('limit'),
+  sort_by: url.searchParams.get('sort_by'),
+  sort_order: url.searchParams.get('sort_order'),
+  search: url.searchParams.get('search'),
 };
 
 // Coerce to proper types
@@ -68,9 +68,9 @@ None (GET request)
 ### Import Required Types from `src/types.ts`
 
 ```typescript
-import type { ListSkiSpecsQuery, SkiSpecDTO, SkiSpecListResponse, PaginationMeta, ApiErrorResponse } from "@/types";
+import type { ListSkiSpecsQuery, SkiSpecDTO, SkiSpecListResponse, PaginationMeta, ApiErrorResponse } from '@/types';
 
-import { ListSkiSpecsQuerySchema, SkiSpecDTOSchema } from "@/types";
+import { ListSkiSpecsQuerySchema, SkiSpecDTOSchema } from '@/types';
 ```
 
 ### Type Descriptions
@@ -240,9 +240,9 @@ Database or server error
 
    ```typescript
    let query = supabase
-     .from("ski_specs")
-     .select("*, notes:ski_spec_notes(count)", { count: "exact" })
-     .eq("user_id", userId);
+     .from('ski_specs')
+     .select('*, notes:ski_spec_notes(count)', { count: 'exact' })
+     .eq('user_id', userId);
    ```
 
 2. **Apply search filter** (if search parameter provided):
@@ -260,7 +260,7 @@ Database or server error
 4. **Apply sorting**:
 
    ```typescript
-   query = query.order(sort_by, { ascending: sort_order === "asc" });
+   query = query.order(sort_by, { ascending: sort_order === 'asc' });
    ```
 
 5. **Apply pagination**:
@@ -368,18 +368,18 @@ const validation = ListSkiSpecsQuerySchema.safeParse(parsedQuery);
 
 if (!validation.success) {
   const details = validation.error.errors.map((err) => ({
-    field: err.path.join("."),
+    field: err.path.join('.'),
     message: err.message,
   }));
 
   return new Response(
     JSON.stringify({
-      error: "Invalid query parameters",
-      code: "VALIDATION_ERROR",
+      error: 'Invalid query parameters',
+      code: 'VALIDATION_ERROR',
       details,
       timestamp: new Date().toISOString(),
     }),
-    { status: 400, headers: { "Content-Type": "application/json" } }
+    { status: 400, headers: { 'Content-Type': 'application/json' } }
   );
 }
 ```
@@ -401,11 +401,11 @@ const {
 if (authError || !user) {
   return new Response(
     JSON.stringify({
-      error: "Authentication required",
-      code: "UNAUTHORIZED",
+      error: 'Authentication required',
+      code: 'UNAUTHORIZED',
       timestamp: new Date().toISOString(),
     }),
-    { status: 401, headers: { "Content-Type": "application/json" } }
+    { status: 401, headers: { 'Content-Type': 'application/json' } }
   );
 }
 ```
@@ -422,15 +422,15 @@ if (authError || !user) {
 const { data, error, count } = await query;
 
 if (error) {
-  console.error("Database error in listSkiSpecs:", error);
+  console.error('Database error in listSkiSpecs:', error);
 
   return new Response(
     JSON.stringify({
-      error: "An unexpected error occurred while fetching ski specifications",
-      code: "INTERNAL_ERROR",
+      error: 'An unexpected error occurred while fetching ski specifications',
+      code: 'INTERNAL_ERROR',
       timestamp: new Date().toISOString(),
     }),
-    { status: 500, headers: { "Content-Type": "application/json" } }
+    { status: 500, headers: { 'Content-Type': 'application/json' } }
   );
 }
 ```
@@ -460,7 +460,7 @@ const response: SkiSpecListResponse = {
   },
 };
 
-return new Response(JSON.stringify(response), { status: 200, headers: { "Content-Type": "application/json" } });
+return new Response(JSON.stringify(response), { status: 200, headers: { 'Content-Type': 'application/json' } });
 ```
 
 **Status Code**: 200
@@ -493,7 +493,7 @@ For all server errors (500):
 Example:
 
 ```typescript
-console.error("Database error in GET /api/ski-specs:", {
+console.error('Database error in GET /api/ski-specs:', {
   error: error.message,
   userId: user.id,
   queryParams: validatedQuery,
@@ -516,7 +516,7 @@ export async function listSkiSpecs(
   query: ListSkiSpecsQuery
 ): Promise<{ data: SkiSpecDTO[]; total: number }> {
   // Build base query with notes count aggregation
-  let dbQuery = supabase.from("ski_specs").select("*", { count: "exact" }).eq("user_id", userId);
+  let dbQuery = supabase.from('ski_specs').select('*', { count: 'exact' }).eq('user_id', userId);
 
   // Apply search filter if provided
   if (query.search) {
@@ -526,7 +526,7 @@ export async function listSkiSpecs(
 
   // Apply sorting
   dbQuery = dbQuery.order(query.sort_by, {
-    ascending: query.sort_order === "asc",
+    ascending: query.sort_order === 'asc',
   });
 
   // Apply pagination
@@ -545,9 +545,9 @@ export async function listSkiSpecs(
   const specsWithNotes = await Promise.all(
     (data || []).map(async (spec) => {
       const { count: notesCount } = await supabase
-        .from("ski_spec_notes")
-        .select("*", { count: "exact", head: true })
-        .eq("ski_spec_id", spec.id);
+        .from('ski_spec_notes')
+        .select('*', { count: 'exact', head: true })
+        .eq('ski_spec_id', spec.id);
 
       return {
         ...spec,
@@ -578,10 +578,10 @@ export async function listSkiSpecs(
 ```typescript
 export const prerender = false;
 
-import type { APIRoute } from "astro";
-import type { ListSkiSpecsQuery, SkiSpecListResponse, ApiErrorResponse, PaginationMeta } from "@/types";
-import { ListSkiSpecsQuerySchema } from "@/types";
-import { listSkiSpecs } from "@/lib/services/ski-spec.service";
+import type { APIRoute } from 'astro';
+import type { ListSkiSpecsQuery, SkiSpecListResponse, ApiErrorResponse, PaginationMeta } from '@/types';
+import { ListSkiSpecsQuerySchema } from '@/types';
+import { listSkiSpecs } from '@/lib/services/ski-spec.service';
 
 export const GET: APIRoute = async ({ url, locals }) => {
   const supabase = locals.supabase;
@@ -594,23 +594,23 @@ export const GET: APIRoute = async ({ url, locals }) => {
 
   if (authError || !user) {
     const errorResponse: ApiErrorResponse = {
-      error: "Authentication required",
-      code: "UNAUTHORIZED",
+      error: 'Authentication required',
+      code: 'UNAUTHORIZED',
       timestamp: new Date().toISOString(),
     };
     return new Response(JSON.stringify(errorResponse), {
       status: 401,
-      headers: { "Content-Type": "application/json" },
+      headers: { 'Content-Type': 'application/json' },
     });
   }
 
   // Step 2: Extract and coerce query parameters
   const rawQuery = {
-    page: url.searchParams.get("page"),
-    limit: url.searchParams.get("limit"),
-    sort_by: url.searchParams.get("sort_by"),
-    sort_order: url.searchParams.get("sort_order"),
-    search: url.searchParams.get("search"),
+    page: url.searchParams.get('page'),
+    limit: url.searchParams.get('limit'),
+    sort_by: url.searchParams.get('sort_by'),
+    sort_order: url.searchParams.get('sort_order'),
+    search: url.searchParams.get('search'),
   };
 
   const parsedQuery = {
@@ -626,20 +626,20 @@ export const GET: APIRoute = async ({ url, locals }) => {
 
   if (!validation.success) {
     const details = validation.error.errors.map((err) => ({
-      field: err.path.join("."),
+      field: err.path.join('.'),
       message: err.message,
     }));
 
     const errorResponse: ApiErrorResponse = {
-      error: "Invalid query parameters",
-      code: "VALIDATION_ERROR",
+      error: 'Invalid query parameters',
+      code: 'VALIDATION_ERROR',
       details,
       timestamp: new Date().toISOString(),
     };
 
     return new Response(JSON.stringify(errorResponse), {
       status: 400,
-      headers: { "Content-Type": "application/json" },
+      headers: { 'Content-Type': 'application/json' },
     });
   }
 
@@ -666,26 +666,26 @@ export const GET: APIRoute = async ({ url, locals }) => {
 
     return new Response(JSON.stringify(response), {
       status: 200,
-      headers: { "Content-Type": "application/json" },
+      headers: { 'Content-Type': 'application/json' },
     });
   } catch (error) {
     // Step 7: Handle unexpected errors
-    console.error("Error in GET /api/ski-specs:", {
-      error: error instanceof Error ? error.message : "Unknown error",
+    console.error('Error in GET /api/ski-specs:', {
+      error: error instanceof Error ? error.message : 'Unknown error',
       userId: user.id,
       queryParams: validatedQuery,
       timestamp: new Date().toISOString(),
     });
 
     const errorResponse: ApiErrorResponse = {
-      error: "An unexpected error occurred while fetching ski specifications",
-      code: "INTERNAL_ERROR",
+      error: 'An unexpected error occurred while fetching ski specifications',
+      code: 'INTERNAL_ERROR',
       timestamp: new Date().toISOString(),
     };
 
     return new Response(JSON.stringify(errorResponse), {
       status: 500,
-      headers: { "Content-Type": "application/json" },
+      headers: { 'Content-Type': 'application/json' },
     });
   }
 };

@@ -1,10 +1,10 @@
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Button } from "@/components/ui/button";
-import type { SkiSpecDTO } from "@/types/api.types";
-import { Pencil, Radius, Weight, Trash2 } from "lucide-react";
-import * as React from "react";
-import { SpecValue } from "./SpecValue";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Button } from '@/components/ui/button';
+import type { SkiSpecDTO } from '@/types/api.types';
+import { Pencil, Radius, Weight, Trash2 } from 'lucide-react';
+import * as React from 'react';
+import { SpecValue } from './SpecValue';
 
 interface SkiSpecCardProps {
   spec: SkiSpecDTO;
@@ -137,7 +137,7 @@ export const SkiSpecCard: React.FC<SkiSpecCardProps> = ({ spec, onEdit, onDelete
       <CardFooter className="border-t">
         <div className="flex items-center justify-between w-full">
           <span className="text-sm text-muted-foreground">
-            {spec.notes_count} {spec.notes_count === 1 ? "note" : "notes"}
+            {spec.notes_count} {spec.notes_count === 1 ? 'note' : 'notes'}
           </span>
           <div className="flex gap-2">
             <Button

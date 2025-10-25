@@ -9,7 +9,7 @@
  * - Automatic HTTP response generation
  */
 
-import type { ApiErrorResponse, ValidationErrorDetail } from "@/types/api.types";
+import type { ApiErrorResponse, ValidationErrorDetail } from '@/types/api.types';
 
 // ============================================================================
 // Base Error Class
@@ -69,8 +69,8 @@ export abstract class SkiSpecError extends Error {
  * Example: Invalid field values, missing required fields, type mismatches
  */
 export class ValidationError extends SkiSpecError {
-  readonly _tag = "ValidationError";
-  readonly code = "VALIDATION_ERROR";
+  readonly _tag = 'ValidationError';
+  readonly code = 'VALIDATION_ERROR';
   readonly statusCode = 400;
   readonly details: ValidationErrorDetail[];
 
@@ -97,12 +97,12 @@ export class ValidationError extends SkiSpecError {
  * Example: Missing session, expired token, invalid credentials
  */
 export class AuthenticationError extends SkiSpecError {
-  readonly _tag = "AuthenticationError";
-  readonly code = "UNAUTHORIZED";
+  readonly _tag = 'AuthenticationError';
+  readonly code = 'UNAUTHORIZED';
   readonly statusCode = 401;
 
   constructor(
-    message = "Authentication required",
+    message = 'Authentication required',
     options?: {
       cause?: Error;
       context?: Record<string, unknown>;
@@ -125,14 +125,14 @@ export class AuthenticationError extends SkiSpecError {
  * information disclosure about resource existence.
  */
 export class AuthorizationError extends SkiSpecError {
-  readonly _tag = "AuthorizationError";
-  readonly code = "FORBIDDEN";
+  readonly _tag = 'AuthorizationError';
+  readonly code = 'FORBIDDEN';
   readonly statusCode = 403;
   readonly resourceId?: string;
   readonly resourceType?: string;
 
   constructor(
-    message = "Access forbidden",
+    message = 'Access forbidden',
     options?: {
       cause?: Error;
       context?: Record<string, unknown>;
@@ -159,8 +159,8 @@ export class AuthorizationError extends SkiSpecError {
  * Example: Ski specification with given UUID doesn't exist, or belongs to another user
  */
 export class NotFoundError extends SkiSpecError {
-  readonly _tag = "NotFoundError";
-  readonly code = "NOT_FOUND";
+  readonly _tag = 'NotFoundError';
+  readonly code = 'NOT_FOUND';
   readonly statusCode = 404;
   readonly resourceType?: string;
   readonly resourceId?: string;
@@ -190,7 +190,7 @@ export class NotFoundError extends SkiSpecError {
  * Example: Creating ski specification with name that already exists for user
  */
 export class ConflictError extends SkiSpecError {
-  readonly _tag = "ConflictError";
+  readonly _tag = 'ConflictError';
   readonly code: string;
   readonly statusCode = 409;
   readonly resourceType?: string;
@@ -209,7 +209,7 @@ export class ConflictError extends SkiSpecError {
     super(message, options);
     this.resourceType = options?.resourceType;
     this.conflictingField = options?.conflictingField;
-    this.code = options?.code || "CONFLICT";
+    this.code = options?.code || 'CONFLICT';
   }
 }
 
@@ -226,8 +226,8 @@ export class ConflictError extends SkiSpecError {
  * and transformed into more specific error types (e.g., ConflictError).
  */
 export class DatabaseError extends SkiSpecError {
-  readonly _tag = "DatabaseError";
-  readonly code = "DATABASE_ERROR";
+  readonly _tag = 'DatabaseError';
+  readonly code = 'DATABASE_ERROR';
   readonly statusCode = 500;
   readonly operation?: string;
   readonly table?: string;
@@ -257,8 +257,8 @@ export class DatabaseError extends SkiSpecError {
  * Example: Network unavailable, timeout, CORS issues
  */
 export class NetworkError extends SkiSpecError {
-  readonly _tag = "NetworkError";
-  readonly code = "NETWORK_ERROR";
+  readonly _tag = 'NetworkError';
+  readonly code = 'NETWORK_ERROR';
   readonly statusCode = 500; // Used for error response generation
   readonly url?: string;
   readonly method?: string;
@@ -288,7 +288,7 @@ export class NetworkError extends SkiSpecError {
  * Example: Waist width greater than tip/tail, invalid calculation result
  */
 export class BusinessLogicError extends SkiSpecError {
-  readonly _tag = "BusinessLogicError";
+  readonly _tag = 'BusinessLogicError';
   readonly code: string;
   readonly statusCode = 400;
 
@@ -301,7 +301,7 @@ export class BusinessLogicError extends SkiSpecError {
     }
   ) {
     super(message, options);
-    this.code = options?.code || "BUSINESS_LOGIC_ERROR";
+    this.code = options?.code || 'BUSINESS_LOGIC_ERROR';
   }
 }
 
@@ -315,7 +315,7 @@ export class BusinessLogicError extends SkiSpecError {
  * Example: Supabase auth.signOut() fails, session invalidation fails
  */
 export class AuthOperationError extends SkiSpecError {
-  readonly _tag = "AuthOperationError";
+  readonly _tag = 'AuthOperationError';
   readonly code: string;
   readonly statusCode = 500;
   readonly operation?: string;
@@ -330,7 +330,7 @@ export class AuthOperationError extends SkiSpecError {
     }
   ) {
     super(message, options);
-    this.code = options?.code || "AUTH_OPERATION_FAILED";
+    this.code = options?.code || 'AUTH_OPERATION_FAILED';
     this.operation = options?.operation;
   }
 }
@@ -345,12 +345,12 @@ export class AuthOperationError extends SkiSpecError {
  * Example: Malformed JSON syntax, missing quotes, trailing commas
  */
 export class InvalidJsonError extends SkiSpecError {
-  readonly _tag = "InvalidJsonError";
-  readonly code = "INVALID_JSON";
+  readonly _tag = 'InvalidJsonError';
+  readonly code = 'INVALID_JSON';
   readonly statusCode = 400;
 
   constructor(
-    message = "Invalid request body",
+    message = 'Invalid request body',
     options?: {
       cause?: Error;
       context?: Record<string, unknown>;
@@ -370,12 +370,12 @@ export class InvalidJsonError extends SkiSpecError {
  * Example: Unexpected exceptions, programming errors, null pointer exceptions
  */
 export class UnexpectedError extends SkiSpecError {
-  readonly _tag = "UnexpectedError";
-  readonly code = "INTERNAL_ERROR";
+  readonly _tag = 'UnexpectedError';
+  readonly code = 'INTERNAL_ERROR';
   readonly statusCode = 500;
 
   constructor(
-    message = "Internal server error",
+    message = 'Internal server error',
     options?: {
       cause?: Error;
       context?: Record<string, unknown>;
@@ -408,7 +408,7 @@ export const isSkiSpecError = (error: unknown): error is SkiSpecError => {
  * @param tag - Expected _tag value
  * @returns True if error has the specified _tag
  */
-export const hasErrorTag = <T extends SkiSpecError["_tag"]>(
+export const hasErrorTag = <T extends SkiSpecError['_tag']>(
   error: unknown,
   tag: T
 ): error is Extract<SkiSpecError, { _tag: T }> => {
@@ -451,7 +451,7 @@ export const toApiErrorResponse = (error: SkiSpecError): ApiErrorResponse => {
 export const createErrorResponse = (error: SkiSpecError): Response => {
   return new Response(JSON.stringify(toApiErrorResponse(error)), {
     status: error.statusCode,
-    headers: { "Content-Type": "application/json" },
+    headers: { 'Content-Type': 'application/json' },
   });
 };
 
@@ -488,7 +488,7 @@ export const logError = (error: SkiSpecError, additionalContext?: Record<string,
  * @param defaultMessage - Default message if error is not an Error instance
  * @returns SkiSpecError (preserves if already SkiSpecError, otherwise wraps as UnexpectedError)
  */
-export const wrapError = (error: unknown, defaultMessage = "An unexpected error occurred"): SkiSpecError => {
+export const wrapError = (error: unknown, defaultMessage = 'An unexpected error occurred'): SkiSpecError => {
   // Already a SkiSpecError - return as-is
   if (isSkiSpecError(error)) {
     return error;
@@ -528,4 +528,4 @@ export type SkiSpecErrorType =
  * Union type of all error _tag values.
  * Useful for type-safe Effect.catchTag() calls.
  */
-export type ErrorTag = SkiSpecErrorType["_tag"];
+export type ErrorTag = SkiSpecErrorType['_tag'];

@@ -12,7 +12,7 @@
  * - Layer 4: Combinator utilities for composition
  */
 
-import { Effect, pipe } from "effect";
+import { Effect, pipe } from 'effect';
 import {
   type SkiSpecError,
   ValidationError,
@@ -29,7 +29,7 @@ import {
   createErrorResponse,
   logError,
   wrapError,
-} from "@/types/error.types";
+} from '@/types/error.types';
 
 // ============================================================================
 // Types
@@ -280,20 +280,20 @@ export const catchAllSkiSpecErrors =
   <R>(effect: Effect.Effect<Response, SkiSpecError, R>): Effect.Effect<Response, never, R> =>
     pipe(
       effect,
-      Effect.catchTag("ValidationError", catchValidationError(context)),
-      Effect.catchTag("AuthenticationError", catchAuthenticationError(context)),
-      Effect.catchTag("AuthorizationError", catchAuthorizationError(context)),
-      Effect.catchTag("NotFoundError", catchNotFoundError(context)),
-      Effect.catchTag("ConflictError", catchConflictError(context)),
-      Effect.catchTag("DatabaseError", catchDatabaseError(context)),
-      Effect.catchTag("NetworkError", catchNetworkError(context)),
-      Effect.catchTag("BusinessLogicError", catchBusinessLogicError(context)),
-      Effect.catchTag("AuthOperationError", catchAuthOperationError(context)),
-      Effect.catchTag("InvalidJsonError", catchInvalidJsonError(context)),
-      Effect.catchTag("UnexpectedError", catchUnexpectedError(context)),
+      Effect.catchTag('ValidationError', catchValidationError(context)),
+      Effect.catchTag('AuthenticationError', catchAuthenticationError(context)),
+      Effect.catchTag('AuthorizationError', catchAuthorizationError(context)),
+      Effect.catchTag('NotFoundError', catchNotFoundError(context)),
+      Effect.catchTag('ConflictError', catchConflictError(context)),
+      Effect.catchTag('DatabaseError', catchDatabaseError(context)),
+      Effect.catchTag('NetworkError', catchNetworkError(context)),
+      Effect.catchTag('BusinessLogicError', catchBusinessLogicError(context)),
+      Effect.catchTag('AuthOperationError', catchAuthOperationError(context)),
+      Effect.catchTag('InvalidJsonError', catchInvalidJsonError(context)),
+      Effect.catchTag('UnexpectedError', catchUnexpectedError(context)),
       // Safety net for any unhandled errors (shouldn't occur with proper typing)
       Effect.catchAll((error: unknown) => {
-        const wrappedError = new UnexpectedError("Unhandled error type", {
+        const wrappedError = new UnexpectedError('Unhandled error type', {
           cause: error instanceof Error ? error : undefined,
           context: {
             errorType: typeof error,
@@ -323,7 +323,7 @@ export const catchAllSkiSpecErrors =
  */
 export const wrapErrorEffect = <A, E, R>(
   effect: Effect.Effect<A, E, R>,
-  defaultMessage = "An unexpected error occurred"
+  defaultMessage = 'An unexpected error occurred'
 ): Effect.Effect<A, SkiSpecError, R> =>
   pipe(
     effect,

@@ -1,4 +1,4 @@
-import type { PaginationMeta } from "@/types/api.types";
+import type { PaginationMeta } from '@/types/api.types';
 import {
   Pagination,
   PaginationContent,
@@ -7,7 +7,7 @@ import {
   PaginationLink,
   PaginationNext,
   PaginationPrevious,
-} from "@/components/ui/pagination";
+} from '@/components/ui/pagination';
 
 interface SkiSpecPaginationProps {
   pagination: PaginationMeta;
@@ -80,7 +80,7 @@ export const SkiSpecPagination = ({ pagination, onPageChange }: SkiSpecPaginatio
             <PaginationPrevious
               onClick={() => !isPreviousDisabled && onPageChange(page - 1)}
               aria-disabled={isPreviousDisabled}
-              className={isPreviousDisabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}
+              className={isPreviousDisabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
               tabIndex={isPreviousDisabled ? -1 : 0}
             />
           </PaginationItem>
@@ -108,7 +108,7 @@ export const SkiSpecPagination = ({ pagination, onPageChange }: SkiSpecPaginatio
             <PaginationNext
               onClick={() => !isNextDisabled && onPageChange(page + 1)}
               aria-disabled={isNextDisabled}
-              className={isNextDisabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}
+              className={isNextDisabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
               tabIndex={isNextDisabled ? -1 : 0}
             />
           </PaginationItem>

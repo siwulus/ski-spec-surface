@@ -1,25 +1,25 @@
 ---
-import Layout from "@/layouts/Layout.astro";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { LoginForm } from "@/components/auth/LoginForm";
+import Layout from '@/layouts/Layout.astro';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { LoginForm } from '@/components/auth/LoginForm';
 
 // Check if user is already logged in (session will be set by middleware)
 const session = Astro.locals.session;
 const isAuthenticated = !!session;
 
 // Get redirectTo from URL params
-const redirectTo = Astro.url.searchParams.get("redirectTo") || undefined;
-const error = Astro.url.searchParams.get("error");
+const redirectTo = Astro.url.searchParams.get('redirectTo') || undefined;
+const error = Astro.url.searchParams.get('error');
 
 // If user is already logged in, redirect to ski-specs
 if (isAuthenticated) {
-  return Astro.redirect("/ski-specs");
+  return Astro.redirect('/ski-specs');
 }
 
 // Map error codes to user-friendly messages
 const errorMessages: Record<string, string> = {
-  session_expired: "Your session has expired. Please log in again.",
-  unauthorized: "Please log in to continue.",
+  session_expired: 'Your session has expired. Please log in again.',
+  unauthorized: 'Please log in to continue.',
 };
 
 const errorMessage = error && errorMessages[error];

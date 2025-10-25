@@ -1,6 +1,6 @@
-import React, { useMemo } from "react";
-import { ApiReferenceReact } from "@scalar/api-reference-react";
-import "@scalar/api-reference-react/style.css";
+import React, { useMemo } from 'react';
+import { ApiReferenceReact } from '@scalar/api-reference-react';
+import '@scalar/api-reference-react/style.css';
 
 /**
  * ApiDocs component renders the Scalar API reference documentation
@@ -11,9 +11,9 @@ const ApiDocs: React.FC = () => {
   // since this configuration is static and won't change
   const configuration = useMemo(
     () => ({
-      url: "/swagger.yaml",
-      theme: "purple" as const,
-      layout: "modern" as const,
+      url: '/swagger.yaml',
+      theme: 'purple' as const,
+      layout: 'modern' as const,
       darkMode: true,
       showSidebar: true,
     }),

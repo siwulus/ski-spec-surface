@@ -166,7 +166,7 @@ Use the Either Monad pattern (Railway-Oriented Programming):
 **Example (API route with Effect)**:
 
 ```typescript
-import { Effect, pipe } from "effect";
+import { Effect, pipe } from 'effect';
 
 export async function POST({ request, locals }: APIContext) {
   return pipe(
@@ -325,7 +325,7 @@ expect(result).toBe(expectedValue);
 // Error case
 const effect = service.method();
 const result = await Effect.runPromise(Effect.either(effect));
-if (result._tag === "Left") {
+if (result._tag === 'Left') {
   expect(result.left).toBeInstanceOf(ExpectedError);
 }
 ```

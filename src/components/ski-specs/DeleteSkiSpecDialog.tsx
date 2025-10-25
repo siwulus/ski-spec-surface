@@ -7,7 +7,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+} from '@/components/ui/alert-dialog';
 
 interface DeleteSkiSpecDialogProps {
   open: boolean;
@@ -38,7 +38,7 @@ export const DeleteSkiSpecDialog = (props: DeleteSkiSpecDialogProps) => {
             disabled={isInProgress}
             className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
           >
-            {isInProgress ? "Deleting..." : "Delete"}
+            {isInProgress ? 'Deleting...' : 'Delete'}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

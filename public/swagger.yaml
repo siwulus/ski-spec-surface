@@ -50,24 +50,24 @@ paths:
         Works regardless of authentication status (idempotent operation).
       operationId: logout
       responses:
-        "200":
+        '200':
           description: Logout successful
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/LogoutResponse"
+                $ref: '#/components/schemas/LogoutResponse'
               example:
                 success: true
-        "500":
+        '500':
           description: Logout failed
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiErrorResponse"
+                $ref: '#/components/schemas/ApiErrorResponse'
               example:
-                error: "Failed to logout"
-                code: "LOGOUT_FAILED"
-                timestamp: "2025-01-20T10:30:00Z"
+                error: 'Failed to logout'
+                code: 'LOGOUT_FAILED'
+                timestamp: '2025-01-20T10:30:00Z'
 
   /api/health:
     get:
@@ -78,7 +78,7 @@ paths:
       operationId: getHealth
       security: []
       responses:
-        "200":
+        '200':
           description: API is healthy
           content:
             application/json:
@@ -91,10 +91,10 @@ paths:
                   timestamp:
                     type: string
                     format: date-time
-                    example: "2025-01-20T10:30:00Z"
+                    example: '2025-01-20T10:30:00Z'
                   version:
                     type: string
-                    example: "1.0.0"
+                    example: '1.0.0'
 
   /api/ski-specs:
     get:
@@ -146,20 +146,20 @@ paths:
           schema:
             type: string
       responses:
-        "200":
+        '200':
           description: Successful response
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/SkiSpecListResponse"
-        "400":
+                $ref: '#/components/schemas/SkiSpecListResponse'
+        '400':
           description: Invalid query parameters
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiErrorResponse"
-        "401":
-          $ref: "#/components/responses/UnauthorizedError"
+                $ref: '#/components/schemas/ApiErrorResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
 
     post:
       tags:
@@ -174,7 +174,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/CreateSkiSpecCommand"
+              $ref: '#/components/schemas/CreateSkiSpecCommand'
             example:
               name: Atomic Backland 107
               description: All-mountain freeride ski for powder and mixed conditions
@@ -185,18 +185,18 @@ paths:
               radius: 18
               weight: 1580
       responses:
-        "201":
+        '201':
           description: Ski specification created successfully
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/SkiSpecDTO"
-        "400":
+                $ref: '#/components/schemas/SkiSpecDTO'
+        '400':
           description: Validation errors
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiErrorResponse"
+                $ref: '#/components/schemas/ApiErrorResponse'
               example:
                 error: Validation failed
                 code: VALIDATION_ERROR
@@ -205,24 +205,24 @@ paths:
                     message: Tip width must be between 50 and 250 mm
                   - field: waist
                     message: Waist must be less than or equal to tip and tail
-                timestamp: "2025-01-15T10:30:00Z"
-        "401":
-          $ref: "#/components/responses/UnauthorizedError"
-        "409":
+                timestamp: '2025-01-15T10:30:00Z'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '409':
           description: Specification name already exists
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiErrorResponse"
+                $ref: '#/components/schemas/ApiErrorResponse'
               example:
                 error: A specification with this name already exists
                 code: CONFLICT
-        "422":
+        '422':
           description: Business rule violations
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiErrorResponse"
+                $ref: '#/components/schemas/ApiErrorResponse'
 
   /api/ski-specs/{id}:
     get:
@@ -232,28 +232,28 @@ paths:
       description: Retrieves detailed information about a specific ski specification including notes count.
       operationId: getSkiSpec
       parameters:
-        - $ref: "#/components/parameters/SkiSpecId"
+        - $ref: '#/components/parameters/SkiSpecId'
       responses:
-        "200":
+        '200':
           description: Successful response
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/SkiSpecDTO"
-        "400":
+                $ref: '#/components/schemas/SkiSpecDTO'
+        '400':
           description: Invalid UUID format
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiErrorResponse"
-        "401":
-          $ref: "#/components/responses/UnauthorizedError"
-        "404":
+                $ref: '#/components/schemas/ApiErrorResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
           description: Ski specification not found
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiErrorResponse"
+                $ref: '#/components/schemas/ApiErrorResponse'
 
     put:
       tags:
@@ -264,13 +264,13 @@ paths:
         if dimensional values change.
       operationId: updateSkiSpec
       parameters:
-        - $ref: "#/components/parameters/SkiSpecId"
+        - $ref: '#/components/parameters/SkiSpecId'
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/UpdateSkiSpecCommand"
+              $ref: '#/components/schemas/UpdateSkiSpecCommand'
             example:
               name: Atomic Backland 107 (181cm)
               description: Updated description with test notes
@@ -281,38 +281,38 @@ paths:
               radius: 18
               weight: 1580
       responses:
-        "200":
+        '200':
           description: Ski specification updated successfully
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/SkiSpecDTO"
-        "400":
+                $ref: '#/components/schemas/SkiSpecDTO'
+        '400':
           description: Validation errors
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiErrorResponse"
-        "401":
-          $ref: "#/components/responses/UnauthorizedError"
-        "404":
+                $ref: '#/components/schemas/ApiErrorResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
           description: Ski specification not found
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiErrorResponse"
-        "409":
+                $ref: '#/components/schemas/ApiErrorResponse'
+        '409':
           description: New name already exists
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiErrorResponse"
-        "422":
+                $ref: '#/components/schemas/ApiErrorResponse'
+        '422':
           description: Business rule violations
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiErrorResponse"
+                $ref: '#/components/schemas/ApiErrorResponse'
 
     delete:
       tags:
@@ -321,24 +321,24 @@ paths:
       description: Deletes a ski specification and all associated notes (cascade delete).
       operationId: deleteSkiSpec
       parameters:
-        - $ref: "#/components/parameters/SkiSpecId"
+        - $ref: '#/components/parameters/SkiSpecId'
       responses:
-        "204":
+        '204':
           description: Ski specification deleted successfully
-        "400":
+        '400':
           description: Invalid UUID format
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiErrorResponse"
-        "401":
-          $ref: "#/components/responses/UnauthorizedError"
-        "404":
+                $ref: '#/components/schemas/ApiErrorResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
           description: Ski specification not found
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiErrorResponse"
+                $ref: '#/components/schemas/ApiErrorResponse'
 
   /api/ski-specs/compare:
     get:
@@ -356,31 +356,31 @@ paths:
           description: Comma-separated UUIDs (2-4 items)
           schema:
             type: string
-          example: "550e8400-e29b-41d4-a716-446655440000,6ba7b810-9dad-11d1-80b4-00c04fd430c8"
+          example: '550e8400-e29b-41d4-a716-446655440000,6ba7b810-9dad-11d1-80b4-00c04fd430c8'
       responses:
-        "200":
+        '200':
           description: Successful response
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/CompareSkiSpecsResponse"
-        "400":
+                $ref: '#/components/schemas/CompareSkiSpecsResponse'
+        '400':
           description: Invalid query parameters
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiErrorResponse"
+                $ref: '#/components/schemas/ApiErrorResponse'
               example:
                 error: Comparison requires between 2 and 4 specifications
                 code: VALIDATION_ERROR
-        "401":
-          $ref: "#/components/responses/UnauthorizedError"
-        "404":
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
           description: One or more specifications not found
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiErrorResponse"
+                $ref: '#/components/schemas/ApiErrorResponse'
 
   /api/ski-specs/export:
     get:
@@ -399,7 +399,7 @@ paths:
               - csv
             default: csv
       responses:
-        "200":
+        '200':
           description: CSV file with ski specifications
           content:
             text/csv:
@@ -415,8 +415,8 @@ paths:
                 type: string
               description: Attachment filename
               example: 'attachment; filename="ski-specs-2025-01-20.csv"'
-        "401":
-          $ref: "#/components/responses/UnauthorizedError"
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
 
   /api/ski-specs/import:
     post:
@@ -445,32 +445,32 @@ paths:
               file:
                 contentType: text/csv, application/vnd.ms-excel
       responses:
-        "200":
+        '200':
           description: Import completed with summary
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ImportResponse"
-        "400":
+                $ref: '#/components/schemas/ImportResponse'
+        '400':
           description: Invalid file format or missing file
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiErrorResponse"
-        "401":
-          $ref: "#/components/responses/UnauthorizedError"
-        "413":
+                $ref: '#/components/schemas/ApiErrorResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '413':
           description: File size exceeds limit
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiErrorResponse"
-        "415":
+                $ref: '#/components/schemas/ApiErrorResponse'
+        '415':
           description: File is not CSV
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiErrorResponse"
+                $ref: '#/components/schemas/ApiErrorResponse'
 
   /api/ski-specs/{specId}/notes:
     get:
@@ -480,7 +480,7 @@ paths:
       description: Lists all notes for a specific ski specification, sorted chronologically (newest first).
       operationId: listNotes
       parameters:
-        - $ref: "#/components/parameters/SpecId"
+        - $ref: '#/components/parameters/SpecId'
         - name: page
           in: query
           description: Page number (1-indexed)
@@ -497,26 +497,26 @@ paths:
             maximum: 100
             default: 50
       responses:
-        "200":
+        '200':
           description: Successful response
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/NoteListResponse"
-        "400":
+                $ref: '#/components/schemas/NoteListResponse'
+        '400':
           description: Invalid UUID format or query parameters
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiErrorResponse"
-        "401":
-          $ref: "#/components/responses/UnauthorizedError"
-        "404":
+                $ref: '#/components/schemas/ApiErrorResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
           description: Ski specification not found
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiErrorResponse"
+                $ref: '#/components/schemas/ApiErrorResponse'
 
     post:
       tags:
@@ -525,36 +525,36 @@ paths:
       description: Creates a new note for a ski specification.
       operationId: createNote
       parameters:
-        - $ref: "#/components/parameters/SpecId"
+        - $ref: '#/components/parameters/SpecId'
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/CreateNoteCommand"
+              $ref: '#/components/schemas/CreateNoteCommand'
             example:
               content: Tested in deep powder at Chamonix. Excellent float and maneuverability.
       responses:
-        "201":
+        '201':
           description: Note created successfully
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/NoteDTO"
-        "400":
+                $ref: '#/components/schemas/NoteDTO'
+        '400':
           description: Validation errors
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiErrorResponse"
-        "401":
-          $ref: "#/components/responses/UnauthorizedError"
-        "404":
+                $ref: '#/components/schemas/ApiErrorResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
           description: Ski specification not found
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiErrorResponse"
+                $ref: '#/components/schemas/ApiErrorResponse'
 
   /api/ski-specs/{specId}/notes/{noteId}:
     get:
@@ -564,29 +564,29 @@ paths:
       description: Retrieves a specific note.
       operationId: getNote
       parameters:
-        - $ref: "#/components/parameters/SpecId"
-        - $ref: "#/components/parameters/NoteId"
+        - $ref: '#/components/parameters/SpecId'
+        - $ref: '#/components/parameters/NoteId'
       responses:
-        "200":
+        '200':
           description: Successful response
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/NoteDTO"
-        "400":
+                $ref: '#/components/schemas/NoteDTO'
+        '400':
           description: Invalid UUID format
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiErrorResponse"
-        "401":
-          $ref: "#/components/responses/UnauthorizedError"
-        "404":
+                $ref: '#/components/schemas/ApiErrorResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
           description: Note or specification not found
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiErrorResponse"
+                $ref: '#/components/schemas/ApiErrorResponse'
 
     put:
       tags:
@@ -595,37 +595,37 @@ paths:
       description: Updates an existing note. Automatically updates the updated_at timestamp.
       operationId: updateNote
       parameters:
-        - $ref: "#/components/parameters/SpecId"
-        - $ref: "#/components/parameters/NoteId"
+        - $ref: '#/components/parameters/SpecId'
+        - $ref: '#/components/parameters/NoteId'
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/UpdateNoteCommand"
+              $ref: '#/components/schemas/UpdateNoteCommand'
             example:
               content: Updated content with additional observations from the test session.
       responses:
-        "200":
+        '200':
           description: Note updated successfully
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/NoteDTO"
-        "400":
+                $ref: '#/components/schemas/NoteDTO'
+        '400':
           description: Validation errors
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiErrorResponse"
-        "401":
-          $ref: "#/components/responses/UnauthorizedError"
-        "404":
+                $ref: '#/components/schemas/ApiErrorResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
           description: Note or specification not found
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiErrorResponse"
+                $ref: '#/components/schemas/ApiErrorResponse'
 
     delete:
       tags:
@@ -634,25 +634,25 @@ paths:
       description: Deletes a note.
       operationId: deleteNote
       parameters:
-        - $ref: "#/components/parameters/SpecId"
-        - $ref: "#/components/parameters/NoteId"
+        - $ref: '#/components/parameters/SpecId'
+        - $ref: '#/components/parameters/NoteId'
       responses:
-        "204":
+        '204':
           description: Note deleted successfully
-        "400":
+        '400':
           description: Invalid UUID format
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiErrorResponse"
-        "401":
-          $ref: "#/components/responses/UnauthorizedError"
-        "404":
+                $ref: '#/components/schemas/ApiErrorResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
           description: Note or specification not found
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiErrorResponse"
+                $ref: '#/components/schemas/ApiErrorResponse'
 
 components:
   securitySchemes:
@@ -671,7 +671,7 @@ components:
       schema:
         type: string
         format: uuid
-      example: "550e8400-e29b-41d4-a716-446655440000"
+      example: '550e8400-e29b-41d4-a716-446655440000'
 
     SpecId:
       name: specId
@@ -681,7 +681,7 @@ components:
       schema:
         type: string
         format: uuid
-      example: "550e8400-e29b-41d4-a716-446655440000"
+      example: '550e8400-e29b-41d4-a716-446655440000'
 
     NoteId:
       name: noteId
@@ -691,7 +691,7 @@ components:
       schema:
         type: string
         format: uuid
-      example: "6ba7b810-9dad-11d1-80b4-00c04fd430c8"
+      example: '6ba7b810-9dad-11d1-80b4-00c04fd430c8'
 
   responses:
     UnauthorizedError:
@@ -699,11 +699,11 @@ components:
       content:
         application/json:
           schema:
-            $ref: "#/components/schemas/ApiErrorResponse"
+            $ref: '#/components/schemas/ApiErrorResponse'
           example:
             error: Authentication required
             code: UNAUTHORIZED
-            timestamp: "2025-01-15T10:30:00Z"
+            timestamp: '2025-01-15T10:30:00Z'
 
   schemas:
     SkiSpecDTO:
@@ -800,7 +800,7 @@ components:
           type: string
           minLength: 1
           description: Version of calculation algorithm used
-          example: "1.0.0"
+          example: '1.0.0'
         notes_count:
           type: integer
           minimum: 0
@@ -810,12 +810,12 @@ components:
           type: string
           format: date-time
           description: Creation timestamp
-          example: "2025-01-15T10:30:00Z"
+          example: '2025-01-15T10:30:00Z'
         updated_at:
           type: string
           format: date-time
           description: Last update timestamp
-          example: "2025-01-15T10:30:00Z"
+          example: '2025-01-15T10:30:00Z'
 
     CreateSkiSpecCommand:
       type: object
@@ -1049,12 +1049,12 @@ components:
           type: string
           format: date-time
           description: Creation timestamp
-          example: "2025-01-20T14:30:00Z"
+          example: '2025-01-20T14:30:00Z'
         updated_at:
           type: string
           format: date-time
           description: Last update timestamp
-          example: "2025-01-20T14:30:00Z"
+          example: '2025-01-20T14:30:00Z'
 
     CreateNoteCommand:
       type: object
@@ -1123,9 +1123,9 @@ components:
         data:
           type: array
           items:
-            $ref: "#/components/schemas/SkiSpecDTO"
+            $ref: '#/components/schemas/SkiSpecDTO'
         pagination:
-          $ref: "#/components/schemas/PaginationMeta"
+          $ref: '#/components/schemas/PaginationMeta'
 
     NoteListResponse:
       type: object
@@ -1137,9 +1137,9 @@ components:
         data:
           type: array
           items:
-            $ref: "#/components/schemas/NoteDTO"
+            $ref: '#/components/schemas/NoteDTO'
         pagination:
-          $ref: "#/components/schemas/PaginationMeta"
+          $ref: '#/components/schemas/PaginationMeta'
 
     CompareSkiSpecsResponse:
       type: object
@@ -1152,7 +1152,7 @@ components:
           minItems: 2
           maxItems: 4
           items:
-            $ref: "#/components/schemas/SkiSpecComparisonDTO"
+            $ref: '#/components/schemas/SkiSpecComparisonDTO'
           description: Array of ski specifications to compare
 
     ImportSummary:
@@ -1249,7 +1249,7 @@ components:
           type: array
           minItems: 1
           items:
-            $ref: "#/components/schemas/ImportErrorDetail"
+            $ref: '#/components/schemas/ImportErrorDetail'
           description: List of validation errors for this row
 
     ImportResponse:
@@ -1261,16 +1261,16 @@ components:
         - errors
       properties:
         summary:
-          $ref: "#/components/schemas/ImportSummary"
+          $ref: '#/components/schemas/ImportSummary'
         imported:
           type: array
           items:
-            $ref: "#/components/schemas/ImportedItem"
+            $ref: '#/components/schemas/ImportedItem'
           description: List of successfully imported items
         errors:
           type: array
           items:
-            $ref: "#/components/schemas/ImportError"
+            $ref: '#/components/schemas/ImportError'
           description: List of failed rows with detailed errors
 
     ValidationErrorDetail:
@@ -1330,10 +1330,10 @@ components:
         details:
           type: array
           items:
-            $ref: "#/components/schemas/ValidationErrorDetail"
+            $ref: '#/components/schemas/ValidationErrorDetail'
           description: Field-level error details (for validation errors)
         timestamp:
           type: string
           format: date-time
           description: Timestamp when the error occurred
-          example: "2025-01-20T10:30:00Z"
+          example: '2025-01-20T10:30:00Z'

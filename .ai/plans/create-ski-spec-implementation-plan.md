@@ -367,10 +367,10 @@ function createErrorResponse(error: string, code: string, details?: ValidationEr
 // Transform Zod errors to ValidationErrorDetail[]
 if (error instanceof z.ZodError) {
   const details: ValidationErrorDetail[] = error.errors.map((err) => ({
-    field: err.path.join("."),
+    field: err.path.join('.'),
     message: err.message,
   }));
-  return createErrorResponse("Validation failed", "VALIDATION_ERROR", details);
+  return createErrorResponse('Validation failed', 'VALIDATION_ERROR', details);
 }
 ```
 
@@ -378,9 +378,9 @@ if (error instanceof z.ZodError) {
 
 ```typescript
 // Handle Supabase/PostgreSQL errors
-if (error.code === "23505") {
+if (error.code === '23505') {
   // UNIQUE constraint violation
-  return createErrorResponse("Specification with this name already exists", "DUPLICATE_NAME");
+  return createErrorResponse('Specification with this name already exists', 'DUPLICATE_NAME');
 }
 ```
 
@@ -393,9 +393,9 @@ if (error.code === "23505") {
 **Implementation**:
 
 ```typescript
-import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Database } from "@/db/database.types";
-import type { CreateSkiSpecCommand, SkiSpecDTO } from "@/types";
+import type { SupabaseClient } from '@supabase/supabase-js';
+import type { Database } from '@/db/database.types';
+import type { CreateSkiSpecCommand, SkiSpecDTO } from '@/types';
 
 /**
  * Calculates the surface area of a ski based on its dimensions.
@@ -435,7 +435,7 @@ export function calculateRelativeWeight(weight: number, surfaceArea: number): nu
  * @returns Algorithm version string (semantic versioning)
  */
 export function getCurrentAlgorithmVersion(): string {
-  return "1.0.0";
+  return '1.0.0';
 }
 
 /**
@@ -481,14 +481,14 @@ export async function createSkiSpec(
   };
 
   // Insert into database
-  const { data, error } = await supabase.from("ski_specs").insert(insertData).select().single();
+  const { data, error } = await supabase.from('ski_specs').insert(insertData).select().single();
 
   if (error) {
     throw error;
   }
 
   if (!data) {
-    throw new Error("Failed to create ski specification");
+    throw new Error('Failed to create ski specification');
   }
 
   // Return DTO with notes_count
@@ -506,10 +506,10 @@ export async function createSkiSpec(
 **Implementation**:
 
 ```typescript
-import type { APIRoute } from "astro";
-import { z } from "zod";
-import { CreateSkiSpecCommandSchema, type ApiErrorResponse } from "@/types";
-import { createSkiSpec } from "@/lib/services/ski-spec.service";
+import type { APIRoute } from 'astro';
+import { z } from 'zod';
+import { CreateSkiSpecCommandSchema, type ApiErrorResponse } from '@/types';
+import { createSkiSpec } from '@/lib/services/ski-spec.service';
 
 export const prerender = false;
 
@@ -529,11 +529,11 @@ export const POST: APIRoute = async ({ request, locals }) => {
     if (sessionError || !session?.user) {
       return new Response(
         JSON.stringify({
-          error: "Unauthorized",
-          code: "AUTH_REQUIRED",
+          error: 'Unauthorized',
+          code: 'AUTH_REQUIRED',
           timestamp: new Date().toISOString(),
         } satisfies ApiErrorResponse),
-        { status: 401, headers: { "Content-Type": "application/json" } }
+        { status: 401, headers: { 'Content-Type': 'application/json' } }
       );
     }
 
@@ -546,11 +546,11 @@ export const POST: APIRoute = async ({ request, locals }) => {
     } catch (error) {
       return new Response(
         JSON.stringify({
-          error: "Invalid request body",
-          code: "INVALID_JSON",
+          error: 'Invalid request body',
+          code: 'INVALID_JSON',
           timestamp: new Date().toISOString(),
         } satisfies ApiErrorResponse),
-        { status: 400, headers: { "Content-Type": "application/json" } }
+        { status: 400, headers: { 'Content-Type': 'application/json' } }
       );
     }
 
@@ -559,18 +559,18 @@ export const POST: APIRoute = async ({ request, locals }) => {
 
     if (!validationResult.success) {
       const details = validationResult.error.errors.map((err) => ({
-        field: err.path.join("."),
+        field: err.path.join('.'),
         message: err.message,
       }));
 
       return new Response(
         JSON.stringify({
-          error: "Validation failed",
-          code: "VALIDATION_ERROR",
+          error: 'Validation failed',
+          code: 'VALIDATION_ERROR',
           details,
           timestamp: new Date().toISOString(),
         } satisfies ApiErrorResponse),
-        { status: 400, headers: { "Content-Type": "application/json" } }
+        { status: 400, headers: { 'Content-Type': 'application/json' } }
       );
     }
 
@@ -583,46 +583,46 @@ export const POST: APIRoute = async ({ request, locals }) => {
       // Step 5: Return success response
       return new Response(JSON.stringify(skiSpec), {
         status: 201,
-        headers: { "Content-Type": "application/json" },
+        headers: { 'Content-Type': 'application/json' },
       });
     } catch (error: any) {
       // Handle database errors
-      if (error?.code === "23505") {
+      if (error?.code === '23505') {
         // UNIQUE constraint violation
         return new Response(
           JSON.stringify({
-            error: "Specification with this name already exists",
-            code: "DUPLICATE_NAME",
+            error: 'Specification with this name already exists',
+            code: 'DUPLICATE_NAME',
             timestamp: new Date().toISOString(),
           } satisfies ApiErrorResponse),
-          { status: 409, headers: { "Content-Type": "application/json" } }
+          { status: 409, headers: { 'Content-Type': 'application/json' } }
         );
       }
 
       // Log error for debugging
-      console.error("Error creating ski specification:", error);
+      console.error('Error creating ski specification:', error);
 
       // Generic database error
       return new Response(
         JSON.stringify({
-          error: "Failed to create specification",
-          code: "DATABASE_ERROR",
+          error: 'Failed to create specification',
+          code: 'DATABASE_ERROR',
           timestamp: new Date().toISOString(),
         } satisfies ApiErrorResponse),
-        { status: 500, headers: { "Content-Type": "application/json" } }
+        { status: 500, headers: { 'Content-Type': 'application/json' } }
       );
     }
   } catch (error) {
     // Catch-all for unexpected errors
-    console.error("Unexpected error in POST /api/ski-specs:", error);
+    console.error('Unexpected error in POST /api/ski-specs:', error);
 
     return new Response(
       JSON.stringify({
-        error: "Internal server error",
-        code: "INTERNAL_ERROR",
+        error: 'Internal server error',
+        code: 'INTERNAL_ERROR',
         timestamp: new Date().toISOString(),
       } satisfies ApiErrorResponse),
-      { status: 500, headers: { "Content-Type": "application/json" } }
+      { status: 500, headers: { 'Content-Type': 'application/json' } }
     );
   }
 };

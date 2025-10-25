@@ -1,6 +1,6 @@
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { CreateSkiSpecCommandSchema, type CreateSkiSpecCommand } from "@/types/api.types";
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { CreateSkiSpecCommandSchema, type CreateSkiSpecCommand } from '@/types/api.types';
 
 /**
  * Custom hook for managing ski spec form state with React Hook Form + Zod validation
@@ -11,10 +11,10 @@ import { CreateSkiSpecCommandSchema, type CreateSkiSpecCommand } from "@/types/a
 export const useSkiSpecForm = (defaultValues?: Partial<CreateSkiSpecCommand>) => {
   const form = useForm<CreateSkiSpecCommand>({
     resolver: zodResolver(CreateSkiSpecCommandSchema),
-    mode: "onBlur", // Validate on blur for better UX
-    reValidateMode: "onChange", // Re-validate on change after first validation
+    mode: 'onBlur', // Validate on blur for better UX
+    reValidateMode: 'onChange', // Re-validate on change after first validation
     defaultValues: {
-      name: "",
+      name: '',
       description: null,
       length: 180, // Sensible defaults
       tip: 130,

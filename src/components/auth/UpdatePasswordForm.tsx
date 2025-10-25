@@ -1,15 +1,15 @@
-import React, { useState } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { toast } from "sonner";
-import { UpdatePasswordSchema, type UpdatePasswordFormData } from "@/types/auth.types";
-import { useAuth } from "@/components/hooks/useAuth";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { CheckCircle } from "lucide-react";
-import { PasswordStrengthIndicator } from "./PasswordStrengthIndicator";
+import React, { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { toast } from 'sonner';
+import { UpdatePasswordSchema, type UpdatePasswordFormData } from '@/types/auth.types';
+import { useAuth } from '@/components/hooks/useAuth';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { CheckCircle } from 'lucide-react';
+import { PasswordStrengthIndicator } from './PasswordStrengthIndicator';
 
 /**
  * UpdatePasswordForm component
@@ -38,13 +38,13 @@ export const UpdatePasswordForm: React.FC = () => {
   const form = useForm<UpdatePasswordFormData>({
     resolver: zodResolver(UpdatePasswordSchema),
     defaultValues: {
-      password: "",
-      confirmPassword: "",
+      password: '',
+      confirmPassword: '',
     },
   });
 
   // Watch password field for strength indicator
-  const watchedPassword = form.watch("password");
+  const watchedPassword = form.watch('password');
 
   const onSubmit = async (data: UpdatePasswordFormData): Promise<void> => {
     setIsLoading(true);
@@ -53,21 +53,21 @@ export const UpdatePasswordForm: React.FC = () => {
       const { success, error } = await updatePassword({ password: data.password });
 
       if (!success) {
-        toast.error(error?.message || "Failed to update password");
+        toast.error(error?.message || 'Failed to update password');
         return;
       }
       // Success
       setIsSuccess(true);
-      toast.success("Password updated successfully!");
+      toast.success('Password updated successfully!');
 
       // Redirect after a short delay
       setTimeout(() => {
-        window.location.href = "/ski-specs";
+        window.location.href = '/ski-specs';
       }, 2000);
     } catch (error) {
       // eslint-disable-next-line no-console
-      console.error("Update password error:", error);
-      toast.error("An unexpected error occurred. Please try again.");
+      console.error('Update password error:', error);
+      toast.error('An unexpected error occurred. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -143,7 +143,7 @@ export const UpdatePasswordForm: React.FC = () => {
 
         {/* Submit button */}
         <Button type="submit" className="w-full" disabled={isLoading}>
-          {isLoading ? "Updating password..." : "Update password"}
+          {isLoading ? 'Updating password...' : 'Update password'}
         </Button>
 
         {/* Link back to login */}

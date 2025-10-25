@@ -1,7 +1,7 @@
 ---
-import Layout from "@/layouts/Layout.astro";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { RegisterForm } from "@/components/auth/RegisterForm";
+import Layout from '@/layouts/Layout.astro';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { RegisterForm } from '@/components/auth/RegisterForm';
 
 // Check if user is already logged in (session will be set by middleware)
 const session = Astro.locals.session;
@@ -9,7 +9,7 @@ const isAuthenticated = !!session;
 
 // If user is already logged in, redirect to ski-specs
 if (isAuthenticated) {
-  return Astro.redirect("/ski-specs");
+  return Astro.redirect('/ski-specs');
 }
 ---
 

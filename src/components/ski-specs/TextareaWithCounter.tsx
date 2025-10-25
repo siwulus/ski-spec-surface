@@ -1,8 +1,8 @@
-import React from "react";
-import { useFormContext } from "react-hook-form";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import type { CreateSkiSpecCommand } from "@/types/api.types";
+import React from 'react';
+import { useFormContext } from 'react-hook-form';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import type { CreateSkiSpecCommand } from '@/types/api.types';
 
 /**
  * Props for textarea with character counter
@@ -49,7 +49,7 @@ export const TextareaWithCounter: React.FC<TextareaWithCounterProps> = ({
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between">
-        <Label htmlFor={name} className={hasError ? "text-destructive" : ""}>
+        <Label htmlFor={name} className={hasError ? 'text-destructive' : ''}>
           {label}
           {required && (
             <span className="text-destructive ml-1" aria-label="required">
@@ -60,7 +60,7 @@ export const TextareaWithCounter: React.FC<TextareaWithCounterProps> = ({
 
         {/* Character counter */}
         <span
-          className={`text-sm ${isNearLimit ? "text-warning" : "text-muted-foreground"}`}
+          className={`text-sm ${isNearLimit ? 'text-warning' : 'text-muted-foreground'}`}
           aria-live="polite"
           aria-atomic="true"
         >
@@ -76,7 +76,7 @@ export const TextareaWithCounter: React.FC<TextareaWithCounterProps> = ({
         aria-invalid={hasError}
         aria-describedby={hasError ? `${name}-error` : `${name}-counter`}
         aria-required={required}
-        className={hasError ? "border-destructive" : ""}
+        className={hasError ? 'border-destructive' : ''}
         {...register(name as keyof CreateSkiSpecCommand)}
       />
 

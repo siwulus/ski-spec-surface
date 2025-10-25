@@ -1,17 +1,17 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
-import type { PaginationMeta, SkiSpecDTO, SkiSpecListResponse } from "@/types/api.types";
-import { SkiSpecListResponseSchema } from "@/types/api.types";
-import { skiSpecHttpClient } from "@/lib/utils/SkiSpecHttpClient";
-import { Effect, pipe } from "effect";
-import { buildUrl } from "@/lib/utils/http";
-import type { SkiSpecError } from "@/types/error.types";
-import { useErrorHandler } from "./useErrorHandler";
+import { useState, useEffect, useCallback, useMemo } from 'react';
+import type { PaginationMeta, SkiSpecDTO, SkiSpecListResponse } from '@/types/api.types';
+import { SkiSpecListResponseSchema } from '@/types/api.types';
+import { skiSpecHttpClient } from '@/lib/utils/SkiSpecHttpClient';
+import { Effect, pipe } from 'effect';
+import { buildUrl } from '@/lib/utils/http';
+import type { SkiSpecError } from '@/types/error.types';
+import { useErrorHandler } from './useErrorHandler';
 
 interface UseSkiSpecsOptions {
   page?: number;
   limit?: number;
-  sort_by?: "name" | "length" | "surface_area" | "relative_weight" | "created_at";
-  sort_order?: "asc" | "desc";
+  sort_by?: 'name' | 'length' | 'surface_area' | 'relative_weight' | 'created_at';
+  sort_order?: 'asc' | 'desc';
   search?: string;
 }
 
@@ -26,11 +26,11 @@ interface UseSkiSpecsReturn {
 const fetchSkiSpecs = (options: UseSkiSpecsOptions): Effect.Effect<SkiSpecListResponse, SkiSpecError> =>
   pipe(
     Effect.sync(() =>
-      buildUrl("/api/ski-specs", {
+      buildUrl('/api/ski-specs', {
         page: options.page ?? 1,
         limit: options.limit ?? 100,
-        sort_by: options.sort_by ?? "created_at",
-        sort_order: options.sort_order ?? "desc",
+        sort_by: options.sort_by ?? 'created_at',
+        sort_order: options.sort_order ?? 'desc',
         search: options.search,
       })
     ),
@@ -47,8 +47,8 @@ export const useSkiSpecs = (options: UseSkiSpecsOptions = {}): UseSkiSpecsReturn
     () => ({
       page: options.page ?? 1,
       limit: options.limit ?? 100,
-      sort_by: options.sort_by ?? "created_at",
-      sort_order: options.sort_order ?? "desc",
+      sort_by: options.sort_by ?? 'created_at',
+      sort_order: options.sort_order ?? 'desc',
       search: options.search,
     }),
     [options.page, options.limit, options.sort_by, options.sort_order, options.search]

@@ -204,10 +204,10 @@ type ApiErrorResponse = {
 
 ```typescript
 const { data, error } = await supabase
-  .from("ski_spec_notes")
-  .select("*")
-  .eq("id", noteId)
-  .eq("ski_spec_id", specId)
+  .from('ski_spec_notes')
+  .select('*')
+  .eq('id', noteId)
+  .eq('ski_spec_id', specId)
   .single();
 ```
 
@@ -339,7 +339,7 @@ if (!uuidRegex.test(noteId)) {
 ```typescript
 // Supabase query returns null due to RLS or non-existence
 if (!data || error) {
-  throw new NotFoundError("Note not found");
+  throw new NotFoundError('Note not found');
 }
 ```
 
@@ -377,11 +377,11 @@ try {
     // Handle 404
   }
   // Unhandled errors → 500
-  console.error("Database error:", error);
+  console.error('Database error:', error);
   return new Response(
     JSON.stringify({
-      error: "Internal server error",
-      code: "INTERNAL_ERROR",
+      error: 'Internal server error',
+      code: 'INTERNAL_ERROR',
       timestamp: new Date().toISOString(),
     }),
     { status: 500 }
@@ -417,8 +417,8 @@ try {
 **File**: `src/pages/api/ski-specs/[specId]/notes/[noteId].ts`
 
 ```typescript
-import type { APIRoute } from "astro";
-import { SkiSpecService } from "@/lib/services/ski-spec.service";
+import type { APIRoute } from 'astro';
+import { SkiSpecService } from '@/lib/services/ski-spec.service';
 
 export const GET: APIRoute = async ({ params, locals }) => {
   // Implementation in next steps
@@ -437,13 +437,13 @@ export const GET: APIRoute = async ({ params, locals }) => {
   if (!userId) {
     return new Response(
       JSON.stringify({
-        error: "Authentication required",
-        code: "UNAUTHORIZED",
+        error: 'Authentication required',
+        code: 'UNAUTHORIZED',
         timestamp: new Date().toISOString(),
       }),
       {
         status: 401,
-        headers: { "Content-Type": "application/json" },
+        headers: { 'Content-Type': 'application/json' },
       }
     );
   }
@@ -465,13 +465,13 @@ const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}
 if (!specId || !uuidRegex.test(specId)) {
   return new Response(
     JSON.stringify({
-      error: "Invalid ski specification ID format",
-      code: "VALIDATION_ERROR",
+      error: 'Invalid ski specification ID format',
+      code: 'VALIDATION_ERROR',
       timestamp: new Date().toISOString(),
     }),
     {
       status: 400,
-      headers: { "Content-Type": "application/json" },
+      headers: { 'Content-Type': 'application/json' },
     }
   );
 }
@@ -479,13 +479,13 @@ if (!specId || !uuidRegex.test(specId)) {
 if (!noteId || !uuidRegex.test(noteId)) {
   return new Response(
     JSON.stringify({
-      error: "Invalid note ID format",
-      code: "VALIDATION_ERROR",
+      error: 'Invalid note ID format',
+      code: 'VALIDATION_ERROR',
       timestamp: new Date().toISOString(),
     }),
     {
       status: 400,
-      headers: { "Content-Type": "application/json" },
+      headers: { 'Content-Type': 'application/json' },
     }
   );
 }
@@ -537,7 +537,7 @@ async getNoteById(
 export class NotFoundError extends Error {
   constructor(message: string) {
     super(message);
-    this.name = "NotFoundError";
+    this.name = 'NotFoundError';
   }
 }
 ```
@@ -553,35 +553,35 @@ try {
 
   return new Response(JSON.stringify(note), {
     status: 200,
-    headers: { "Content-Type": "application/json" },
+    headers: { 'Content-Type': 'application/json' },
   });
 } catch (error) {
   if (error instanceof NotFoundError) {
     return new Response(
       JSON.stringify({
-        error: "Note not found",
-        code: "NOT_FOUND",
+        error: 'Note not found',
+        code: 'NOT_FOUND',
         timestamp: new Date().toISOString(),
       }),
       {
         status: 404,
-        headers: { "Content-Type": "application/json" },
+        headers: { 'Content-Type': 'application/json' },
       }
     );
   }
 
   // Log unexpected errors
-  console.error("Error fetching note:", error);
+  console.error('Error fetching note:', error);
 
   return new Response(
     JSON.stringify({
-      error: "Internal server error",
-      code: "INTERNAL_ERROR",
+      error: 'Internal server error',
+      code: 'INTERNAL_ERROR',
       timestamp: new Date().toISOString(),
     }),
     {
       status: 500,
-      headers: { "Content-Type": "application/json" },
+      headers: { 'Content-Type': 'application/json' },
     }
   );
 }
@@ -603,32 +603,32 @@ This ensures the response from Supabase matches the expected schema before retur
 **File**: `src/pages/api/ski-specs/[specId]/notes/[noteId].test.ts`
 
 ```typescript
-describe("GET /api/ski-specs/{specId}/notes/{noteId}", () => {
-  it("should return 401 when not authenticated", async () => {
+describe('GET /api/ski-specs/{specId}/notes/{noteId}', () => {
+  it('should return 401 when not authenticated', async () => {
     // Test implementation
   });
 
-  it("should return 400 for invalid specId UUID", async () => {
+  it('should return 400 for invalid specId UUID', async () => {
     // Test implementation
   });
 
-  it("should return 400 for invalid noteId UUID", async () => {
+  it('should return 400 for invalid noteId UUID', async () => {
     // Test implementation
   });
 
-  it("should return 404 when note does not exist", async () => {
+  it('should return 404 when note does not exist', async () => {
     // Test implementation
   });
 
-  it("should return 404 when note belongs to different spec", async () => {
+  it('should return 404 when note belongs to different spec', async () => {
     // Test implementation
   });
 
-  it("should return 404 when user does not own the spec", async () => {
+  it('should return 404 when user does not own the spec', async () => {
     // Test implementation
   });
 
-  it("should return 200 with note data when successful", async () => {
+  it('should return 200 with note data when successful', async () => {
     // Test implementation
   });
 });
