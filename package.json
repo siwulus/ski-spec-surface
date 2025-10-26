@@ -5,6 +5,7 @@
   "packageManager": "pnpm@10.18.1",
   "scripts": {
     "dev": "astro dev",
+    "dev:e2e": "astro dev --mode e2e",
     "build": "astro build",
     "preview": "astro preview",
     "astro": "astro",
@@ -49,6 +50,7 @@
     "astro": "^5.13.7",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "dotenv": "^17.2.3",
     "effect": "^3.18.4",
     "expect-type": "^1.2.2",
     "lucide-react": "^0.487.0",

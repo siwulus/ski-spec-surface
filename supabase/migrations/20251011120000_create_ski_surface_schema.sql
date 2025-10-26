@@ -19,7 +19,7 @@ create extension if not exists "uuid-ossp";
 -- Stores ski specifications with dimensional data and calculated metrics
 create table ski_specs (
   -- Primary identifier
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default extensions.uuid_generate_v4(),
   
   -- Ownership: references Supabase auth.users
   user_id uuid not null references auth.users(id) on delete cascade,
@@ -81,7 +81,7 @@ create index ski_specs_user_id_idx on ski_specs(user_id);
 -- Ownership is derived through parent ski_specs relationship
 create table ski_spec_notes (
   -- Primary identifier
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default extensions.uuid_generate_v4(),
   
   -- Parent specification reference
   ski_spec_id uuid not null references ski_specs(id) on delete cascade,
