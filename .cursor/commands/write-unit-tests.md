@@ -2,7 +2,7 @@ You will be writing comprehensive unit tests for a piece of code. Your goal is t
 
 You find the code you need to analyze and write tests for in conversation context in tags <code>
 
-You find the mocking strategy guidelines, you should follow, in conversation context in tags <mocking_strategy>
+You find the mocking strategy guidelines, you should follow, in conversation context in tags <mocking_strategy> (if it was added)
 
 Before writing any tests, you must first thoroughly analyze the code to build a comprehensive understanding of what needs to be tested. Use the scratchpad below to work through your analysis.
 

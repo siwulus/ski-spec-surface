@@ -24,7 +24,7 @@ import { renderHook, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { SkiSpecDTO, PaginationMeta, SkiSpecListResponse } from '@/types/api.types';
 import { Effect } from 'effect';
-import type { NetworkError } from '@/types/error.types';
+import { NetworkError } from '@/types/error.types';
 
 /**
  * STEP 1: MOCK EXTERNAL DEPENDENCIES
@@ -285,14 +285,7 @@ describe('useSkiSpecs', () => {
    */
   describe('Error Handling', () => {
     it('should handle API errors', async () => {
-      const apiError: NetworkError = {
-        _tag: 'NetworkError',
-        name: 'NetworkError',
-        code: 'NETWORK_ERROR',
-        message: 'Network error',
-        statusCode: 500,
-        timestamp: new Date().toISOString(),
-      };
+      const apiError: NetworkError = new NetworkError('Network error');
       vi.mocked(skiSpecHttpClient.get).mockReturnValue(Effect.fail(apiError));
 
       const { result } = renderHook(() => useSkiSpecs());
