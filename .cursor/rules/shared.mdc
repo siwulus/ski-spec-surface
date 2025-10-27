@@ -22,18 +22,42 @@ Ski Surface Spec Extension is a web application created for advanced ski touring
 
 When introducing changes to the project, always follow the directory structure below:
 
-- `./src` - source code
-- `./src/layouts` - Astro layouts
-- `./src/pages` - Astro pages
-- `./src/pages/api` - API endpoints
-- `./src/middleware/index.ts` - Astro middleware
-- `./src/db` - Supabase clients and types
-- `./src/types.ts` - Shared types for backend and frontend (Entities, DTOs)
-- `./src/components` - Client-side components written in Astro (static) and React (dynamic)
-- `./src/components/ui` - Client-side components from Shadcn/ui
-- `./src/lib` - Services and helpers 
-- `./src/assets` - static internal assets
-- `./public` - public assets
+```text
+public/                  # public assets
+src/
+├── components/          # Astro (static) and React (dynamic) components
+│   ├── auth/
+│   │   ├── PasswordStrengthIndicator.tsx
+│   │   └── PasswordStrengthIndicator.spec.tsx  # Co-located unit test
+│   └── ui/             # Shadcn/ui components
+├── db/                 # Supabase clients and database types
+│   ├── supabase.client.ts    # Initialized Supabase client
+│   └── database.types.ts     # Generated DB types
+├── layouts/            # Astro layouts
+├── lib/                # Services and helpers
+│   └── services/       # Business logic services
+│       ├── SkiSpecService.ts
+│       └── SkiSpecService.spec.ts  # Co-located unit test
+├── middleware/         # Astro middleware (Supabase injection, auth)
+├── pages/              # Astro pages and API routes
+│   └── api/            # RESTful API endpoints
+├── styles/             # Global CSS
+├── test/               # Test setup and utilities
+│   ├── setup.ts        # Global test configuration
+│   └── test-utils.tsx  # Custom render functions for React Testing Library
+└── types/              # TypeScript type definitions
+    ├── db.types.ts     # Database entities
+    └── api.types.ts    # DTOs, Commands, Queries, Responses
+
+tests/
+├── e2e/                # Playwright E2E tests (*.spec.ts)
+├── integration/        # Integration tests (*.integration.spec.ts)
+└── fixtures/           # Test fixtures and helpers
+    ├── test-fixtures.ts      # Playwright custom fixtures
+    └── accessibility.ts      # Accessibility testing helpers
+└── poms/               # Playwright page object models
+    └── HomePage.ts     # Playwright POM for home page, etc
+```
 
 When modifying the directory structure, always update this section.
 

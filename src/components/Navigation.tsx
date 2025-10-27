@@ -19,11 +19,12 @@ interface NavigationItem {
   requiresAuth?: boolean;
   /** Whether this item should only be shown to unauthenticated users */
   guestOnly?: boolean;
+  testId?: string;
 }
 
 const navigationItems: NavigationItem[] = [
-  { label: 'Home', href: '/' },
-  { label: 'Ski Specs', href: '/ski-specs', requiresAuth: true },
+  { label: 'Home', href: '/', testId: 'navigation-home' },
+  { label: 'Ski Specs', href: '/ski-specs', requiresAuth: true, testId: 'navigation-ski-specs' },
 ];
 
 export default function Navigation({ currentPath }: NavigationProps) {
@@ -47,12 +48,12 @@ export default function Navigation({ currentPath }: NavigationProps) {
   });
 
   return (
-    <NavigationMenu>
+    <NavigationMenu data-testid="navigation">
       <NavigationMenuList>
         {visibleItems.map((item) => {
           const isActive = currentPath === item.href;
           return (
-            <NavigationMenuItem key={item.href}>
+            <NavigationMenuItem key={item.href} data-testid={item.testId}>
               <NavigationMenuLink
                 href={item.href}
                 className={navigationMenuTriggerStyle()}

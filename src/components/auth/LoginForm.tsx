@@ -85,6 +85,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ redirectTo }) => {
                   placeholder="you@example.com"
                   autoComplete="email"
                   disabled={isLoading}
+                  data-testid="email-input"
                   {...field}
                 />
               </FormControl>
@@ -106,6 +107,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ redirectTo }) => {
                   placeholder="Enter your password"
                   autoComplete="current-password"
                   disabled={isLoading}
+                  data-testid="password-input"
                   {...field}
                 />
               </FormControl>
@@ -115,7 +117,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ redirectTo }) => {
         />
 
         {/* Submit button */}
-        <Button type="submit" className="w-full" disabled={isLoading}>
+        <Button type="submit" className="w-full" disabled={isLoading} data-testid="login-submit-button">
           {isLoading ? 'Signing in...' : 'Sign in'}
         </Button>
 

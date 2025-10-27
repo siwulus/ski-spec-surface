@@ -13,13 +13,16 @@ export default defineConfig({
 
   // Maximum time one test can run
   timeout: 30 * 1000,
-
+  // Expect timeout for assertions
+  expect: {
+    timeout: 10 * 1000,
+  },
   // Global setup/teardown
   // globalSetup: require.resolve('./tests/e2e/global-setup'),
   // globalTeardown: require.resolve('./tests/e2e/global-teardown'),
 
   // Run tests in files in parallel
-  fullyParallel: true,
+  fullyParallel: false,
 
   // Fail the build on CI if you accidentally left test.only in the source code
   forbidOnly: !!process.env.CI,

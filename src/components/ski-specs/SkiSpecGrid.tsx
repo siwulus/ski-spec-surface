@@ -113,7 +113,9 @@ export const SkiSpecGrid: React.FC = () => {
     <>
       <div className="flex items-center justify-between mb-6">
         <header>
-          <h1 className="text-3xl font-bold text-foreground">Ski Specifications</h1>
+          <h1 className="text-3xl font-bold text-foreground" data-testid="ski-spec-grid-header">
+            Ski Specifications
+          </h1>
           <p className="mt-2 text-muted-foreground">Manage your ski specifications and compare different models.</p>
         </header>
         <Button ref={addButtonRef} onClick={handleAddClick} className="ml-4">

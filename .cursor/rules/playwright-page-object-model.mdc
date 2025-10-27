@@ -1,0 +1,49 @@
+---
+name: playwright-page-object-model
+description: Create a new Playwright Page Object Model
+---
+
+# Rule: Playwright Page Object Model
+
+When creating a new Page Object Model (POM) for a Playwright test, it should follow these guidelines:
+
+1.  **Extend `AbstractPage`**: All POMs must extend the `AbstractPage` base class to inherit common functionality like navigation and basic assertions. The `AbstractPage` is located at `tests/poms/AbstractPage.ts`.
+2.  **Implement Abstract Methods**: Any abstract methods from `AbstractPage` must be implemented. Currently, this includes `assertPageIsDisplayed()`.
+3.  **Constructor**: The constructor must accept a Playwright `Page` object and call the parent constructor with the page object and the specific URL for that page.
+4.  **File Location**: New POMs should be placed in the `tests/poms/` directory.
+5.  **Naming Convention**: The file and class should be named using PascalCase, ending with `Page` (e.g., `HomePage.ts` and `class HomePage`).
+
+## Template
+
+Here is a template for creating a new POM.
+
+```typescript
+import { type Page, expect } from '@playwright/test';
+import { AbstractPage } from './AbstractPage';
+
+/**
+ * Page Object Model for the {{PageName}} page.
+ *
+ * @see {@link AbstractPage}
+ */
+export class {{PageName}}Page extends AbstractPage {
+  /**
+   * @param page - The Playwright page object.
+   */
+  constructor(page: Page) {
+    super(page, '{{pageUrl}}');
+  }
+
+  /**
+   * Asserts that the main content of the page is visible.
+   * This method should be specific to the page being tested.
+   */
+  async assertPageIsDisplayed(): Promise<void> {
+    // TODO: Add specific assertions for this page.
+    // For example, check for a unique heading or element.
+    // await expect(this.page.getByRole('heading', { name: 'Welcome to {{PageName}}' })).toBeVisible();
+  }
+
+  // Add more methods here to interact with the page elements.
+}
+```

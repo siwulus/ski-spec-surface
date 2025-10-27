@@ -116,6 +116,8 @@ tests/
 └── fixtures/           # Test fixtures and helpers
     ├── test-fixtures.ts      # Playwright custom fixtures
     └── accessibility.ts      # Accessibility testing helpers
+└── poms/               # Playwright page object models
+    └── HomePage.ts     # Playwright POM for home page, etc
 ```
 
 ### Key Architectural Patterns

@@ -5,8 +5,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import Layout from '../layouts/Layout.astro';
 
 // Get session from middleware (set in middleware/index.ts)
-const session = Astro.locals.session;
-const isAuthenticated = !!session;
+const user = Astro.locals.user;
+const isAuthenticated = !!user;
 ---
 
 <Layout title="Ski Surface Spec Extension - Advanced Ski Specifications">
@@ -396,7 +396,7 @@ const isAuthenticated = !!session;
                   </a>
                 </Button>
                 <Button variant="outline" size="lg" asChild>
-                  <a href="/auth/login" aria-label="Sign in to existing account">
+                  <a href="/auth/login" aria-label="Sign in to existing account" data-testid="signin-button">
                     Sign In
                   </a>
                 </Button>

@@ -4,8 +4,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { LoginForm } from '@/components/auth/LoginForm';
 
 // Check if user is already logged in (session will be set by middleware)
-const session = Astro.locals.session;
-const isAuthenticated = !!session;
+const user = Astro.locals.user;
+const isAuthenticated = !!user;
 
 // Get redirectTo from URL params
 const redirectTo = Astro.url.searchParams.get('redirectTo') || undefined;

@@ -6,7 +6,7 @@ import { Effect, pipe } from 'effect';
 
 import { SkiSpecService } from '@/lib/services/SkiSpecService';
 import { wrapErrorEffect } from '@/lib/utils/error';
-import { DatabaseError, logError, type SkiSpecError } from '@/types/error.types';
+import { AuthenticationError, logError, type SkiSpecError } from '@/types/error.types';
 
 // ============================================================================
 // Constants
@@ -78,31 +78,19 @@ const getUserEffect = (supabase: SupabaseClient): Effect.Effect<User | null, Ski
     Effect.tryPromise({
       try: () => supabase.auth.getUser(),
       catch: (error) =>
-        new DatabaseError('Failed to fetch user from Supabase', {
+        new AuthenticationError('Failed to fetch user from Supabase', {
           cause: error instanceof Error ? error : undefined,
-          operation: 'getUser',
-          table: 'auth.users',
         }),
     }),
-    Effect.map(({ data, error }) => {
-      if (error) {
-        throw new DatabaseError('Supabase auth error', {
-          cause: error,
-          operation: 'getUser',
-          context: {
-            supabaseErrorCode: error.code,
-            supabaseErrorMessage: error.message,
-          },
-        });
-      }
-      return data.user;
-    }),
+    Effect.map(({ data }) => data.user),
+    Effect.catchTag('AuthenticationError', () => Effect.succeed(null)),
     wrapErrorEffect
   );
 };
 
 /**
  * Creates a redirect response to the login page with return URL.
+ * Preserves the query string from the original URL for deep linking.
  *
  * @param url - Current URL to return to after login
  * @param redirect - Astro redirect function
@@ -111,7 +99,9 @@ const getUserEffect = (supabase: SupabaseClient): Effect.Effect<User | null, Ski
 const redirectToLogin = (url: URL, redirect: (path: string) => Response): Effect.Effect<Response, never> => {
   return Effect.sync(() => {
     const redirectUrl = new URL('/auth/login', url);
-    redirectUrl.searchParams.set('redirectTo', url.pathname);
+    // Preserve both pathname and search params for deep linking
+    const returnPath = `${url.pathname}${url.search ?? ''}`;
+    redirectUrl.searchParams.set('redirectTo', returnPath);
     return redirect(redirectUrl.toString());
   });
 };
