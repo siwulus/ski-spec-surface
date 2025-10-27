@@ -66,6 +66,7 @@ export const NumberInputWithUnit: React.FC<NumberInputWithUnitProps> = ({
           step={step}
           min={min}
           max={max}
+          data-testid={`ski-spec-form-${name}`}
           disabled={disabled}
           aria-invalid={hasError}
           aria-describedby={hasError ? `${name}-error` : undefined}

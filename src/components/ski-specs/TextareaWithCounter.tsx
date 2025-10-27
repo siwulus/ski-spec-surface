@@ -72,6 +72,7 @@ export const TextareaWithCounter: React.FC<TextareaWithCounterProps> = ({
         id={name}
         rows={4}
         maxLength={maxLength}
+        data-testid={`ski-spec-form-${name}`}
         disabled={disabled}
         aria-invalid={hasError}
         aria-describedby={hasError ? `${name}-error` : `${name}-counter`}

@@ -15,7 +15,7 @@ interface SkiSpecCardProps {
 
 export const SkiSpecCard: React.FC<SkiSpecCardProps> = ({ spec, onEdit, onDelete, isInProgress }) => {
   return (
-    <Card>
+    <Card data-testid={`ski-spec-card-${spec.id}`}>
       <CardHeader>
         <CardTitle>{spec.name}</CardTitle>
       </CardHeader>
@@ -146,6 +146,7 @@ export const SkiSpecCard: React.FC<SkiSpecCardProps> = ({ spec, onEdit, onDelete
               aria-label={`Edit ${spec.name}`}
               onClick={() => onEdit?.(spec.id)}
               disabled={isInProgress}
+              data-testid="ski-spec-card-edit-button"
             >
               <Pencil className="h-4 w-4" />
             </Button>

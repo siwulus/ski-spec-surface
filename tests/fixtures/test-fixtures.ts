@@ -15,22 +15,12 @@ interface TestFixtures {
 }
 
 export const test = base.extend<TestFixtures>({
+  // eslint-disable-next-line
   e2eCredentials: async ({}, use) => {
     const { username, password } = getE2ECredentials();
     // eslint-disable-next-line react-hooks/rules-of-hooks
     await use({ username, password });
   },
-
-  // Remove the page override - Playwright automatically creates isolated contexts per test
-  // The built-in page fixture already provides proper isolation
-
-  /**
-   * Authenticated page fixture implementation
-   * Automatically logs in using E2E credentials before running the test
-   *
-   * Note: Each test gets its own browser context automatically via Playwright's
-   * built-in page fixture, ensuring complete isolation between parallel tests
-   */
   newPage: async ({ browser }, use) => {
     const context = await browser.newContext();
     const page = await context.newPage();

@@ -17,9 +17,6 @@ export default defineConfig({
   expect: {
     timeout: 10 * 1000,
   },
-  // Global setup/teardown
-  // globalSetup: require.resolve('./tests/e2e/global-setup'),
-  // globalTeardown: require.resolve('./tests/e2e/global-teardown'),
 
   // Run tests in files in parallel
   fullyParallel: false,
@@ -63,15 +60,31 @@ export default defineConfig({
 
   // Configure projects for major browsers
   projects: [
+    // Global setup project - runs before all tests
+    {
+      name: 'setup db',
+      testDir: './tests/e2e',
+      testMatch: /global\.setup\.ts/,
+      teardown: 'cleanup db',
+    },
+    // Global teardown project - runs after all tests
+    {
+      name: 'cleanup db',
+      testDir: './tests/e2e',
+      testMatch: /global\.teardown\.ts/,
+    },
+    // Main test project - depends on setup
     {
       name: 'chromium',
+      testDir: './tests/e2e',
       use: { ...devices['Desktop Chrome'] },
+      dependencies: ['setup db'],
     },
   ],
 
   // Run your local dev server before starting the tests
   webServer: {
-    command: 'pnpm dev',
+    command: 'pnpm dev:e2e',
     url: 'http://localhost:3000',
     reuseExistingServer: !process.env.CI,
     timeout: 120 * 1000,

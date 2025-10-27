@@ -78,6 +78,7 @@ export const SkiSpecForm: React.FC<SkiSpecFormProps> = ({
           <Input
             id="name"
             type="text"
+            data-testid="ski-spec-form-name"
             disabled={isSubmitting}
             aria-invalid={!!formState.errors.name}
             aria-describedby={formState.errors.name ? 'name-error' : undefined}
@@ -148,11 +149,17 @@ export const SkiSpecForm: React.FC<SkiSpecFormProps> = ({
 
         {/* Form actions */}
         <div className="flex justify-end gap-3 pt-4">
-          <Button type="button" variant="outline" onClick={onCancel} disabled={isSubmitting}>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onCancel}
+            disabled={isSubmitting}
+            data-testid="ski-spec-form-cancel"
+          >
             Cancel
           </Button>
 
-          <Button type="submit" disabled={isSubmitting || !formState.isValid}>
+          <Button type="submit" disabled={isSubmitting || !formState.isValid} data-testid="ski-spec-form-submit">
             {isSubmitting ? 'Saving...' : 'Save'}
           </Button>
         </div>
