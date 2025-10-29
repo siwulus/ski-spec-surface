@@ -11,11 +11,12 @@ export class HomePage extends AbstractPage {
     this.header = page.getByTestId('header');
   }
 
-  async assertPageIsDisplayed(): Promise<void> {
+  protected async assertPageIsDisplayed(): Promise<void> {
     await expect(this.header).toBeVisible();
   }
 
   async clickSignIn() {
+    await this.waitForReadyInput(this.signInButton);
     await this.signInButton.click();
   }
 }

@@ -5,9 +5,8 @@
  * (global setup/teardown) where SSR client is not available.
  */
 
-import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '@/db/database.types';
-import { getE2ECredentials } from './e2e-credentials';
+import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 
 /**
  * Creates and authenticates a Supabase client for E2E testing
@@ -28,7 +27,12 @@ export async function createAuthenticatedSupabaseClient(): Promise<SupabaseClien
   const supabase = createClient<Database>(supabaseUrl, supabaseKey);
 
   // Authenticate with E2E credentials
-  const { username, password } = getE2ECredentials();
+  const username = process.env.E2E_USERNAME;
+  const password = process.env.E2E_PASSWORD;
+
+  if (!username || !password) {
+    throw new Error('E2E_USERNAME and E2E_PASSWORD must be set in environment variables');
+  }
 
   const { data, error } = await supabase.auth.signInWithPassword({
     email: username,

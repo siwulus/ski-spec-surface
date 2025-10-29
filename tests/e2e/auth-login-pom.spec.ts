@@ -22,6 +22,7 @@ test.describe('Login Flow with POM', () => {
     await loginPage.login(username, password);
 
     // 4. See and verify the ski-specs page
+    await newPage.waitForTimeout(1000);
     await skiSpecsPage.assertOnPage();
   });
 });

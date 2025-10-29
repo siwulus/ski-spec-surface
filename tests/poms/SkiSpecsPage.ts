@@ -57,7 +57,7 @@ export class SkiSpecsPage extends AbstractPage {
   /**
    * Assert that the page is displayed with correct header
    */
-  async assertPageIsDisplayed(): Promise<void> {
+  protected async assertPageIsDisplayed(): Promise<void> {
     await expect(this.header).toBeVisible();
     await expect(this.header).toHaveText('Ski Specifications');
   }
@@ -91,6 +91,7 @@ export class SkiSpecsPage extends AbstractPage {
   async clickEditSpecification(name: string): Promise<void> {
     const card = this.getSkiSpecCardByName(name);
     const editButton = card.getByTestId('ski-spec-card-edit-button');
+    await this.waitForReadyInput(editButton);
     await editButton.click();
   }
 
@@ -131,24 +132,56 @@ export class SkiSpecsPage extends AbstractPage {
     radius: number;
     weight: number;
   }): Promise<void> {
+    // Wait for React hydration - ensure all fields are ready
+    await this.waitForReadyInput(this.formNameInput);
+    await this.formNameInput.click();
     await this.formNameInput.fill(data.name);
+    await expect(this.formNameInput).toHaveValue(data.name);
 
     if (data.description) {
+      await this.waitForReadyInput(this.formDescriptionInput);
+      await this.formDescriptionInput.click();
       await this.formDescriptionInput.fill(data.description);
+      await expect(this.formDescriptionInput).toHaveValue(data.description);
     }
 
+    await this.waitForReadyInput(this.formLengthInput);
+    await this.formLengthInput.click();
     await this.formLengthInput.fill(data.length.toString());
+    await expect(this.formLengthInput).toHaveValue(data.length.toString());
+
+    await this.waitForReadyInput(this.formTipInput);
+    await this.formTipInput.click();
     await this.formTipInput.fill(data.tip.toString());
+    await expect(this.formTipInput).toHaveValue(data.tip.toString());
+
+    await this.waitForReadyInput(this.formWaistInput);
+    await this.formWaistInput.click();
     await this.formWaistInput.fill(data.waist.toString());
+    await expect(this.formWaistInput).toHaveValue(data.waist.toString());
+
+    await this.waitForReadyInput(this.formTailInput);
+    await this.formTailInput.click();
     await this.formTailInput.fill(data.tail.toString());
+    await expect(this.formTailInput).toHaveValue(data.tail.toString());
+
+    await this.waitForReadyInput(this.formRadiusInput);
+    await this.formRadiusInput.click();
     await this.formRadiusInput.fill(data.radius.toString());
+    await expect(this.formRadiusInput).toHaveValue(data.radius.toString());
+
+    await this.waitForReadyInput(this.formWeightInput);
+    await this.formWeightInput.click();
     await this.formWeightInput.fill(data.weight.toString());
+    await expect(this.formWeightInput).toHaveValue(data.weight.toString());
   }
 
   /**
    * Submit the ski specification form
    */
   async submitForm(): Promise<void> {
+    // Ensure React hydration is complete before submitting
+    await this.waitForReadyInput(this.formSaveButton);
     await this.formSaveButton.click();
   }
 
@@ -156,6 +189,7 @@ export class SkiSpecsPage extends AbstractPage {
    * Cancel the ski specification form
    */
   async cancelForm(): Promise<void> {
+    await this.waitForReadyInput(this.formCancelButton);
     await this.formCancelButton.click();
   }
 

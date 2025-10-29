@@ -1,4 +1,4 @@
-import { expect, type Page } from '@playwright/test';
+import { expect, type Locator, type Page } from '@playwright/test';
 
 /**
  * Abstract base class for Page Object Models (POMs)
@@ -19,6 +19,19 @@ export abstract class AbstractPage {
   }
 
   /**
+   * Wait for the page to be loaded
+   */
+  protected async waitForPageLoaded(): Promise<void> {
+    await this.page.waitForLoadState('networkidle');
+    await this.page.waitForTimeout(500);
+  }
+
+  protected async waitForReadyInput(locator: Locator): Promise<void> {
+    await expect(locator).toBeVisible();
+    await expect(locator).toBeEnabled();
+  }
+
+  /**
    * Navigate to the page
    */
   async goto(queryParams?: Record<string, string>): Promise<void> {
@@ -28,20 +41,17 @@ export abstract class AbstractPage {
       url = `${this.pageUrl}?${searchParams.toString()}`;
     }
     await this.page.goto(url);
+    await this.waitForPageLoaded();
   }
 
   /**
    * Assert that the page is displayed and the page URL is correct
    */
   async assertOnPage(): Promise<void> {
+    await this.waitForPageLoaded();
     await expect(this.page).toHaveURL(new RegExp(this.pageUrl));
     await this.assertPageIsDisplayed();
   }
-
-  /**
-   * Abstract method to assert that the page is displayed
-   */
-  abstract assertPageIsDisplayed(): Promise<void>;
 
   /**
    * Assert that the page has specific query parameters
@@ -53,4 +63,9 @@ export abstract class AbstractPage {
       expect(url.searchParams.get(key)).toBe(value);
     }
   }
+
+  /**
+   * Abstract method to assert that the page is displayed
+   */
+  protected abstract assertPageIsDisplayed(): Promise<void>;
 }

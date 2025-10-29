@@ -15,6 +15,7 @@ interface TestFixtures {
 }
 
 export const test = base.extend<TestFixtures>({
+  // Test-scoped fixtures below
   // eslint-disable-next-line
   e2eCredentials: async ({}, use) => {
     const { username, password } = getE2ECredentials();

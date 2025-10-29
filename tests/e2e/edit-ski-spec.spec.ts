@@ -5,8 +5,8 @@ test.describe('E2E-009: Edit Existing Specification', () => {
   test('should allow user to edit an existing ski specification', async ({ authenticatedPage }) => {
     const skiSpecsPage = new SkiSpecsPage(authenticatedPage);
 
-    // The "e2e-for-edition" spec is created in global setup with these initial values:
-    // length=180, tip=135, waist=105, tail=125, radius=18.5, weight=1800
+    // Use worker-scoped testSkiSpec fixture (created once per worker)
+    // Initial values: length=180, tip=135, waist=105, tail=125, radius=18.5, weight=1800
     const specName = 'e2e-for-edition';
     const updatedData = {
       weight: 2050, // Changed from 1800g to 2050g (matching scenario)
@@ -68,12 +68,34 @@ test.describe('E2E-009: Edit Existing Specification', () => {
 
   test('should preserve unchanged fields when editing', async ({ authenticatedPage }) => {
     const skiSpecsPage = new SkiSpecsPage(authenticatedPage);
-    const specName = 'e2e-for-edition';
 
-    // Navigate and open edit dialog
+    // Create a unique spec for this test to ensure isolation from other tests
+    const testSpecName = `e2e-test-preserve-${Date.now()}`;
+    const testSpecData = {
+      name: testSpecName,
+      description: 'Original description for preserve test',
+      length: 180,
+      tip: 135,
+      waist: 105,
+      tail: 125,
+      radius: 18.5,
+      weight: 1800,
+    };
+
+    // Navigate to ski-specs page
     await skiSpecsPage.goto();
     await skiSpecsPage.assertOnPage();
-    await skiSpecsPage.clickEditSpecification(specName);
+
+    // Create the test spec
+    await skiSpecsPage.clickAddSpecification();
+    await skiSpecsPage.assertFormDialogIsOpen();
+    await skiSpecsPage.fillSkiSpecForm(testSpecData);
+    await skiSpecsPage.submitForm();
+    await skiSpecsPage.assertFormDialogIsClosed();
+    await skiSpecsPage.assertSkiSpecVisible(testSpecName);
+
+    // Now test editing - open edit dialog for our newly created spec
+    await skiSpecsPage.clickEditSpecification(testSpecName);
 
     // Verify dialog is open
     await skiSpecsPage.assertFormDialogIsOpen();
@@ -93,7 +115,7 @@ test.describe('E2E-009: Edit Existing Specification', () => {
 
     // Re-open the edit dialog to verify the description was updated
     // and other fields remained unchanged
-    await skiSpecsPage.clickEditSpecification(specName);
+    await skiSpecsPage.clickEditSpecification(testSpecName);
     await skiSpecsPage.assertFormDialogIsOpen();
 
     // Verify description was updated

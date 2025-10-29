@@ -32,11 +32,10 @@ export class LoginPage extends AbstractPage {
    * @param email - User email address
    * @param password - User password (optional for validation testing)
    */
-  async login(email: string, password?: string): Promise<void> {
-    await this.emailInput.fill(email);
-    if (password) {
-      await this.passwordInput.fill(password);
-    }
+  async login(email: string, password: string): Promise<void> {
+    await this.assertOnPage();
+    await this.fillLoginForm(email, password);
+    await this.waitForReadyInput(this.loginButton);
     await this.loginButton.click();
   }
 
@@ -46,14 +45,28 @@ export class LoginPage extends AbstractPage {
    * @param password - User password
    */
   async fillLoginForm(email: string, password: string): Promise<void> {
+    await this.waitForReadyInput(this.emailInput);
+    await this.waitForReadyInput(this.passwordInput);
+
+    // Click to focus before filling
+    await this.emailInput.click();
     await this.emailInput.fill(email);
+    await expect(this.emailInput).toHaveValue(email);
+
+    await this.passwordInput.click();
     await this.passwordInput.fill(password);
+    await expect(this.passwordInput).toHaveValue(password);
   }
 
   /**
    * Submit the login form (assumes form is already filled)
    */
   async submitForm(): Promise<void> {
+    // Ensure React hydration is complete
+    await expect(this.loginButton).toBeEnabled();
+    await this.page.waitForLoadState('networkidle');
+    await this.page.waitForTimeout(300);
+
     await this.loginButton.click();
   }
 
@@ -78,6 +91,7 @@ export class LoginPage extends AbstractPage {
    */
   async clickSignUp(): Promise<void> {
     await this.signUpLink.click();
+    await this.waitForPageLoaded();
     await expect(this.page).toHaveURL('/auth/register');
   }
 
