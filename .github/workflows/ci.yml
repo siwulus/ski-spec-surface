@@ -1,0 +1,390 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - "**/*.md" # Wszystkie pliki markdown
+      - "docs/**" # Folder dokumentacji
+      - ".ai/**" # Plany i specyfikacje AI
+      - ".cursor/**" # Cursor IDE config
+      - ".claude/**" # Claude config
+      - ".vscode/**" # VSCode config
+      - "coverage/**" # Generowane coverage reports
+      - "playwright-report/**" # Generowane playwright reports
+      - "test-results/**" # Generowane test results
+      - "LICENSE"
+      - ".gitignore"
+  pull_request:
+    branches:
+      - main
+    paths-ignore:
+      - "**/*.md" # Wszystkie pliki markdown
+      - "docs/**" # Folder dokumentacji
+      - ".ai/**" # Plany i specyfikacje AI
+      - ".cursor/**" # Cursor IDE config
+      - ".claude/**" # Claude config
+      - ".vscode/**" # VSCode config
+      - "coverage/**" # Generowane coverage reports
+      - "playwright-report/**" # Generowane playwright reports
+      - "test-results/**" # Generowane test results
+      - "LICENSE"
+      - ".gitignore"
+
+# Cancel previous runs for the same PR/branch when new commits are pushed
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # Job 1: Code Quality Checks (Linting and Type Checking)
+  code_quality:
+    name: Code Quality
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js from .nvmrc
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        # Version is automatically read from package.json's "packageManager" field
+
+      - name: Get pnpm store directory
+        id: pnpm-cache
+        shell: bash
+        run: |
+          echo "path=$(pnpm store path --silent)" >> $GITHUB_OUTPUT
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.pnpm-cache.outputs.path }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run linter
+        run: pnpm lint
+
+      - name: Run type check
+        run: pnpm type-check
+
+  # Job 2: Unit and Integration Tests with Coverage
+  unit_tests:
+    name: Unit & Integration Tests
+    runs-on: ubuntu-latest
+    needs: code_quality
+    outputs:
+      coverage_exists: ${{ steps.coverage.outputs.coverage_exists }}
+      lines: ${{ steps.coverage.outputs.lines }}
+      functions: ${{ steps.coverage.outputs.functions }}
+      branches: ${{ steps.coverage.outputs.branches }}
+      statements: ${{ steps.coverage.outputs.statements }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js from .nvmrc
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        # Version is automatically read from package.json's "packageManager" field
+
+      - name: Get pnpm store directory
+        id: pnpm-cache
+        shell: bash
+        run: |
+          echo "path=$(pnpm store path --silent)" >> $GITHUB_OUTPUT
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.pnpm-cache.outputs.path }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run unit tests with coverage
+        run: pnpm test:coverage
+
+      - name: Generate coverage summary
+        id: coverage
+        if: always()
+        run: |
+          if [ -f coverage/coverage-summary.json ]; then
+            echo "coverage_exists=true" >> $GITHUB_OUTPUT
+
+            # Extract coverage percentages
+            LINES=$(jq -r '.total.lines.pct' coverage/coverage-summary.json)
+            FUNCTIONS=$(jq -r '.total.functions.pct' coverage/coverage-summary.json)
+            BRANCHES=$(jq -r '.total.branches.pct' coverage/coverage-summary.json)
+            STATEMENTS=$(jq -r '.total.statements.pct' coverage/coverage-summary.json)
+
+            # Save to output
+            echo "lines=$LINES" >> $GITHUB_OUTPUT
+            echo "functions=$FUNCTIONS" >> $GITHUB_OUTPUT
+            echo "branches=$BRANCHES" >> $GITHUB_OUTPUT
+            echo "statements=$STATEMENTS" >> $GITHUB_OUTPUT
+          else
+            echo "coverage_exists=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Upload coverage reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: |
+            coverage/
+          retention-days: 30
+
+  # Job 3: E2E Tests with Playwright
+  e2e_tests:
+    name: E2E Tests
+    runs-on: ubuntu-latest
+    needs: code_quality
+    environment: e2e-tests
+    outputs:
+      results_exist: ${{ steps.e2e-results.outputs.results_exist }}
+      total: ${{ steps.e2e-results.outputs.total }}
+      passed: ${{ steps.e2e-results.outputs.passed }}
+      failed: ${{ steps.e2e-results.outputs.failed }}
+      skipped: ${{ steps.e2e-results.outputs.skipped }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js from .nvmrc
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        # Version is automatically read from package.json's "packageManager" field
+
+      - name: Get pnpm store directory
+        id: pnpm-cache
+        shell: bash
+        run: |
+          echo "path=$(pnpm store path --silent)" >> $GITHUB_OUTPUT
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.pnpm-cache.outputs.path }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Get Playwright version
+        id: playwright-version
+        run: |
+          echo "version=$(pnpm list @playwright/test --depth=0 --json | jq -r '.[0].devDependencies["@playwright/test"].version')" >> $GITHUB_OUTPUT
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        id: playwright-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ steps.playwright-version.outputs.version }}
+          restore-keys: |
+            ${{ runner.os }}-playwright-
+
+      - name: Install Playwright Chromium browser
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        run: npx playwright install --with-deps chromium
+
+      - name: Install Chromium system dependencies (if cached)
+        if: steps.playwright-cache.outputs.cache-hit == 'true'
+        run: npx playwright install-deps chromium
+
+      - name: Create .env.e2e file
+        run: |
+          cat > .env.e2e << EOF
+          SUPABASE_URL=${{ vars.SUPABASE_URL }}
+          SUPABASE_KEY=${{ secrets.SUPABASE_KEY }}
+          PUBLIC_SUPABASE_URL=${{ vars.PUBLIC_SUPABASE_URL }}
+          PUBLIC_SUPABASE_KEY=${{ secrets.PUBLIC_SUPABASE_KEY }}  
+          E2E_USERNAME_ID=${{ secrets.E2E_USERNAME_ID }}
+          E2E_USERNAME=${{ secrets.E2E_USERNAME }}
+          E2E_PASSWORD=${{ secrets.E2E_PASSWORD }}
+          EOF
+
+      - name: Run E2E tests
+        run: pnpm test:e2e
+
+      - name: Extract E2E test results
+        id: e2e-results
+        if: always()
+        run: |
+          if [ -f test-results/results.json ]; then
+            echo "results_exist=true" >> $GITHUB_OUTPUT
+
+            # Extract test counts from JSON
+            TOTAL=$(jq '.suites | map(.specs | length) | add' test-results/results.json)
+            PASSED=$(jq '[.suites[].specs[].tests[] | select(.status == "passed")] | length' test-results/results.json)
+            FAILED=$(jq '[.suites[].specs[].tests[] | select(.status == "failed")] | length' test-results/results.json)
+            SKIPPED=$(jq '[.suites[].specs[].tests[] | select(.status == "skipped")] | length' test-results/results.json)
+
+            echo "total=$TOTAL" >> $GITHUB_OUTPUT
+            echo "passed=$PASSED" >> $GITHUB_OUTPUT
+            echo "failed=$FAILED" >> $GITHUB_OUTPUT
+            echo "skipped=$SKIPPED" >> $GITHUB_OUTPUT
+          else
+            echo "results_exist=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Upload Playwright HTML report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-test-results
+          path: test-results/
+          retention-days: 7
+
+  # Job 4: Production Build
+  build:
+    name: Production Build
+    runs-on: ubuntu-latest
+    needs: [unit_tests, e2e_tests]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js from .nvmrc
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        # Version is automatically read from package.json's "packageManager" field
+
+      - name: Get pnpm store directory
+        id: pnpm-cache
+        shell: bash
+        run: |
+          echo "path=$(pnpm store path --silent)" >> $GITHUB_OUTPUT
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.pnpm-cache.outputs.path }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build production
+        run: pnpm build
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-output
+          path: dist/
+          retention-days: 7
+
+  # Job 5: PR Comment (only on pull requests)
+  pr_comment:
+    name: Post PR Comment
+    runs-on: ubuntu-latest
+    needs: [build, unit_tests, e2e_tests]
+    if: github.event_name == 'pull_request'
+    permissions:
+      pull-requests: write
+    steps:
+      - name: Create coverage status emojis
+        id: status
+        run: |
+          THRESHOLD=70
+
+          # Check coverage thresholds
+          if [ "${{ needs.unit_tests.outputs.coverage_exists }}" = "true" ]; then
+            LINES_STATUS="✅"
+            FUNCTIONS_STATUS="✅"
+            BRANCHES_STATUS="✅"
+            STATEMENTS_STATUS="✅"
+
+            LINES=$(echo "${{ needs.unit_tests.outputs.lines }}" | cut -d'.' -f1)
+            FUNCTIONS=$(echo "${{ needs.unit_tests.outputs.functions }}" | cut -d'.' -f1)
+            BRANCHES=$(echo "${{ needs.unit_tests.outputs.branches }}" | cut -d'.' -f1)
+            STATEMENTS=$(echo "${{ needs.unit_tests.outputs.statements }}" | cut -d'.' -f1)
+
+            [ $LINES -lt $THRESHOLD ] && LINES_STATUS="❌"
+            [ $FUNCTIONS -lt $THRESHOLD ] && FUNCTIONS_STATUS="❌"
+            [ $BRANCHES -lt $THRESHOLD ] && BRANCHES_STATUS="❌"
+            [ $STATEMENTS -lt $THRESHOLD ] && STATEMENTS_STATUS="❌"
+
+            echo "lines_status=$LINES_STATUS" >> $GITHUB_OUTPUT
+            echo "functions_status=$FUNCTIONS_STATUS" >> $GITHUB_OUTPUT
+            echo "branches_status=$BRANCHES_STATUS" >> $GITHUB_OUTPUT
+            echo "statements_status=$STATEMENTS_STATUS" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create PR comment
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          body: |
+            ## ✅ CI Tests Passed
+
+            All tests completed successfully!
+
+            ### 📊 Test Coverage
+
+            ${{ needs.unit_tests.outputs.coverage_exists == 'true' && format('| Metric | Coverage |
+            |--------|----------|
+            | Lines | {0}% {1} |
+            | Functions | {2}% {3} |
+            | Branches | {4}% {5} |
+            | Statements | {6}% {7} |
+
+            **Threshold:** 70% (all metrics passed)', needs.unit_tests.outputs.lines, steps.status.outputs.lines_status, needs.unit_tests.outputs.functions, steps.status.outputs.functions_status, needs.unit_tests.outputs.branches, steps.status.outputs.branches_status, needs.unit_tests.outputs.statements, steps.status.outputs.statements_status) || '_Coverage data not available_' }}
+
+            ### 🎭 E2E Tests
+
+            ${{ needs.e2e_tests.outputs.results_exist == 'true' && format('- **Total Tests:** {0}
+            - **Passed:** {1} ✅
+            - **Failed:** {2}
+            - **Skipped:** {3}', needs.e2e_tests.outputs.total, needs.e2e_tests.outputs.passed, needs.e2e_tests.outputs.failed, needs.e2e_tests.outputs.skipped) || '_E2E results not available_' }}
+
+            ### 📦 Build Status
+
+            Production build completed successfully.
+
+            ---
+            *View full reports in [workflow artifacts](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})*
