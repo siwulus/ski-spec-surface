@@ -19,9 +19,26 @@ interface ImportMetaEnv {
   readonly PUBLIC_SUPABASE_KEY: string;
   readonly SUPABASE_URL: string;
   readonly SUPABASE_KEY: string;
-  // more env variables...
+  readonly OPENROUTER_API_KEY?: string;
+  // Build-time environment variables (for config files)
+  readonly CF_PAGES?: string;
+  readonly BUILD_ENV?: string;
 }
 
 interface ImportMeta {
   readonly env: ImportMetaEnv;
+}
+
+// Node.js process.env types for build-time config files
+declare namespace NodeJS {
+  interface ProcessEnv {
+    readonly SUPABASE_URL: string;
+    readonly SUPABASE_KEY: string;
+    readonly PUBLIC_SUPABASE_URL: string;
+    readonly PUBLIC_SUPABASE_KEY: string;
+    readonly OPENROUTER_API_KEY?: string;
+    // Build-time flags
+    readonly CF_PAGES?: string;
+    readonly BUILD_ENV?: string;
+  }
 }

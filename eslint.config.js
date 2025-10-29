@@ -34,6 +34,15 @@ const jsxA11yConfig = tseslint.config({
   },
 });
 
+const nodeConfigFiles = tseslint.config({
+  files: ["*.config.{js,mjs,ts}", "eslint.config.js"],
+  languageOptions: {
+    globals: {
+      process: "readonly",
+    },
+  },
+});
+
 const reactConfig = tseslint.config({
   files: ["**/*.{js,jsx,ts,tsx}"],
   extends: [pluginReact.configs.flat.recommended],
@@ -60,6 +69,7 @@ const reactConfig = tseslint.config({
 export default tseslint.config(
   includeIgnoreFile(gitignorePath),
   baseConfig,
+  nodeConfigFiles,
   jsxA11yConfig,
   reactConfig,
   eslintPluginAstro.configs["flat/recommended"],

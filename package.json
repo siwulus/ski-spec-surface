@@ -7,6 +7,8 @@
     "dev": "astro dev",
     "dev:e2e": "astro dev --mode e2e",
     "build": "astro build",
+    "build:cf": "BUILD_ENV=cloudflare astro build",
+    "build:node": "astro build",
     "preview": "astro preview",
     "astro": "astro",
     "lint": "eslint .",
@@ -26,6 +28,7 @@
     "test:all": "pnpm test:unit && pnpm test:e2e"
   },
   "dependencies": {
+    "@astrojs/cloudflare": "^12.6.10",
     "@astrojs/node": "^9.4.3",
     "@astrojs/react": "^4.3.1",
     "@astrojs/sitemap": "^3.5.1",

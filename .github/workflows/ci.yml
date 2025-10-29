@@ -303,8 +303,10 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Build production
-        run: pnpm build
+      - name: Build production (Cloudflare adapter)
+        run: pnpm build:cf
+        env:
+          BUILD_ENV: cloudflare
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
