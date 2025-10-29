@@ -23,7 +23,7 @@ export abstract class AbstractPage {
    */
   protected async waitForPageLoaded(): Promise<void> {
     await this.page.waitForLoadState('networkidle');
-    await this.page.waitForTimeout(500);
+    await this.page.waitForTimeout(200);
   }
 
   protected async waitForReadyInput(locator: Locator): Promise<void> {
