@@ -132,10 +132,10 @@ jobs:
             echo "coverage_exists=true" >> $GITHUB_OUTPUT
 
             # Extract coverage percentages
-            LINES=$(jq -r '.total.lines.pct' coverage/coverage-summary.json)
-            FUNCTIONS=$(jq -r '.total.functions.pct' coverage/coverage-summary.json)
-            BRANCHES=$(jq -r '.total.branches.pct' coverage/coverage-summary.json)
-            STATEMENTS=$(jq -r '.total.statements.pct' coverage/coverage-summary.json)
+            LINES=$(jq -r '.total.lines.pct' coverage/coverage-final.json)
+            FUNCTIONS=$(jq -r '.total.functions.pct' coverage/coverage-final.json)
+            BRANCHES=$(jq -r '.total.branches.pct' coverage/coverage-final.json)
+            STATEMENTS=$(jq -r '.total.statements.pct' coverage/coverage-final.json)
 
             # Save to output
             echo "lines=$LINES" >> $GITHUB_OUTPUT
@@ -398,7 +398,7 @@ jobs:
   pr_comment:
     name: Post PR Comment
     runs-on: ubuntu-latest
-    needs: [build]
+    needs: [build, unit_tests, e2e_tests]
     if: github.event_name == 'pull_request'
     permissions:
       pull-requests: write
