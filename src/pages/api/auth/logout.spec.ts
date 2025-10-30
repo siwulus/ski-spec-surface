@@ -1,11 +1,9 @@
-import { describe, it, expect, vi, beforeEach, type Mock } from 'vitest';
-import { Effect } from 'effect';
-import { POST } from './logout';
-import type { APIContext } from 'astro';
-import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '@/db/database.types';
 import type { LogoutResponse } from '@/types/api.types';
-import { AuthOperationError } from '@/types/error.types';
+import type { SupabaseClient } from '@supabase/supabase-js';
+import type { APIContext } from 'astro';
+import { beforeEach, describe, expect, it, vi, type Mock } from 'vitest';
+import { POST } from './logout';
 
 /**
  * Unit tests for POST /api/auth/logout
