@@ -64,10 +64,20 @@ export const useAuth = (): UseAuthReturn => {
    * Create Supabase browser client
    * Memoized to create only once per hook instance
    */
-  const supabase = useMemo(
-    () => createBrowserClient<Database>(import.meta.env.PUBLIC_SUPABASE_URL, import.meta.env.PUBLIC_SUPABASE_KEY),
-    []
-  );
+  const supabase = useMemo(() => {
+    const supabaseUrl = import.meta.env.PUBLIC_SUPABASE_URL;
+    const supabaseKey = import.meta.env.PUBLIC_SUPABASE_KEY;
+
+    if (!supabaseUrl || !supabaseKey) {
+      throw new Error(
+        `Missing Supabase environment variables. Please configure: ${
+          !supabaseUrl ? 'PUBLIC_SUPABASE_URL ' : ''
+        }${!supabaseKey ? 'PUBLIC_SUPABASE_KEY' : ''}`
+      );
+    }
+
+    return createBrowserClient<Database>(supabaseUrl, supabaseKey);
+  }, []);
 
   /**
    * Fetches the current session from Supabase
