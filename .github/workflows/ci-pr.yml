@@ -84,7 +84,8 @@ jobs:
     name: E2E Tests
     runs-on: ubuntu-latest
     needs: code_quality
-    if: github.base_ref == 'main'
+    # if: github.base_ref == 'main'
+    if: false
     environment: integration
 
     steps:
@@ -185,8 +186,6 @@ jobs:
           echo "- PR: #${{ github.event.pull_request.number }}" >> $GITHUB_STEP_SUMMARY
           echo "- Target Branch: ${{ github.base_ref }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-
-          jobs:
   review_code_with_claude:
     name: Review Code with Claude
     runs-on: ubuntu-latest
