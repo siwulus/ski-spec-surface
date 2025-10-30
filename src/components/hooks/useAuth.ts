@@ -211,11 +211,14 @@ export const useAuth = (): UseAuthReturn => {
 
   /**
    * Request password reset email
+   *
+   * Note: redirectTo points to the PKCE callback endpoint, not directly to update-password.
+   * Flow: Email link → /api/auth/callback?code=xxx → exchangeCodeForSession → /auth/update-password
    */
   const resetPassword = async (credentials: ResetPasswordCredentials): Promise<AuthResult> => {
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(credentials.email, {
-        redirectTo: `${window.location.origin}/auth/update-password`,
+        redirectTo: `${window.location.origin}/api/auth/callback`,
       });
 
       if (error) {

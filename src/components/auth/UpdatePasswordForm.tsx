@@ -19,11 +19,14 @@ import { PasswordStrengthIndicator } from './PasswordStrengthIndicator';
  * - Real-time password strength indicator
  * - Client-side validation with Zod
  * - Supabase-based password update via useAuth hook
- * - Automatic redirect to /ski-specs after success
+ * - Automatic logout and redirect to /auth/login after success
  *
  * Used on /auth/update-password page after password reset email link.
- * The session is established by the server-side middleware when the user
+ * The session is established by the PKCE callback endpoint when the user
  * clicks the reset link from their email.
+ *
+ * Security requirement: User must be logged out after password change
+ * to ensure they authenticate with the new password.
  *
  * @example
  * ```tsx
@@ -33,7 +36,7 @@ import { PasswordStrengthIndicator } from './PasswordStrengthIndicator';
 export const UpdatePasswordForm: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
-  const { updatePassword } = useAuth();
+  const { updatePassword, signOut } = useAuth();
 
   const form = useForm<UpdatePasswordFormData>({
     resolver: zodResolver(UpdatePasswordSchema),
@@ -50,19 +53,31 @@ export const UpdatePasswordForm: React.FC = () => {
     setIsLoading(true);
 
     try {
+      // Step 1: Update password
       const { success, error } = await updatePassword({ password: data.password });
 
       if (!success) {
         toast.error(error?.message || 'Failed to update password');
         return;
       }
-      // Success
-      setIsSuccess(true);
-      toast.success('Password updated successfully!');
 
-      // Redirect after a short delay
+      // Step 2: Sign out user (security requirement)
+      // User must authenticate with new password
+      const { success: signOutSuccess, error: signOutError } = await signOut();
+
+      if (!signOutSuccess) {
+        // eslint-disable-next-line no-console
+        console.error('Sign out after password change failed:', signOutError);
+        // Continue anyway - password was changed successfully
+      }
+
+      // Step 3: Show success state
+      setIsSuccess(true);
+      toast.success('Password updated successfully! Please log in with your new password.');
+
+      // Step 4: Redirect to login page after short delay
       setTimeout(() => {
-        window.location.href = '/ski-specs';
+        window.location.href = '/auth/login?passwordChanged=true';
       }, 2000);
     } catch (error) {
       // eslint-disable-next-line no-console
@@ -81,7 +96,7 @@ export const UpdatePasswordForm: React.FC = () => {
           <CheckCircle className="size-4" />
           <AlertTitle>Password updated successfully!</AlertTitle>
           <AlertDescription>
-            Your password has been updated. You will be redirected to the main page shortly.
+            Your password has been updated. You will be redirected to the login page to sign in with your new password.
           </AlertDescription>
         </Alert>
       </div>

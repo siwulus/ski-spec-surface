@@ -8,7 +8,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { LogOut } from 'lucide-react';
+import { KeyRound, LogOut } from 'lucide-react';
 import React from 'react';
 import { toast } from 'sonner';
 
@@ -36,9 +36,13 @@ const getUserInitials = (email: string): string => {
  * Displays user dropdown menu with:
  * - Avatar with user initials
  * - User email display
+ * - Change password action (redirects to /auth/update-password)
  * - Logout action
  *
  * Used in Header for authenticated users.
+ *
+ * Security note: After password change, user is automatically logged out
+ * and must authenticate with the new password (prevents session fixation).
  *
  * @example
  * ```tsx
@@ -87,6 +91,17 @@ export const UserMenu: React.FC<UserMenuProps> = ({ userEmail }) => {
         </DropdownMenuLabel>
 
         <DropdownMenuSeparator />
+
+        <DropdownMenuItem asChild disabled={!isAuthenticated || isLoading}>
+          <a
+            href="/auth/update-password"
+            className="flex cursor-pointer items-center"
+            aria-label="Change your password (you will be logged out after changing)"
+          >
+            <KeyRound className="mr-2 size-4" />
+            <span>Change password</span>
+          </a>
+        </DropdownMenuItem>
 
         <DropdownMenuItem onClick={handleLogout} disabled={!isAuthenticated || isLoading} className="cursor-pointer">
           <LogOut className="mr-2 size-4" />
