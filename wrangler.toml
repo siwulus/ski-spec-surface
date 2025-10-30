@@ -1,0 +1,29 @@
+# Cloudflare Pages Configuration for Ski Surface Spec Extension
+# See: https://developers.cloudflare.com/pages/functions/wrangler-configuration/
+
+name = "ski-spec-surface"
+
+# Compatibility date determines which Workers runtime APIs are available
+# Set to current date for latest features and security updates
+compatibility_date = "2025-01-01"
+
+# Enable Node.js compatibility for Astro SSR
+# This allows using Node.js built-in modules in your server-side code
+compatibility_flags = ["nodejs_compat"]
+
+# Pages configuration
+pages_build_output_dir = "dist"
+
+# Development configuration
+# [env.development]
+# Development-specific settings can be added here if needed
+
+# Production configuration
+# [env.production]
+# Production-specific settings can be added here if needed
+
+# Environment variables should be configured in Cloudflare Pages dashboard:
+# - SUPABASE_URL
+# - SUPABASE_KEY
+# - PUBLIC_SUPABASE_URL
+# - PUBLIC_SUPABASE_KEY
