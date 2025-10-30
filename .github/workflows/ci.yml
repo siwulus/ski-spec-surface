@@ -155,6 +155,51 @@ jobs:
             coverage/
           retention-days: 30
 
+      - name: Add coverage to workflow summary
+        if: always()
+        run: |
+          echo "## 📊 Test Coverage" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          if [ "${{ steps.coverage.outputs.coverage_exists }}" = "true" ]; then
+            THRESHOLD=70
+
+            # Get coverage values
+            LINES="${{ steps.coverage.outputs.lines }}"
+            FUNCTIONS="${{ steps.coverage.outputs.functions }}"
+            BRANCHES="${{ steps.coverage.outputs.branches }}"
+            STATEMENTS="${{ steps.coverage.outputs.statements }}"
+
+            # Determine status emojis
+            LINES_INT=$(echo "$LINES" | cut -d'.' -f1)
+            FUNCTIONS_INT=$(echo "$FUNCTIONS" | cut -d'.' -f1)
+            BRANCHES_INT=$(echo "$BRANCHES" | cut -d'.' -f1)
+            STATEMENTS_INT=$(echo "$STATEMENTS" | cut -d'.' -f1)
+
+            LINES_STATUS="✅"
+            FUNCTIONS_STATUS="✅"
+            BRANCHES_STATUS="✅"
+            STATEMENTS_STATUS="✅"
+
+            [ $LINES_INT -lt $THRESHOLD ] && LINES_STATUS="❌"
+            [ $FUNCTIONS_INT -lt $THRESHOLD ] && FUNCTIONS_STATUS="❌"
+            [ $BRANCHES_INT -lt $THRESHOLD ] && BRANCHES_STATUS="❌"
+            [ $STATEMENTS_INT -lt $THRESHOLD ] && STATEMENTS_STATUS="❌"
+
+            # Create table
+            echo "| Metric | Coverage |" >> $GITHUB_STEP_SUMMARY
+            echo "|--------|----------|" >> $GITHUB_STEP_SUMMARY
+            echo "| Lines | ${LINES}% ${LINES_STATUS} |" >> $GITHUB_STEP_SUMMARY
+            echo "| Functions | ${FUNCTIONS}% ${FUNCTIONS_STATUS} |" >> $GITHUB_STEP_SUMMARY
+            echo "| Branches | ${BRANCHES}% ${BRANCHES_STATUS} |" >> $GITHUB_STEP_SUMMARY
+            echo "| Statements | ${STATEMENTS}% ${STATEMENTS_STATUS} |" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "**Threshold:** 70% for all metrics" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "_Coverage data not available_" >> $GITHUB_STEP_SUMMARY
+          fi
+          echo "" >> $GITHUB_STEP_SUMMARY
+
   # Job 3: E2E Tests with Playwright
   e2e_tests:
     name: E2E Tests
@@ -267,6 +312,27 @@ jobs:
           path: test-results/
           retention-days: 7
 
+      - name: Add E2E results to workflow summary
+        if: always()
+        run: |
+          echo "## 🎭 E2E Test Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          if [ "${{ steps.e2e-results.outputs.results_exist }}" = "true" ]; then
+            TOTAL="${{ steps.e2e-results.outputs.total }}"
+            PASSED="${{ steps.e2e-results.outputs.passed }}"
+            FAILED="${{ steps.e2e-results.outputs.failed }}"
+            SKIPPED="${{ steps.e2e-results.outputs.skipped }}"
+
+            echo "- **Total Tests:** $TOTAL" >> $GITHUB_STEP_SUMMARY
+            echo "- **Passed:** $PASSED ✅" >> $GITHUB_STEP_SUMMARY
+            echo "- **Failed:** $FAILED" >> $GITHUB_STEP_SUMMARY
+            echo "- **Skipped:** $SKIPPED" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "_E2E test results not available_" >> $GITHUB_STEP_SUMMARY
+          fi
+          echo "" >> $GITHUB_STEP_SUMMARY
+
   # Job 4: Production Build
   build:
     name: Production Build
@@ -314,6 +380,18 @@ jobs:
           name: build-output
           path: dist/
           retention-days: 7
+
+      - name: Add build status to workflow summary
+        run: |
+          echo "## 📦 Production Build" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Production build completed successfully." >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Build Configuration:**" >> $GITHUB_STEP_SUMMARY
+          echo "- Adapter: Cloudflare Pages" >> $GITHUB_STEP_SUMMARY
+          echo "- Output: \`dist/\`" >> $GITHUB_STEP_SUMMARY
+          echo "- Mode: SSR (Server-Side Rendering)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
 
   # Job 5: PR Comment (only on pull requests)
   pr_comment:
@@ -412,7 +490,7 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy --commit-dirty=true
+          command: pages deploy dist --project-name=ski-spec-surface --commit-dirty=true
           packageManager: pnpm
 
       - name: Deployment summary
