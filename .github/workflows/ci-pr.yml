@@ -189,7 +189,6 @@ jobs:
   review_code_with_claude:
     name: Review Code with Claude
     runs-on: ubuntu-latest
-    if: github.event.pull_request.head.repo.full_name == github.repository
     needs: [build]
     environment: integration
     permissions:
