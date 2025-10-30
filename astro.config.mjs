@@ -13,9 +13,7 @@ import cloudflare from "@astrojs/cloudflare";
 // BUILD_ENV=cloudflare can be set manually for testing
 const isProd = process.env.CF_PAGES === "1" || process.env.BUILD_ENV === "cloudflare";
 const adapter = isProd
-  ? cloudflare({
-      imageService: "compile",
-    })
+  ? cloudflare()
   : node({
       mode: "standalone",
     });
