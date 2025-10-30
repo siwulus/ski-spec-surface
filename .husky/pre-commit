@@ -1,1 +1,19 @@
-npx lint-staged
+#!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
+
+echo "🔍 Running pre-commit checks..."
+
+# 1. Lint and format staged files (fastest, most common failures)
+echo "\n📝 Linting and formatting staged files..."
+npx lint-staged || exit 1
+
+# 2. Type check entire codebase (fast, catches type errors)
+echo "\n🔎 Type checking..."
+pnpm type-check || exit 1
+
+# 3. Run unit tests (slower, but critical)
+echo "\n🧪 Running unit tests..."
+pnpm test:unit || exit 1
+
+echo "\n✅ All pre-commit checks passed!"
+echo "ℹ️  Tip: Use 'git commit --no-verify' to skip checks in emergencies"
