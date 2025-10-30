@@ -60,25 +60,45 @@ System uwierzytelniania wprowadza nowe strony oraz modyfikuje istniejące elemen
   - `ResetPasswordForm` (React island) - formularz żądania resetu hasła (email)
 - **Logika:**
   - Użytkownik wprowadza email
-  - System wysyła link resetujący przez Supabase Auth
+  - System wysyła link resetujący przez Supabase Auth z PKCE flow
+  - Link prowadzi do `/api/auth/callback?code=xxx` (callback endpoint)
   - Wyświetlenie komunikatu o wysłaniu emaila
-- **Parametry URL:** brak
+- **Parametry URL:**
+  - `error=invalid_code` (opcjonalny) - wyświetlany gdy kod PKCE jest nieprawidłowy/wygasły
 
 **D. Strona ustawiania nowego hasła: `/auth/update-password`**
 
 - **Ścieżka pliku:** `src/pages/auth/update-password.astro`
 - **Typ:** Strona Astro z wyspą React dla formularza
-- **Dostępność:** Dostępna przez link z emaila (z tokenem)
+- **Dostępność:** Chroniona - wymaga aktywnej sesji (ustanowionej przez callback endpoint)
 - **Layout:** `Layout.astro` z uproszczonym nagłówkiem
 - **Główne komponenty:**
   - `UpdatePasswordForm` (React island) - formularz nowego hasła
 - **Logika:**
-  - Weryfikacja tokenu z URL (hash fragment lub query param)
+  - Wymaga aktywnej sesji (użytkownik przekierowany z callback endpoint po PKCE exchange)
   - Formularz wprowadzenia nowego hasła z potwierdzeniem
-  - Walidacja wymogów hasła
-  - Po udanej zmianie → przekierowanie do `/auth/login` z komunikatem sukcesu
+  - Walidacja wymogów hasła (min 8 znaków, wielka litera, mała litera, cyfra)
+  - Po udanej zmianie → wylogowanie użytkownika (security requirement)
+  - Przekierowanie do `/auth/login?passwordChanged=true` z komunikatem sukcesu
+- **Parametry URL:** brak (sesja ustanowiona przez cookies po PKCE exchange)
+
+**E. API Callback endpoint (PKCE): `/api/auth/callback`**
+
+- **Ścieżka pliku:** `src/pages/api/auth/callback.ts`
+- **Typ:** API Route (GET)
+- **Dostępność:** Publiczny endpoint (whitelist w middleware)
+- **Odpowiedzialności:**
+  - Przyjmuje parametr `code` z URL (authorization code z emaila reset password)
+  - Wymienia kod na sesję używając `supabase.auth.exchangeCodeForSession(code)`
+  - Kod jest jednorazowy i wygasa po 5 minutach
+  - Redirect do `/auth/update-password` (sukces) lub `/auth/reset-password?error=invalid_code` (błąd)
 - **Parametry URL:**
-  - `access_token` i `refresh_token` (w hash fragment) - tokeny z Supabase
+  - `code` (wymagany) - PKCE authorization code z Supabase
+- **Flow PKCE:**
+  1. Email link → `/api/auth/callback?code=xxx`
+  2. Exchange code for session
+  3. Redirect → `/auth/update-password` (user ma aktywną sesję)
+- **Implementacja:** EffectJS z Railway-Oriented Programming pattern
 
 #### 1.1.2 Modyfikacje istniejących stron
 
@@ -214,15 +234,19 @@ const RegisterSchema = z
   - Formularz żądania resetu hasła (wprowadzenie emaila)
   - Komunikacja z Supabase Auth
   - Wyświetlanie komunikatu o wysłaniu emaila
+  - Wykrywanie błędu `invalid_code` z query params
 - **Pola formularza:**
   - Email (type="email", required)
 - **Akcje:**
   - Przycisk "Wyślij link resetujący"
   - Link "Powrót do logowania" → `/auth/login`
 - **Logika:**
-  - Po wprowadzeniu emaila wywołuje `supabase.auth.resetPasswordForEmail(email, { redirectTo: 'https://domain.com/auth/update-password' })`
+  - Po wprowadzeniu emaila wywołuje `supabase.auth.resetPasswordForEmail(email, { redirectTo: '${origin}/api/auth/callback' })`
+  - **WAŻNE:** redirectTo prowadzi do callback endpoint, NIE bezpośrednio do update-password
+  - Email zawiera link: `/api/auth/callback?code=xxx`
   - Wyświetlenie komunikatu sukcesu (nawet jeśli email nie istnieje w systemie - security best practice)
   - Informacja o sprawdzeniu skrzynki email
+  - Wykrywa query param `error=invalid_code` i wyświetla komunikat o wygasłym/nieprawidłowym linku
 - **Schema Zod:**
 
 ```typescript
@@ -237,19 +261,28 @@ const ResetPasswordSchema = z.object({
 - **Typ:** React Functional Component
 - **Odpowiedzialności:**
   - Formularz ustawienia nowego hasła
-  - Walidacja siły hasła
-  - Weryfikacja tokenu z URL
+  - Walidacja siły hasła w czasie rzeczywistym
   - Aktualizacja hasła przez Supabase Auth
+  - **WAŻNE:** Wylogowanie użytkownika po zmianie hasła (security requirement)
 - **Pola formularza:**
   - Nowe hasło (type="password", required, wymogi bezpieczeństwa)
   - Potwierdzenie nowego hasła (type="password", required)
+  - Password Strength Indicator (komponent pomocniczy)
 - **Akcje:**
-  - Przycisk "Ustaw nowe hasło"
+  - Przycisk "Update password"
+  - Link "Back to login" → `/auth/login`
 - **Logika:**
-  - Weryfikacja tokenu z URL (automatycznie przez Supabase przy montowaniu)
-  - Jeśli token nieprawidłowy/wygasły → komunikat błędu + link do `/auth/reset-password`
-  - Po wprowadzeniu nowego hasła: `supabase.auth.updateUser({ password: newPassword })`
-  - Po sukcesie → przekierowanie do `/auth/login` z toastem "Hasło zostało zmienione"
+  - Sesja już ustanowiona przez `/api/auth/callback` endpoint (PKCE exchange)
+  - Jeśli brak sesji → middleware przekierowuje do `/auth/login`
+  - Po wprowadzeniu nowego hasła:
+    1. `supabase.auth.updateUser({ password: newPassword })` - zmiana hasła
+    2. `supabase.auth.signOut()` - **wylogowanie użytkownika** (security requirement)
+    3. Przekierowanie do `/auth/login?passwordChanged=true`
+  - LoginForm wykrywa `passwordChanged=true` i wyświetla toast: "Password updated successfully! You can now log in with your new password."
+- **Security Note:**
+  - Użytkownik MUSI być wylogowany po zmianie hasła
+  - Zapewnia to, że musi się uwierzytelnić nowym hasłem
+  - Prevents session fixation attacks
 - **Schema Zod:**
 
 ```typescript
@@ -560,19 +593,29 @@ const authErrorMessages: Record<string, string> = {
 7. Middleware odczytuje sesję z cookie i ustawia `userId`
 8. Strona `/ski-specs` renderuje się z danymi użytkownika
 
-#### Scenariusz 3: Resetowanie hasła
+#### Scenariusz 3: Resetowanie hasła (PKCE Flow)
 
-1. Użytkownik na stronie `/auth/login` klika "Zapomniałem hasła"
+1. Użytkownik na stronie `/auth/login` klika "Forgot your password?"
 2. Przekierowanie do `/auth/reset-password`
-3. Wprowadza email i klika "Wyślij link resetujący"
-4. Wywołanie `supabase.auth.resetPasswordForEmail()`
-5. Wyświetlenie komunikatu: "Jeśli podany adres email jest w naszej bazie, otrzymasz link do resetowania hasła"
-6. Użytkownik otrzymuje email z linkiem
-7. Kliknięcie linku → przekierowanie do `/auth/update-password?access_token=...`
-8. Wprowadza nowe hasło i potwierdzenie
-9. Kliknięcie "Ustaw nowe hasło"
-10. Wywołanie `supabase.auth.updateUser({ password })`
-11. Sukces → przekierowanie do `/auth/login` + toast "Hasło zostało zmienione. Możesz się teraz zalogować"
+3. Wprowadza email i klika "Send reset link"
+4. Wywołanie `supabase.auth.resetPasswordForEmail(email, { redirectTo: '${origin}/api/auth/callback' })`
+5. Wyświetlenie komunikatu: "Jeśli podany adres email jest w naszej bazie, otrzymasz link do resetowania hasła" (security best practice)
+6. Użytkownik otrzymuje email z linkiem PKCE: `/api/auth/callback?code=xxx`
+7. Kliknięcie linku → żądanie do `/api/auth/callback?code=xxx`
+8. Callback endpoint:
+   - Wywołanie `supabase.auth.exchangeCodeForSession(code)` - wymiana kodu na sesję
+   - Kod jest jednorazowy i wygasa po 5 minutach
+   - Sukces → redirect 302 do `/auth/update-password` (sesja ustanowiona w cookies)
+   - Błąd → redirect 302 do `/auth/reset-password?error=invalid_code`
+9. Użytkownik na `/auth/update-password` (ma aktywną sesję)
+10. Wprowadza nowe hasło i potwierdzenie
+11. Kliknięcie "Update password"
+12. Wykonanie operacji:
+    - `supabase.auth.updateUser({ password })` - zmiana hasła
+    - `supabase.auth.signOut()` - **wylogowanie użytkownika** (security requirement)
+13. Sukces → przekierowanie do `/auth/login?passwordChanged=true`
+14. LoginForm wykrywa `passwordChanged=true` → toast "Password updated successfully! You can now log in with your new password."
+15. Użytkownik loguje się nowym hasłem
 
 #### Scenariusz 4: Wylogowanie
 
@@ -629,10 +672,12 @@ const PUBLIC_ROUTES = [
   '/auth/login',
   '/auth/register',
   '/auth/reset-password',
-  '/auth/update-password',
+  '/api/auth/callback', // PKCE code exchange for password reset
   '/api/health',
   '/404',
 ];
+
+// NOTE: /auth/update-password is NOT public - requires active session from callback
 
 // Trasy tylko dla niezalogowanych (redirect do /ski-specs jeśli zalogowany)
 const GUEST_ONLY_ROUTES = ['/auth/login', '/auth/register'];
@@ -793,11 +838,59 @@ const supabase = createClient<Database>(import.meta.env.PUBLIC_SUPABASE_URL, imp
 - Do wywołań auth (signIn, signUp, signOut, resetPassword)
 - Do subskrypcji zmian stanu autentykacji (onAuthStateChange)
 
-### 2.3 API Endpoints (jeśli potrzebne)
+### 2.3 API Endpoints
 
-Większość operacji uwierzytelniania jest obsługiwana bezpośrednio przez Supabase Auth. Jednak możemy utworzyć pomocnicze endpointy dla specyficznych przypadków:
+Większość operacji uwierzytelniania jest obsługiwana bezpośrednio przez Supabase Auth. Jednak aplikacja zawiera pomocnicze endpointy dla specyficznych przypadków:
 
-#### 2.3.1 GET /api/auth/session
+#### 2.3.1 GET /api/auth/callback (REQUIRED - PKCE Flow)
+
+- **Cel:** Wymiana kodu PKCE na sesję użytkownika (password reset flow)
+- **Plik:** `src/pages/api/auth/callback.ts`
+- **Metoda:** GET
+- **Dostępność:** Publiczny endpoint (w PUBLIC_PATHS)
+- **Parametry Query:**
+  - `code` (wymagany) - PKCE authorization code z emaila reset password
+- **Odpowiedź:** HTTP 302 Redirect
+- **Flow:**
+  1. Użytkownik klika link z emaila: `/api/auth/callback?code=xxx`
+  2. Endpoint wywołuje `supabase.auth.exchangeCodeForSession(code)`
+  3. Kod jest jednorazowy i wygasa po 5 minutach
+  4. Sukces → redirect do `/auth/update-password` (sesja w cookies)
+  5. Błąd → redirect do `/auth/reset-password?error=invalid_code`
+- **Implementacja:** EffectJS z Railway-Oriented Programming pattern
+
+```typescript
+import { Effect, pipe } from 'effect';
+import type { APIRoute } from 'astro';
+
+export const GET: APIRoute = async ({ request, locals, url }) => {
+  const { supabase } = locals;
+  const origin = url.origin;
+
+  const program = pipe(
+    // Extract code from URL
+    extractCode(url),
+    // Exchange code for session
+    Effect.flatMap((code) => exchangeCodeForSession(supabase, code)),
+    // Redirect to update-password on success
+    Effect.flatMap(() => createSuccessRedirect(origin)),
+    // Redirect to reset-password on any error
+    Effect.catchAll(() => createErrorRedirect(origin)),
+    catchAllSkiSpecErrors({ endpoint: '/api/auth/callback', method: 'GET' })
+  );
+
+  return Effect.runPromise(program);
+};
+```
+
+**Security Notes:**
+
+- Code is single-use (cannot be reused)
+- Code expires after 5 minutes
+- Generic error messages prevent information disclosure
+- All errors logged for monitoring
+
+#### 2.3.2 GET /api/auth/session
 
 - **Cel:** Sprawdzenie bieżącej sesji użytkownika po stronie klienta
 - **Plik:** `src/pages/api/auth/session.ts`
@@ -1025,12 +1118,14 @@ Domyślnie Supabase ma wbudowane rate limiting:
 
 W Supabase → Authentication → URL Configuration → Redirect URLs:
 
+**WAŻNE:** Redirect URLs muszą prowadzić do callback endpoint (PKCE flow), NIE bezpośrednio do update-password!
+
 ```
-http://localhost:3000/auth/update-password (dev)
-https://yourdomain.com/auth/update-password (prod)
-http://localhost:3000/* (dev - opcjonalnie wildcard)
-https://yourdomain.com/* (prod - opcjonalnie wildcard)
+http://localhost:3000/api/auth/callback (dev) ← REQUIRED dla PKCE
+https://yourdomain.com/api/auth/callback (prod) ← REQUIRED dla PKCE
 ```
+
+**Uwaga:** Nie dodawaj `/auth/update-password` do redirect URLs - ta strona jest chroniona i wymaga sesji ustanowionej przez callback endpoint.
 
 #### 3.1.2 Zmienne środowiskowe
 
@@ -1657,11 +1752,46 @@ W razie pytań lub potrzeby wyjaśnienia szczegółów specyfikacji:
 **Koniec specyfikacji technicznej**
 
 Data utworzenia: 2025-10-20
-Data aktualizacji: 2025-10-21
-Wersja: 1.1
-Status: Gotowa do implementacji
+Data aktualizacji: 2025-10-30
+Wersja: 1.2
+Status: Zaimplementowana (password reset flow z PKCE)
 
 ## Historia zmian
+
+### Wersja 1.2 (2025-10-30)
+
+#### Implementacja PKCE Flow dla Password Reset
+
+- **Nowy endpoint:** Dodano `/api/auth/callback` (GET) - obsługa PKCE code exchange
+  - Implementacja w EffectJS z Railway-Oriented Programming
+  - Wymiana jednorazowego kodu na sesję użytkownika
+  - Redirect do `/auth/update-password` (sukces) lub `/auth/reset-password?error=invalid_code` (błąd)
+  - Kod wygasa po 5 minutach i jest jednorazowy
+- **Zmiana flow resetowania hasła:**
+  - Email reset password zawiera link do `/api/auth/callback?code=xxx` (nie bezpośrednio do update-password)
+  - Callback endpoint wykonuje `exchangeCodeForSession()` i ustanawia sesję w cookies
+  - `/auth/update-password` wymaga teraz aktywnej sesji (chroniona strona)
+  - Po zmianie hasła użytkownik jest **automatycznie wylogowywany** (security requirement)
+  - Redirect do `/auth/login?passwordChanged=true` z komunikatem sukcesu
+- **Aktualizacja komponentów:**
+  - `ResetPasswordForm`: `redirectTo` zmienione na `/api/auth/callback`
+  - `UpdatePasswordForm`: dodano wylogowanie po zmianie hasła + redirect do login
+  - `LoginForm`: wykrywa `passwordChanged=true` i wyświetla toast z komunikatem sukcesu
+- **Aktualizacja middleware:**
+  - Dodano `/api/auth/callback` do PUBLIC_PATHS
+  - `/auth/update-password` pozostaje chronione (wymaga sesji)
+- **Aktualizacja Supabase Redirect URLs:**
+  - Redirect URLs MUSZĄ prowadzić do `/api/auth/callback` (nie do `/auth/update-password`)
+  - Required: `http://localhost:3000/api/auth/callback` (dev), `https://yourdomain.com/api/auth/callback` (prod)
+- **Dokumentacja:**
+  - Dodano szczegółowy opis PKCE flow w Scenariuszu 3
+  - Dodano dokumentację API endpoint `/api/auth/callback`
+  - Dodano sekcję "E. API Callback endpoint (PKCE)" w strukturze stron
+  - Dodano plik `.ai/supabase-redirect-urls-setup.md` z instrukcją konfiguracji
+- **Security improvements:**
+  - Wymuszenie wylogowania po zmianie hasła zapobiega session fixation attacks
+  - PKCE flow zapewnia bezpieczną wymianę tokenu bez ekspozycji w URL hash
+  - Generic error messages zapobiegają information disclosure
 
 ### Wersja 1.1 (2025-10-21)
 

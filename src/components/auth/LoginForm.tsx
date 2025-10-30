@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input';
 import { useAuth } from '@/components/hooks/useAuth';
 import { LoginSchema, type LoginFormData } from '@/types/auth.types';
 import { zodResolver } from '@hookform/resolvers/zod';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 
@@ -22,6 +22,7 @@ interface LoginFormProps {
  * - Supabase-based authentication via useAuth hook
  * - Error handling with user-friendly messages
  * - Redirect after successful login
+ * - Detection of passwordChanged query param to show success message after password reset
  *
  * @example
  * ```tsx
@@ -39,6 +40,17 @@ export const LoginForm: React.FC<LoginFormProps> = ({ redirectTo }) => {
       password: '',
     },
   });
+
+  // Detect passwordChanged query param and show success message
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('passwordChanged') === 'true') {
+      toast.success('Password updated successfully! You can now log in with your new password.');
+      // Clean up URL by removing the query param for cleaner UX
+      const newUrl = window.location.pathname;
+      window.history.replaceState({}, '', newUrl);
+    }
+  }, []);
 
   const onSubmit = async (data: LoginFormData): Promise<void> => {
     setIsLoading(true);

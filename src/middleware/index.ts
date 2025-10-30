@@ -22,6 +22,8 @@ const PUBLIC_PATHS = [
   '/auth/login',
   '/auth/register',
   '/auth/reset-password',
+  // API endpoints for authentication flow
+  '/api/auth/callback', // PKCE code exchange for password reset
 ];
 
 // ============================================================================
