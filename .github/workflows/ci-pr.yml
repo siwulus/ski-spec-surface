@@ -1,0 +1,187 @@
+name: Pull Request Validation
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths-ignore:
+      - "**/*.md" # All markdown files
+      - "docs/**" # Documentation folder
+      - ".ai/**" # AI plans and specifications
+      - ".cursor/**" # Cursor IDE config
+      - ".claude/**" # Claude config
+      - ".vscode/**" # VSCode config
+      - "coverage/**" # Generated coverage reports
+      - "playwright-report/**" # Generated playwright reports
+      - "test-results/**" # Generated test results
+      - "LICENSE"
+      - ".gitignore"
+
+# Cancel previous runs for the same PR when new commits are pushed
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  # Job 1: Code Quality Checks (Linting and Type Checking in parallel)
+  code_quality:
+    name: Code Quality
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js and pnpm
+        uses: ./.github/actions/setup-node-pnpm
+
+      - name: Run linter and type check in parallel
+        run: |
+          pnpm lint &
+          LINT_PID=$!
+          pnpm type-check &
+          TYPE_PID=$!
+
+          # Wait for both processes and capture exit codes
+          wait $LINT_PID
+          LINT_EXIT=$?
+          wait $TYPE_PID
+          TYPE_EXIT=$?
+
+          # Exit with error if either failed
+          if [ $LINT_EXIT -ne 0 ] || [ $TYPE_EXIT -ne 0 ]; then
+            echo "❌ Code quality checks failed"
+            exit 1
+          fi
+
+          echo "✅ Code quality checks passed"
+
+  # Job 2: Unit and Integration Tests with Coverage
+  unit_tests:
+    name: Unit & Integration Tests
+    runs-on: ubuntu-latest
+    needs: code_quality
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js and pnpm
+        uses: ./.github/actions/setup-node-pnpm
+
+      - name: Run unit tests with coverage
+        run: pnpm test:coverage
+
+      - name: Upload coverage reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report-pr-${{ github.event.pull_request.number }}
+          path: coverage/
+          retention-days: 30
+
+  # Job 3: E2E Tests with Playwright (only for PRs to main)
+  e2e_tests:
+    name: E2E Tests
+    runs-on: ubuntu-latest
+    needs: code_quality
+    if: github.base_ref == 'main'
+    environment: e2e-tests
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js and pnpm
+        uses: ./.github/actions/setup-node-pnpm
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        id: playwright-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-playwright-
+
+      - name: Install Playwright Chromium browser
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        run: npx playwright install --with-deps chromium
+
+      - name: Install Chromium system dependencies (if cached)
+        if: steps.playwright-cache.outputs.cache-hit == 'true'
+        run: npx playwright install-deps chromium
+
+      - name: Create .env.e2e file
+        run: |
+          cat > .env.e2e << EOF
+          SUPABASE_URL=${{ vars.SUPABASE_URL }}
+          SUPABASE_KEY=${{ secrets.SUPABASE_KEY }}
+          PUBLIC_SUPABASE_URL=${{ vars.PUBLIC_SUPABASE_URL }}
+          PUBLIC_SUPABASE_KEY=${{ secrets.PUBLIC_SUPABASE_KEY }}
+          E2E_USERNAME_ID=${{ secrets.E2E_USERNAME_ID }}
+          E2E_USERNAME=${{ secrets.E2E_USERNAME }}
+          E2E_PASSWORD=${{ secrets.E2E_PASSWORD }}
+          EOF
+
+      - name: Run E2E tests
+        run: pnpm test:e2e
+
+      - name: Upload Playwright HTML report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-pr-${{ github.event.pull_request.number }}
+          path: playwright-report/
+          retention-days: 7
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-test-results-pr-${{ github.event.pull_request.number }}
+          path: test-results/
+          retention-days: 7
+
+  # Job 4: Production Build (runs after all tests pass)
+  build:
+    name: Production Build
+    runs-on: ubuntu-latest
+    needs: [unit_tests, e2e_tests]
+    # Run if unit_tests passed AND (e2e_tests passed OR e2e_tests was skipped)
+    if: |
+      always() &&
+      needs.unit_tests.result == 'success' &&
+      (needs.e2e_tests.result == 'success' || needs.e2e_tests.result == 'skipped')
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js and pnpm
+        uses: ./.github/actions/setup-node-pnpm
+
+      - name: Build production (Cloudflare adapter)
+        run: pnpm build:cf
+        env:
+          BUILD_ENV: cloudflare
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-output-pr-${{ github.event.pull_request.number }}
+          path: dist/
+          retention-days: 7
+
+      - name: Add build status to workflow summary
+        run: |
+          echo "## 📦 Production Build" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Production build completed successfully." >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Build Configuration:**" >> $GITHUB_STEP_SUMMARY
+          echo "- Adapter: Cloudflare Pages" >> $GITHUB_STEP_SUMMARY
+          echo "- Output: \`dist/\`" >> $GITHUB_STEP_SUMMARY
+          echo "- Mode: SSR (Server-Side Rendering)" >> $GITHUB_STEP_SUMMARY
+          echo "- PR: #${{ github.event.pull_request.number }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Target Branch: ${{ github.base_ref }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
