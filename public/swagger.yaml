@@ -40,6 +40,51 @@ security:
   - BearerAuth: []
 
 paths:
+  /api/auth/callback:
+    get:
+      tags:
+        - Authentication
+      summary: PKCE code exchange for password reset
+      description: |
+        Handles PKCE code exchange for password reset flow. This endpoint is called automatically
+        when users click the reset password link from their email.
+
+        **Flow:**
+        1. User clicks reset password link from email → /api/auth/callback?code=xxx
+        2. Exchange code for session (establishes authenticated session via cookies)
+        3. Redirect to /auth/update-password (user can now change password)
+        4. On error: Redirect to /auth/reset-password?error=invalid_code
+
+        **Security:**
+        - Uses Supabase PKCE flow for secure session establishment
+        - Code is single-use and expires after 5 minutes
+        - Generic error messages to prevent information disclosure
+      operationId: authCallback
+      security: []
+      parameters:
+        - name: code
+          in: query
+          required: true
+          description: PKCE authorization code from Supabase password reset email
+          schema:
+            type: string
+          example: 'pkce_code_abc123xyz'
+      responses:
+        '302':
+          description: Redirect response
+          headers:
+            Location:
+              schema:
+                type: string
+              description: Redirect URL (success or error)
+              examples:
+                success:
+                  value: '/auth/update-password'
+                  description: Code exchange successful, redirect to password update page
+                error:
+                  value: '/auth/reset-password?error=invalid_code'
+                  description: Code exchange failed (invalid, expired, or already used)
+
   /api/auth/logout:
     post:
       tags:
@@ -48,7 +93,10 @@ paths:
       description: |
         Logs out the current user by clearing the session and removing authentication cookies.
         Works regardless of authentication status (idempotent operation).
+
+        Uses Supabase's secure logout flow to clear all session data server-side.
       operationId: logout
+      security: []
       responses:
         '200':
           description: Logout successful
@@ -58,8 +106,24 @@ paths:
                 $ref: '#/components/schemas/LogoutResponse'
               example:
                 success: true
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+              example:
+                error: 'Invalid request'
+                code: 'VALIDATION_ERROR'
+                timestamp: '2025-01-20T10:30:00Z'
+        '401':
+          description: Unauthorized (informational, logout still succeeds)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
         '500':
-          description: Logout failed
+          description: Logout operation failed
           content:
             application/json:
               schema:
