@@ -58,6 +58,10 @@ describe('useAuth', () => {
   beforeEach(() => {
     vi.clearAllMocks();
 
+    // Mock environment variables required by useAuth hook
+    vi.stubEnv('PUBLIC_SUPABASE_URL', 'https://test.supabase.co');
+    vi.stubEnv('PUBLIC_SUPABASE_KEY', 'test-anon-key');
+
     // Setup default mock return values
     unsubscribe = vi.fn();
     mockOnAuthStateChange.mockReturnValue({
@@ -427,7 +431,7 @@ describe('useAuth', () => {
       expect(authResult.success).toBe(true);
       expect(authResult.error).toBeUndefined();
       expect(mockResetPasswordForEmail).toHaveBeenCalledWith('test@example.com', {
-        redirectTo: 'http://localhost:3000/auth/update-password',
+        redirectTo: 'http://localhost:3000/api/auth/callback',
       });
     });
 
