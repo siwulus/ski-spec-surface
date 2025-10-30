@@ -3,7 +3,7 @@ name: CI/CD Pipeline
 on:
   push:
     branches:
-      - xxx
+      - main
     paths-ignore:
       - "**/*.md" # Wszystkie pliki markdown
       - "docs/**" # Folder dokumentacji
@@ -18,7 +18,7 @@ on:
       - ".gitignore"
   pull_request:
     branches:
-      - xxx
+      - main
     paths-ignore:
       - "**/*.md" # Wszystkie pliki markdown
       - "docs/**" # Folder dokumentacji
@@ -84,12 +84,6 @@ jobs:
     name: Unit & Integration Tests
     runs-on: ubuntu-latest
     needs: code_quality
-    outputs:
-      coverage_exists: ${{ steps.coverage.outputs.coverage_exists }}
-      lines: ${{ steps.coverage.outputs.lines }}
-      functions: ${{ steps.coverage.outputs.functions }}
-      branches: ${{ steps.coverage.outputs.branches }}
-      statements: ${{ steps.coverage.outputs.statements }}
 
     steps:
       - name: Checkout code
@@ -138,13 +132,6 @@ jobs:
     runs-on: ubuntu-latest
     needs: code_quality
     environment: e2e-tests
-
-    outputs:
-      results_exist: ${{ steps.e2e-results.outputs.results_exist }}
-      total: ${{ steps.e2e-results.outputs.total }}
-      passed: ${{ steps.e2e-results.outputs.passed }}
-      failed: ${{ steps.e2e-results.outputs.failed }}
-      skipped: ${{ steps.e2e-results.outputs.skipped }}
 
     steps:
       - name: Checkout code
