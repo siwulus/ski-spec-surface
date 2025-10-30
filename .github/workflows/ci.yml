@@ -3,7 +3,7 @@ name: CI/CD Pipeline
 on:
   push:
     branches:
-      - main
+      - xxx
     paths-ignore:
       - "**/*.md" # Wszystkie pliki markdown
       - "docs/**" # Folder dokumentacji
@@ -18,7 +18,7 @@ on:
       - ".gitignore"
   pull_request:
     branches:
-      - main
+      - xxx
     paths-ignore:
       - "**/*.md" # Wszystkie pliki markdown
       - "docs/**" # Folder dokumentacji
@@ -124,28 +124,6 @@ jobs:
       - name: Run unit tests with coverage
         run: pnpm test:coverage
 
-      - name: Generate coverage summary
-        id: coverage
-        if: always()
-        run: |
-          if [ -f coverage/coverage-final.json ]; then
-            echo "coverage_exists=true" >> $GITHUB_OUTPUT
-
-            # Extract coverage percentages
-            LINES=$(jq -r '.total.lines.pct' coverage/coverage-final.json)
-            FUNCTIONS=$(jq -r '.total.functions.pct' coverage/coverage-final.json)
-            BRANCHES=$(jq -r '.total.branches.pct' coverage/coverage-final.json)
-            STATEMENTS=$(jq -r '.total.statements.pct' coverage/coverage-final.json)
-
-            # Save to output
-            echo "lines=$LINES" >> $GITHUB_OUTPUT
-            echo "functions=$FUNCTIONS" >> $GITHUB_OUTPUT
-            echo "branches=$BRANCHES" >> $GITHUB_OUTPUT
-            echo "statements=$STATEMENTS" >> $GITHUB_OUTPUT
-          else
-            echo "coverage_exists=false" >> $GITHUB_OUTPUT
-          fi
-
       - name: Upload coverage reports
         if: always()
         uses: actions/upload-artifact@v4
@@ -154,52 +132,6 @@ jobs:
           path: |
             coverage/
           retention-days: 30
-
-      - name: Add coverage to workflow summary
-        if: always()
-        run: |
-          echo "## 📊 Test Coverage" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-
-          if [ "${{ steps.coverage.outputs.coverage_exists }}" = "true" ]; then
-            THRESHOLD=70
-
-            # Get coverage values
-            LINES="${{ steps.coverage.outputs.lines }}"
-            FUNCTIONS="${{ steps.coverage.outputs.functions }}"
-            BRANCHES="${{ steps.coverage.outputs.branches }}"
-            STATEMENTS="${{ steps.coverage.outputs.statements }}"
-
-            # Determine status emojis
-            LINES_INT=$(echo "$LINES" | cut -d'.' -f1)
-            FUNCTIONS_INT=$(echo "$FUNCTIONS" | cut -d'.' -f1)
-            BRANCHES_INT=$(echo "$BRANCHES" | cut -d'.' -f1)
-            STATEMENTS_INT=$(echo "$STATEMENTS" | cut -d'.' -f1)
-
-            LINES_STATUS="✅"
-            FUNCTIONS_STATUS="✅"
-            BRANCHES_STATUS="✅"
-            STATEMENTS_STATUS="✅"
-
-            [ $LINES_INT -lt $THRESHOLD ] && LINES_STATUS="❌"
-            [ $FUNCTIONS_INT -lt $THRESHOLD ] && FUNCTIONS_STATUS="❌"
-            [ $BRANCHES_INT -lt $THRESHOLD ] && BRANCHES_STATUS="❌"
-            [ $STATEMENTS_INT -lt $THRESHOLD ] && STATEMENTS_STATUS="❌"
-
-            # Create table
-            echo "| Metric | Coverage |" >> $GITHUB_STEP_SUMMARY
-            echo "|--------|----------|" >> $GITHUB_STEP_SUMMARY
-            echo "| Lines | ${LINES}% ${LINES_STATUS} |" >> $GITHUB_STEP_SUMMARY
-            echo "| Functions | ${FUNCTIONS}% ${FUNCTIONS_STATUS} |" >> $GITHUB_STEP_SUMMARY
-            echo "| Branches | ${BRANCHES}% ${BRANCHES_STATUS} |" >> $GITHUB_STEP_SUMMARY
-            echo "| Statements | ${STATEMENTS}% ${STATEMENTS_STATUS} |" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "**Threshold:** 70% for all metrics" >> $GITHUB_STEP_SUMMARY
-          else
-            echo "_Coverage data not available_" >> $GITHUB_STEP_SUMMARY
-          fi
-          echo "" >> $GITHUB_STEP_SUMMARY
-
   # Job 3: E2E Tests with Playwright
   e2e_tests:
     name: E2E Tests
@@ -275,28 +207,6 @@ jobs:
 
       - name: Run E2E tests
         run: pnpm test:e2e
-
-      - name: Extract E2E test results
-        id: e2e-results
-        if: always()
-        run: |
-          if [ -f test-results/results.json ]; then
-            echo "results_exist=true" >> $GITHUB_OUTPUT
-
-            # Extract test counts from JSON
-            TOTAL=$(jq '.suites | map(.specs | length) | add' test-results/results.json)
-            PASSED=$(jq '[.suites[].specs[].tests[] | select(.status == "passed")] | length' test-results/results.json)
-            FAILED=$(jq '[.suites[].specs[].tests[] | select(.status == "failed")] | length' test-results/results.json)
-            SKIPPED=$(jq '[.suites[].specs[].tests[] | select(.status == "skipped")] | length' test-results/results.json)
-
-            echo "total=$TOTAL" >> $GITHUB_OUTPUT
-            echo "passed=$PASSED" >> $GITHUB_OUTPUT
-            echo "failed=$FAILED" >> $GITHUB_OUTPUT
-            echo "skipped=$SKIPPED" >> $GITHUB_OUTPUT
-          else
-            echo "results_exist=false" >> $GITHUB_OUTPUT
-          fi
-
       - name: Upload Playwright HTML report
         if: failure()
         uses: actions/upload-artifact@v4
@@ -312,27 +222,6 @@ jobs:
           name: e2e-test-results
           path: test-results/
           retention-days: 7
-
-      - name: Add E2E results to workflow summary
-        if: always()
-        run: |
-          echo "## 🎭 E2E Test Results" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-
-          if [ "${{ steps.e2e-results.outputs.results_exist }}" = "true" ]; then
-            TOTAL="${{ steps.e2e-results.outputs.total }}"
-            PASSED="${{ steps.e2e-results.outputs.passed }}"
-            FAILED="${{ steps.e2e-results.outputs.failed }}"
-            SKIPPED="${{ steps.e2e-results.outputs.skipped }}"
-
-            echo "- **Total Tests:** $TOTAL" >> $GITHUB_STEP_SUMMARY
-            echo "- **Passed:** $PASSED ✅" >> $GITHUB_STEP_SUMMARY
-            echo "- **Failed:** $FAILED" >> $GITHUB_STEP_SUMMARY
-            echo "- **Skipped:** $SKIPPED" >> $GITHUB_STEP_SUMMARY
-          else
-            echo "_E2E test results not available_" >> $GITHUB_STEP_SUMMARY
-          fi
-          echo "" >> $GITHUB_STEP_SUMMARY
 
   # Job 4: Production Build
   build:
@@ -394,78 +283,7 @@ jobs:
           echo "- Mode: SSR (Server-Side Rendering)" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
 
-  # Job 5: PR Comment (only on pull requests)
-  pr_comment:
-    name: Post PR Comment
-    runs-on: ubuntu-latest
-    needs: [build, unit_tests, e2e_tests]
-    if: github.event_name == 'pull_request'
-    permissions:
-      pull-requests: write
-    steps:
-      - name: Create coverage status emojis
-        id: status
-        run: |
-          THRESHOLD=70
-
-          # Check coverage thresholds
-          if [ "${{ needs.unit_tests.outputs.coverage_exists }}" = "true" ]; then
-            LINES_STATUS="✅"
-            FUNCTIONS_STATUS="✅"
-            BRANCHES_STATUS="✅"
-            STATEMENTS_STATUS="✅"
-
-            LINES=$(echo "${{ needs.unit_tests.outputs.lines }}" | cut -d'.' -f1)
-            FUNCTIONS=$(echo "${{ needs.unit_tests.outputs.functions }}" | cut -d'.' -f1)
-            BRANCHES=$(echo "${{ needs.unit_tests.outputs.branches }}" | cut -d'.' -f1)
-            STATEMENTS=$(echo "${{ needs.unit_tests.outputs.statements }}" | cut -d'.' -f1)
-
-            [ $LINES -lt $THRESHOLD ] && LINES_STATUS="❌"
-            [ $FUNCTIONS -lt $THRESHOLD ] && FUNCTIONS_STATUS="❌"
-            [ $BRANCHES -lt $THRESHOLD ] && BRANCHES_STATUS="❌"
-            [ $STATEMENTS -lt $THRESHOLD ] && STATEMENTS_STATUS="❌"
-
-            echo "lines_status=$LINES_STATUS" >> $GITHUB_OUTPUT
-            echo "functions_status=$FUNCTIONS_STATUS" >> $GITHUB_OUTPUT
-            echo "branches_status=$BRANCHES_STATUS" >> $GITHUB_OUTPUT
-            echo "statements_status=$STATEMENTS_STATUS" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Create PR comment
-        uses: peter-evans/create-or-update-comment@v4
-        with:
-          issue-number: ${{ github.event.pull_request.number }}
-          body: |
-            ## ✅ CI Tests Passed
-
-            All tests completed successfully!
-
-            ### 📊 Test Coverage
-
-            ${{ needs.unit_tests.outputs.coverage_exists == 'true' && format('| Metric | Coverage |
-            |--------|----------|
-            | Lines | {0}% {1} |
-            | Functions | {2}% {3} |
-            | Branches | {4}% {5} |
-            | Statements | {6}% {7} |
-
-            **Threshold:** 70% (all metrics passed)', needs.unit_tests.outputs.lines, steps.status.outputs.lines_status, needs.unit_tests.outputs.functions, steps.status.outputs.functions_status, needs.unit_tests.outputs.branches, steps.status.outputs.branches_status, needs.unit_tests.outputs.statements, steps.status.outputs.statements_status) || '_Coverage data not available_' }}
-
-            ### 🎭 E2E Tests
-
-            ${{ needs.e2e_tests.outputs.results_exist == 'true' && format('- **Total Tests:** {0}
-            - **Passed:** {1} ✅
-            - **Failed:** {2}
-            - **Skipped:** {3}', needs.e2e_tests.outputs.total, needs.e2e_tests.outputs.passed, needs.e2e_tests.outputs.failed, needs.e2e_tests.outputs.skipped) || '_E2E results not available_' }}
-
-            ### 📦 Build Status
-
-            Production build completed successfully.
-
-            ---
-            *View full reports in [workflow artifacts](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})*
-
-  # Job 6: Deploy to Cloudflare Pages (only on main branch push)
+  # Job 5: Deploy to Cloudflare Pages (only on main branch push)
   deploy_cloudflare:
     name: Deploy to Cloudflare Pages
     runs-on: ubuntu-latest

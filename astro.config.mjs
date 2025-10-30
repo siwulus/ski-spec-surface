@@ -11,7 +11,7 @@ import cloudflare from "@astrojs/cloudflare";
 // Use Cloudflare adapter for production builds, Node.js for local development
 // CF_PAGES=1 is automatically set by Cloudflare Pages
 // BUILD_ENV=cloudflare can be set manually for testing
-const isProd = import.meta.env.CF_PAGES === "1" || import.meta.env.BUILD_ENV === "cloudflare";
+const isProd = process.env.CF_PAGES === "1" || process.env.BUILD_ENV === "cloudflare";
 const adapter = isProd
   ? cloudflare({
       imageService: "compile",
