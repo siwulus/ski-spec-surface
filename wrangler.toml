@@ -15,11 +15,11 @@ compatibility_flags = ["nodejs_compat"]
 pages_build_output_dir = "dist"
 
 # Development configuration
-# [env.development]
+  [env.development]
 # Development-specific settings can be added here if needed
 
 # Production configuration
-# [env.production]
+  [env.production]
 # Production-specific settings can be added here if needed
 
 # Environment variables should be configured in Cloudflare Pages dashboard:
