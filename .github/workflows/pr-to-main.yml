@@ -1,5 +1,4 @@
-name: Deploy main branch to Cloudflare Pages
-
+name: Pull request to main branch
 on:
   pull_request:
     types: [opened, synchronize, reopened]
