@@ -4,17 +4,17 @@ on:
   pull_request:
     types: [opened, synchronize, reopened]
     paths-ignore:
-      - '**/*.md' # All markdown files
-      - 'docs/**' # Documentation folder
-      - '.ai/**' # AI plans and specifications
-      - '.cursor/**' # Cursor IDE config
-      - '.claude/**' # Claude config
-      - '.vscode/**' # VSCode config
-      - 'coverage/**' # Generated coverage reports
-      - 'playwright-report/**' # Generated playwright reports
-      - 'test-results/**' # Generated test results
-      - 'LICENSE'
-      - '.gitignore'
+      - "**/*.md" # All markdown files
+      - "docs/**" # Documentation folder
+      - ".ai/**" # AI plans and specifications
+      - ".cursor/**" # Cursor IDE config
+      - ".claude/**" # Claude config
+      - ".vscode/**" # VSCode config
+      - "coverage/**" # Generated coverage reports
+      - "playwright-report/**" # Generated playwright reports
+      - "test-results/**" # Generated test results
+      - "LICENSE"
+      - ".gitignore"
 
 # Cancel previous runs for the same PR when new commits are pushed
 concurrency:
@@ -148,6 +148,7 @@ jobs:
     name: Production Build
     runs-on: ubuntu-latest
     needs: [unit_tests, e2e_tests]
+    environment: integration
     # Run if unit_tests passed AND (e2e_tests passed OR e2e_tests was skipped)
     if: |
       always() &&
@@ -165,24 +166,7 @@ jobs:
         run: pnpm build:cf
         env:
           BUILD_ENV: cloudflare
-
-      - name: Upload build artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: build-output-pr-${{ github.event.pull_request.number }}
-          path: dist/
-          retention-days: 7
-
-      - name: Add build status to workflow summary
-        run: |
-          echo "## 📦 Production Build" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "✅ Production build completed successfully." >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Build Configuration:**" >> $GITHUB_STEP_SUMMARY
-          echo "- Adapter: Cloudflare Pages" >> $GITHUB_STEP_SUMMARY
-          echo "- Output: \`dist/\`" >> $GITHUB_STEP_SUMMARY
-          echo "- Mode: SSR (Server-Side Rendering)" >> $GITHUB_STEP_SUMMARY
-          echo "- PR: #${{ github.event.pull_request.number }}" >> $GITHUB_STEP_SUMMARY
-          echo "- Target Branch: ${{ github.base_ref }}" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
+          SUPABASE_URL: ${{ vars.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+          PUBLIC_SUPABASE_URL: ${{ vars.PUBLIC_SUPABASE_URL }}
+          PUBLIC_SUPABASE_KEY: ${{ secrets.PUBLIC_SUPABASE_KEY }}

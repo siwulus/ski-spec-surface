@@ -143,9 +143,10 @@ jobs:
           retention-days: 7
 
   # Job 4: Production Build (runs only after ALL tests pass)
-  build:
-    name: Production Build
+  deploy_cloudflare:
+    name: Deploy to Cloudflare Pages
     runs-on: ubuntu-latest
+    environment: production
     needs: [unit_tests, e2e_tests]
     # Run if unit_tests passed AND (e2e_tests passed OR e2e_tests was skipped)
     if: |
@@ -164,70 +165,28 @@ jobs:
         run: pnpm build:cf
         env:
           BUILD_ENV: cloudflare
-
-      - name: Upload build artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: build-output-main
-          path: dist/
-          retention-days: 7
-
-      - name: Add build status to workflow summary
-        run: |
-          echo "## 📦 Production Build" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "✅ Production build completed successfully." >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Build Configuration:**" >> $GITHUB_STEP_SUMMARY
-          echo "- Adapter: Cloudflare Pages" >> $GITHUB_STEP_SUMMARY
-          echo "- Output: \`dist/\`" >> $GITHUB_STEP_SUMMARY
-          echo "- Mode: SSR (Server-Side Rendering)" >> $GITHUB_STEP_SUMMARY
-          echo "- Branch: main" >> $GITHUB_STEP_SUMMARY
-          echo "- Commit: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-
-  # Job 5: Deploy to Cloudflare Pages (only after successful build)
-  deploy_cloudflare:
-    name: Deploy to Cloudflare Pages
-    runs-on: ubuntu-latest
-    needs: [build]
-    if: always()
-    environment: production
-    permissions:
-      contents: read
-      deployments: write
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js and pnpm
-        uses: ./.github/actions/setup-node-pnpm
-
-      - name: Download build artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: build-output-main
-          path: dist/
+          SUPABASE_URL: ${{ vars.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+          PUBLIC_SUPABASE_URL: ${{ vars.PUBLIC_SUPABASE_URL }}
+          PUBLIC_SUPABASE_KEY: ${{ secrets.PUBLIC_SUPABASE_KEY }}
 
       - name: Deploy to Cloudflare Pages
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy dist --project-name=ski-spec-surface --commit-dirty=true
+          command: pages deploy dist --project-name=ski-spec-surface
           gitHubToken: ${{ secrets.GITHUB_TOKEN }}
           packageManager: pnpm
-
       - name: Deployment summary
         run: |
-          echo "### 🚀 Deployment Successful" >> $GITHUB_STEP_SUMMARY
+          echo "## 🚀 Deployment Successful" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "Application deployed to Cloudflare Pages." >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Deployment Details:**" >> $GITHUB_STEP_SUMMARY
-          echo "- Project: ski-spec-surface" >> $GITHUB_STEP_SUMMARY
-          echo "- Branch: main" >> $GITHUB_STEP_SUMMARY
-          echo "- Commit: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
-          echo "- Workflow Run: ${{ github.run_number }}" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
+           echo "Application deployed to Cloudflare Pages." >> $GITHUB_STEP_SUMMARY
+           echo "" >> $GITHUB_STEP_SUMMARY
+           echo "**Deployment Details:**" >> $GITHUB_STEP_SUMMARY
+           echo "- Project: ski-spec-surface" >> $GITHUB_STEP_SUMMARY
+           echo "- Branch: main" >> $GITHUB_STEP_SUMMARY
+           echo "- Commit: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+           echo "- Workflow Run: ${{ github.run_number }}" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
