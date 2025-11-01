@@ -1,0 +1,60 @@
+name: Pull Request Validation
+
+on:
+  pull_request:
+    types: [opened, synchronize, ready_for_review, reopened]
+    paths-ignore:
+      - "**/*.md" # All markdown files
+      - "docs/**" # Documentation folder
+      - ".ai/**" # AI plans and specifications
+      - ".cursor/**" # Cursor IDE config
+      - ".claude/**" # Claude config
+      - ".vscode/**" # VSCode config
+      - "coverage/**" # Generated coverage reports
+      - "playwright-report/**" # Generated playwright reports
+      - "test-results/**" # Generated test results
+      - "LICENSE"
+      - ".gitignore"
+# Cancel previous runs for the same PR when new commits are pushed
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+jobs:
+  review_code_with_claude:
+    name: Review Code with Claude
+    runs-on: ubuntu-latest
+    environment: integration
+    permissions:
+      contents: read
+      pull-requests: write
+      id-token: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          track_progress: true
+          # Or use OAuth token instead:
+          # anthropic_api_key: $/{{ secrets.ANTHROPIC_API_KEY }}
+          prompt: |
+            REPO: ${{ github.repository }}
+            PR NUMBER: ${{ github.event.pull_request.number }}
+
+            Please review this pull request with a focus on:
+            - Code quality and best practices
+            - Potential bugs or issues
+            - Security implications
+            - Performance considerations
+
+            Please take @.ai/prd.md, @.ai/tech-stack.md and other applicable context documents into account.
+            Provide detailed feedback using inline comments for specific issues.
+
+            Note: The PR branch is already checked out in the current working directory.
+
+            Use `gh pr comment` for top-level feedback.
+            Use `mcp__github_inline_comment__create_inline_comment` to highlight specific code issues.
+            Only post GitHub comments - don't submit review text as messages.
+
+          claude_args: |
+            --allowedTools "mcp__github_inline_comment__create_inline_comment,Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*)"
