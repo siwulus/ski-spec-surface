@@ -10,6 +10,7 @@ import type {
   UpdateNoteCommand,
   NoteDTO,
   ListNotesQuery,
+  SkiSpecComparisonDTO,
 } from '@/types/api.types';
 import {
   NotFoundError,
@@ -513,6 +514,45 @@ export class SkiSpecService {
             notes_count: notesCount,
           }))
         )
+      )
+    );
+  }
+
+  /**
+   * Compares multiple ski specifications for the authenticated user.
+   *
+   * This function:
+   * 1. Verifies all specifications exist and user owns them (parallel verification)
+   * 2. Transforms entities to comparison DTOs (excluding metadata)
+   * 3. Returns specifications in the same order as the input IDs
+   *
+   * Security: Verifies ownership of each specification to prevent IDOR attacks.
+   * Returns generic "not found" error if any spec doesn't exist or user doesn't own it.
+   *
+   * @param userId - ID of the authenticated user
+   * @param specIds - Array of UUIDs (2-4) of ski specifications to compare
+   * @returns Effect that succeeds with array of comparison DTOs or fails with SkiSpecError
+   */
+  compareSkiSpecs(userId: string, specIds: string[]): Effect.Effect<SkiSpecComparisonDTO[], SkiSpecError> {
+    return pipe(
+      // Step 1: Verify all specs exist and user owns them (parallel)
+      Effect.all(specIds.map((specId) => this.verifySpecOwnership(userId, specId))),
+
+      // Step 2: Transform entities to comparison DTOs
+      Effect.map((specs) =>
+        specs.map((spec) => ({
+          id: spec.id,
+          name: spec.name,
+          description: spec.description,
+          length: spec.length,
+          tip: spec.tip,
+          waist: spec.waist,
+          tail: spec.tail,
+          radius: spec.radius,
+          weight: spec.weight,
+          surface_area: spec.surface_area,
+          relative_weight: spec.relative_weight,
+        }))
       )
     );
   }
