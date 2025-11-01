@@ -39,8 +39,7 @@ const mockUpdateCommand: UpdateNoteCommand = {
 
 const mockNote: NoteDTO = {
   id: 'note-1',
-  spec_id: 'spec-123',
-  user_id: 'user-1',
+  ski_spec_id: 'spec-123',
   content: mockCreateCommand.content,
   created_at: '2025-01-01T10:00:00Z',
   updated_at: '2025-01-01T10:00:00Z',
@@ -102,7 +101,7 @@ describe('useNoteMutation', () => {
     });
 
     it('should set isSubmitting to true during create operation', async () => {
-      let resolvePromise: (value: NoteDTO) => void;
+      let resolvePromise!: (value: NoteDTO) => void;
       const pendingPromise = new Promise<NoteDTO>((resolve) => {
         resolvePromise = resolve;
       });
@@ -123,7 +122,7 @@ describe('useNoteMutation', () => {
 
       // Resolve the promise
       await act(async () => {
-        resolvePromise!(mockNote);
+        resolvePromise(mockNote);
         await createPromise;
       });
 
@@ -158,9 +157,7 @@ describe('useNoteMutation', () => {
     });
 
     it('should clear previous API errors before new submission', async () => {
-      const validationError = new ValidationError('Invalid data', [
-        { field: 'content', message: 'Too short' },
-      ]);
+      const validationError = new ValidationError('Invalid data', [{ field: 'content', message: 'Too short' }]);
       const errorMap = { content: 'Too short' };
 
       vi.mocked(skiSpecHttpClient.post)
@@ -228,7 +225,7 @@ describe('useNoteMutation', () => {
     });
 
     it('should set isSubmitting to true during update operation', async () => {
-      let resolvePromise: (value: NoteDTO) => void;
+      let resolvePromise!: (value: NoteDTO) => void;
       const pendingPromise = new Promise<NoteDTO>((resolve) => {
         resolvePromise = resolve;
       });
@@ -247,7 +244,7 @@ describe('useNoteMutation', () => {
       });
 
       await act(async () => {
-        resolvePromise!(mockUpdatedNote);
+        resolvePromise(mockUpdatedNote);
         await updatePromise;
       });
 
@@ -257,9 +254,7 @@ describe('useNoteMutation', () => {
     });
 
     it('should handle validation errors and propagate field messages', async () => {
-      const validationError = new ValidationError('Invalid data', [
-        { field: 'content', message: 'Content too long' },
-      ]);
+      const validationError = new ValidationError('Invalid data', [{ field: 'content', message: 'Content too long' }]);
       const fieldErrors = { content: 'Content too long' };
 
       vi.mocked(skiSpecHttpClient.put).mockReturnValueOnce(Effect.fail(validationError));
@@ -317,7 +312,7 @@ describe('useNoteMutation', () => {
     });
 
     it('should set isSubmitting to true during delete operation', async () => {
-      let resolvePromise: (value: void) => void;
+      let resolvePromise!: () => void;
       const pendingPromise = new Promise<void>((resolve) => {
         resolvePromise = resolve;
       });
@@ -336,7 +331,7 @@ describe('useNoteMutation', () => {
       });
 
       await act(async () => {
-        resolvePromise!();
+        resolvePromise();
         await deletePromise;
       });
 
