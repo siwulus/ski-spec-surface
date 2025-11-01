@@ -159,7 +159,7 @@ export const SkiSpecForm: React.FC<SkiSpecFormProps> = ({
             Cancel
           </Button>
 
-          <Button type="submit" disabled={isSubmitting || !formState.isValid} data-testid="ski-spec-form-submit">
+          <Button type="submit" disabled={isSubmitting} data-testid="ski-spec-form-submit">
             {isSubmitting ? 'Saving...' : 'Save'}
           </Button>
         </div>

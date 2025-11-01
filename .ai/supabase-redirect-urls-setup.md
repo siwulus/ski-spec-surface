@@ -23,11 +23,13 @@ For security reasons, Supabase only allows redirects to pre-configured URLs. Any
 In the **Redirect URLs** section, add the following URLs:
 
 #### For Development (Local):
+
 ```
 http://localhost:3000/api/auth/callback
 ```
 
 #### For Production:
+
 ```
 https://yourdomain.com/api/auth/callback
 ```
@@ -71,6 +73,7 @@ After configuration, the password reset flow works as follows:
 **Cause**: The redirect URL is not in the Supabase allowlist.
 
 **Solution**:
+
 1. Verify the URL is added exactly as shown above
 2. Check for typos (e.g., extra spaces, incorrect port)
 3. Ensure you saved the configuration in Supabase dashboard
@@ -80,6 +83,7 @@ After configuration, the password reset flow works as follows:
 **Cause**: The authorization code is no longer valid.
 
 **Solution**:
+
 - Request a new password reset email
 - Code expires after 5 minutes
 - Code can only be used once
@@ -89,6 +93,7 @@ After configuration, the password reset flow works as follows:
 **Cause**: The PKCE code exchange failed in the callback endpoint.
 
 **Solution**:
+
 - Check server logs for detailed error messages
 - Verify Supabase environment variables are configured correctly
 - Ensure the code parameter is present in the URL
