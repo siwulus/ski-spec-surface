@@ -24,7 +24,7 @@ import { SkiSpecDetail } from './SkiSpecDetail';
 
 // Mock window.location.href for navigation tests
 delete (window as { location?: Location }).location;
-window.location = { href: '/' } as Location;
+window.location = { href: '/' } as string & Location;
 
 // Mock hook return values (can be modified per test)
 let mockSpec: SkiSpecDTO | null = null;
