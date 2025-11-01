@@ -5,11 +5,13 @@ import { SkiSpecGridSkeleton } from '@/components/ski-specs/SkiSpecGridSkeleton'
 import { SkiSpecToolbar } from '@/components/ski-specs/SkiSpecToolbar';
 import { SkiSpecPagination } from '@/components/ski-specs/SkiSpecPagination';
 import { SkiSpecFormDialog } from '@/components/ski-specs/SkiSpecFormDialog';
+import { SkiSpecSelectionToolbar } from '@/components/ski-specs/SkiSpecSelectionToolbar';
 import { Button } from '@/components/ui/button';
-import { PlusIcon } from 'lucide-react';
+import { PlusIcon, GitCompareIcon } from 'lucide-react';
 import { useSkiSpecs } from '../hooks/useSkiSpecs';
 import { useSkiSpecsUrlState } from '../hooks/useSkiSpecsUrlState';
 import { useSkiSpecMutation } from '../hooks/useSkiSpecMutation';
+import { useSkiSpecSelection } from '../hooks/useSkiSpecSelection';
 import { toast } from 'sonner';
 import { DeleteSkiSpecDialog } from './DeleteSkiSpecDialog';
 
@@ -41,6 +43,11 @@ export const SkiSpecGrid: React.FC = () => {
   const [deletingSpecId, setDeletingSpecId] = React.useState<string | null>(null);
 
   const { deleteSkiSpec, isSubmitting } = useSkiSpecMutation();
+
+  // Selection state for comparison
+  const [isCompareMode, setIsCompareMode] = React.useState<boolean>(false);
+  const { selectedIds, toggleSelection, clearSelection, isSelected, count, canCompare, isMaxReached } =
+    useSkiSpecSelection();
 
   const handleSearchChange = React.useCallback(
     (search: string) => {
@@ -109,6 +116,25 @@ export const SkiSpecGrid: React.FC = () => {
     }
   }, [deletingSpecId, deleteSkiSpec, refetch]);
 
+  const handleToggleCompareMode = React.useCallback(() => {
+    setIsCompareMode((prev) => !prev);
+    if (isCompareMode) {
+      // Exiting compare mode - clear selection
+      clearSelection();
+    }
+  }, [isCompareMode, clearSelection]);
+
+  const handleCompareSelected = React.useCallback(() => {
+    if (!canCompare) return;
+
+    // Build comparison URL with selected IDs and current query params
+    const idsParam = Array.from(selectedIds).join(',');
+    const currentParams = new URLSearchParams(window.location.search);
+    const compareUrl = `/ski-specs/compare?ids=${idsParam}&${currentParams.toString()}`;
+
+    window.location.href = compareUrl;
+  }, [canCompare, selectedIds]);
+
   return (
     <>
       <div className="flex items-center justify-between mb-6">
@@ -118,11 +144,31 @@ export const SkiSpecGrid: React.FC = () => {
           </h1>
           <p className="mt-2 text-muted-foreground">Manage your ski specifications and compare different models.</p>
         </header>
-        <Button ref={addButtonRef} onClick={handleAddClick} className="ml-4">
-          <PlusIcon className="h-4 w-4 mr-2" aria-hidden="true" />
-          Add Specification
-        </Button>
+        <div className="flex items-center gap-2 ml-4">
+          <Button
+            variant={isCompareMode ? 'default' : 'outline'}
+            onClick={handleToggleCompareMode}
+            data-testid="toggle-compare-mode-button"
+          >
+            <GitCompareIcon className="h-4 w-4 mr-2" aria-hidden="true" />
+            {isCompareMode ? 'Compare Mode' : 'Compare'}
+          </Button>
+          <Button ref={addButtonRef} onClick={handleAddClick}>
+            <PlusIcon className="h-4 w-4 mr-2" aria-hidden="true" />
+            Add Specification
+          </Button>
+        </div>
       </div>
+
+      {isCompareMode && (
+        <SkiSpecSelectionToolbar
+          selectedCount={count}
+          canCompare={canCompare}
+          onCompare={handleCompareSelected}
+          onClear={clearSelection}
+          onExitMode={handleToggleCompareMode}
+        />
+      )}
 
       <SkiSpecToolbar
         search={queryState.search || ''}
@@ -158,6 +204,10 @@ export const SkiSpecGrid: React.FC = () => {
                 onEdit={handleEditClick}
                 onDelete={handleDeleteClick}
                 isInProgress={isSubmitting}
+                selectionMode={isCompareMode}
+                isSelected={isSelected(spec.id)}
+                onToggleSelection={toggleSelection}
+                isSelectionDisabled={isMaxReached}
               />
             ))}
           </div>

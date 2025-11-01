@@ -1,0 +1,81 @@
+---
+import Layout from '@/layouts/Layout.astro';
+import { ComparisonTable } from '@/components/comparison/ComparisonTable';
+import { AuthGuard } from '@/components/auth/AuthGuard';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
+
+// Extract and validate IDs from URL query parameters
+const { url } = Astro;
+const idsParam = url.searchParams.get('ids');
+
+// Extract list page query params (excluding 'ids' which is specific to compare view)
+const listParams = new URLSearchParams();
+['page', 'limit', 'sort_by', 'sort_order', 'search'].forEach((param) => {
+  const value = url.searchParams.get(param);
+  if (value) listParams.set(param, value);
+});
+const returnQueryParams = listParams.toString() ? `?${listParams.toString()}` : '';
+
+let ids: string[] = [];
+let validationError: string | null = null;
+
+if (!idsParam) {
+  validationError = 'Missing required parameter: ids. Please provide 2-4 specification IDs.';
+} else {
+  ids = idsParam.split(',').map((id) => id.trim());
+
+  // Validate number of IDs
+  if (ids.length < 2) {
+    validationError = 'Comparison requires at least 2 specifications. Please select more specifications.';
+  } else if (ids.length > 4) {
+    validationError = 'Comparison supports maximum 4 specifications. Please select fewer specifications.';
+  } else {
+    // Validate UUID format (basic regex)
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    const invalidIds = ids.filter((id) => !uuidRegex.test(id));
+
+    if (invalidIds.length > 0) {
+      validationError = 'Invalid specification ID format. All IDs must be valid UUIDs.';
+    }
+  }
+}
+---
+
+<Layout title="Compare Ski Specifications">
+  <div class="space-y-6">
+    <AuthGuard client:load redirectTo="/auth/login">
+      <!-- Page Header -->
+      <div class="flex items-center justify-between mb-6">
+        <div>
+          <h1 class="text-3xl font-bold tracking-tight">Compare Specifications</h1>
+          <p class="text-muted-foreground mt-2">
+            Side-by-side comparison of ski specifications with calculated differences
+          </p>
+        </div>
+        <Button variant="outline" asChild>
+          <a href={returnQueryParams ? `/ski-specs${returnQueryParams}` : '/ski-specs'}>Back to List</a>
+        </Button>
+      </div>
+
+      <!-- Validation Error or Comparison Table -->
+      {
+        validationError ? (
+          <Alert variant="destructive">
+            <AlertDescription>
+              <strong>Invalid Parameters:</strong> {validationError}
+              <br />
+              <Button variant="link" className="px-0 h-auto mt-2" asChild>
+                <a href={returnQueryParams ? `/ski-specs${returnQueryParams}` : '/ski-specs'}>
+                  Return to specifications list
+                </a>
+              </Button>
+            </AlertDescription>
+          </Alert>
+        ) : (
+          <ComparisonTable client:load ids={ids} returnQueryParams={returnQueryParams} />
+        )
+      }
+    </AuthGuard>
+  </div>
+</Layout>

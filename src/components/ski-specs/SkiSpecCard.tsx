@@ -1,6 +1,7 @@
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import type { SkiSpecDTO } from '@/types/api.types';
 import { Pencil, Radius, Weight, Trash2, Eye } from 'lucide-react';
 import * as React from 'react';
@@ -11,9 +12,23 @@ interface SkiSpecCardProps {
   onEdit?: (id: string) => void;
   onDelete?: (id: string) => void;
   isInProgress?: boolean;
+  // Selection mode props
+  selectionMode?: boolean;
+  isSelected?: boolean;
+  onToggleSelection?: (id: string) => void;
+  isSelectionDisabled?: boolean;
 }
 
-export const SkiSpecCard: React.FC<SkiSpecCardProps> = ({ spec, onEdit, onDelete, isInProgress }) => {
+export const SkiSpecCard: React.FC<SkiSpecCardProps> = ({
+  spec,
+  onEdit,
+  onDelete,
+  isInProgress,
+  selectionMode = false,
+  isSelected = false,
+  onToggleSelection,
+  isSelectionDisabled = false,
+}) => {
   const handleViewDetails = () => {
     // Capture current list filters/sorting to preserve on back navigation
     const currentSearch = window.location.search;
@@ -21,10 +36,30 @@ export const SkiSpecCard: React.FC<SkiSpecCardProps> = ({ spec, onEdit, onDelete
     window.location.href = detailUrl;
   };
 
+  const handleCheckboxChange = () => {
+    onToggleSelection?.(spec.id);
+  };
+
+  const checkboxId = React.useId();
+
   return (
-    <Card data-testid={`ski-spec-card-${spec.id}`}>
+    <Card data-testid={`ski-spec-card-${spec.id}`} className={isSelected ? 'ring-2 ring-primary bg-primary/5' : ''}>
       <CardHeader>
-        <CardTitle>{spec.name}</CardTitle>
+        <div className="flex items-start justify-between gap-2">
+          <CardTitle className="flex-1">{spec.name}</CardTitle>
+          {selectionMode && (
+            <div className="flex items-center">
+              <Checkbox
+                id={checkboxId}
+                checked={isSelected}
+                onCheckedChange={handleCheckboxChange}
+                disabled={isSelectionDisabled && !isSelected}
+                aria-label={`Select ${spec.name} for comparison`}
+                data-testid={`ski-spec-card-checkbox-${spec.id}`}
+              />
+            </div>
+          )}
+        </div>
       </CardHeader>
 
       <CardContent className="space-y-4">
