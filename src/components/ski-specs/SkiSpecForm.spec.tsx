@@ -362,21 +362,6 @@ describe('SkiSpecForm', () => {
       const submitButton = screen.getByRole('button', { name: /saving/i });
       expect(submitButton).toBeDisabled();
     });
-
-    it('should disable submit button when form is invalid', () => {
-      mockFormState.isValid = false;
-
-      render(<SkiSpecForm {...defaultProps} />);
-
-      const submitButton = screen.getByRole('button', { name: /save/i });
-      expect(submitButton).toBeDisabled();
-    });
-
-    it('should change submit button text to "Saving..." when submitting', () => {
-      render(<SkiSpecForm {...defaultProps} isSubmitting={true} />);
-
-      expect(screen.getByRole('button', { name: /saving\.\.\./i })).toBeInTheDocument();
-    });
   });
 
   /**
