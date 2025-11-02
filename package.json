@@ -55,6 +55,7 @@
     "astro": "^5.13.7",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "csv": "^6.4.1",
     "dotenv": "^17.2.3",
     "effect": "^3.18.4",
     "expect-type": "^1.2.2",

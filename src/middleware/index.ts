@@ -5,6 +5,7 @@ import { defineMiddleware } from 'astro:middleware';
 import { Effect, pipe } from 'effect';
 
 import { SkiSpecService } from '@/lib/services/SkiSpecService';
+import { SkiSpecImportExportService } from '@/lib/services/SkiSpecImportExportService';
 import { wrapErrorEffect } from '@/lib/utils/error';
 import { AuthenticationError, logError, type SkiSpecError } from '@/types/error.types';
 
@@ -219,6 +220,7 @@ export const onRequest = defineMiddleware(async ({ locals, cookies, url, request
       locals.user = result.user;
       locals.supabase = result.supabase;
       locals.skiSpecService = new SkiSpecService(result.supabase);
+      locals.skiSpecImportExportService = new SkiSpecImportExportService(locals.skiSpecService);
 
       return null; // Signal to continue with next()
     }),
