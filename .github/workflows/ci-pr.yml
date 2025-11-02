@@ -4,17 +4,17 @@ on:
   pull_request:
     types: [opened, synchronize, reopened]
     paths-ignore:
-      - "**/*.md" # All markdown files
-      - "docs/**" # Documentation folder
-      - ".ai/**" # AI plans and specifications
-      - ".cursor/**" # Cursor IDE config
-      - ".claude/**" # Claude config
-      - ".vscode/**" # VSCode config
-      - "coverage/**" # Generated coverage reports
-      - "playwright-report/**" # Generated playwright reports
-      - "test-results/**" # Generated test results
-      - "LICENSE"
-      - ".gitignore"
+      - '**/*.md' # All markdown files
+      - 'docs/**' # Documentation folder
+      - '.ai/**' # AI plans and specifications
+      - '.cursor/**' # Cursor IDE config
+      - '.claude/**' # Claude config
+      - '.vscode/**' # VSCode config
+      - 'coverage/**' # Generated coverage reports
+      - 'playwright-report/**' # Generated playwright reports
+      - 'test-results/**' # Generated test results
+      - 'LICENSE'
+      - '.gitignore'
 
 # Cancel previous runs for the same PR when new commits are pushed
 concurrency:

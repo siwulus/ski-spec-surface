@@ -84,6 +84,7 @@ Obecnie narciarze muszą samodzielnie szacować te parametry lub polegać na sub
 - Import/eksport uwzględnia opis specyfikacji o ile jest ona obecna
 
 **Struktura pliku CSV:**
+
 - Format: CSV (Comma-Separated Values) z nagłówkiem w pierwszym wierszu
 - Kodowanie: UTF-8
 - Separator: przecinek (`,`)
@@ -92,21 +93,25 @@ Obecnie narciarze muszą samodzielnie szacować te parametry lub polegać na sub
 - Escapowanie: wartości zawierające przecinki, cudzysłowy lub nowe linie są automatycznie escapowane zgodnie ze standardem CSV (podwójne cudzysłowy dla cudzysłowów)
 
 **Kolumny w pliku CSV:**
+
 - Wymagane kolumny: name, length_cm, tip_mm, waist_mm, tail_mm, radius_m, weight_g
 - Opcjonalne kolumny: description
 - Kolumny automatycznie obliczane (nie w pliku): surface_area_cm2, relative_weight_g_cm2 (system oblicza je automatycznie podczas importu)
 - Nagłówki kolumn zawierają jednostki dla przejrzystości (np. length_cm, tip_mm)
 
 **Filtrowanie eksportu:**
+
 - Opcjonalny parametr `search` - filtruje eksportowane specyfikacje według tekstu w nazwie lub opisie
 - System eksportuje tylko specyfikacje pasujące do kryterium wyszukiwania
 
 **Sortowanie eksportu:**
+
 - Opcjonalny parametr `sort_by` - określa pole sortowania: name, length, surface_area, relative_weight, created_at (domyślnie: created_at)
 - Opcjonalny parametr `sort_order` - określa kierunek sortowania: asc, desc (domyślnie: desc)
 - System eksportuje specyfikacje w określonej kolejności
 
 **Walidacja importu:**
+
 - Walidacja struktury pliku (nagłówki kolumn)
 - Walidacja wszystkich danych zgodnie z regułami walidacji specyfikacji (sekcja 3.3)
 - Walidacja opisu: maksymalnie 2000 znaków (pole opcjonalne)
@@ -115,11 +120,13 @@ Obecnie narciarze muszą samodzielnie szacować te parametry lub polegać na sub
 - System obsługuje częściowy sukces - poprawne rekordy są importowane nawet jeśli niektóre się nie powiodły
 
 **Obsługa błędów:**
+
 - Podsumowanie importu zawiera liczbę pomyślnie zaimportowanych rekordów, liczbę błędnych rekordów i szczegóły błędów dla każdego nieudanego wiersza
 - Błędne rekordy są raportowane z numerem wiersza i listą błędów walidacji
 - Poprawne escapowanie opisów w formacie CSV (obsługa znaków specjalnych, nowych linii, cudzysłowów, przecinków)
 
 **Eksport:**
+
 - Nazwa pliku: ski-specs-YYYY-MM-DD.csv (data eksportu)
 - Automatyczne pobieranie pliku przez przeglądarkę
 - Format wartości numerycznych: użycie kropki (`.`) jako separatora dziesiętnego

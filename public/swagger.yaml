@@ -455,7 +455,7 @@ paths:
         Exports ski specifications for the authenticated user to CSV format.
         Uses the same filtering (search) and sorting (sort_by, sort_order) parameters as the list endpoint,
         but exports ALL matching specifications without pagination.
-        
+
         **Important:** Export contains ONLY ski specification data - notes are NOT exported and remain in the system independently.
       operationId: exportSkiSpecs
       parameters:
@@ -514,9 +514,9 @@ paths:
         Imports ski specifications from CSV file. Validates all entries and provides 
         detailed import summary. Supports partial success - valid rows are imported 
         even if some rows fail.
-        
+
         **Important:** Import contains ONLY ski specification data - notes are NOT imported from CSV file and remain in the system independently.
-        
+
         **CSV Format:**
         - Headers with units (e.g., length_cm, tip_mm, waist_mm, tail_mm, radius_m, weight_g)
         - Required columns: name, length_cm, tip_mm, waist_mm, tail_mm, radius_m, weight_g
