@@ -253,7 +253,7 @@ export class SkiSpecImportExportService {
         limit: pageSize,
       }),
 
-      // Step 2: Check if we need to fetch more pages
+      // Step 2: Check if we need to fetch more pages and loop if needed
       Effect.flatMap((firstPage) => {
         const { data, total } = firstPage;
 
@@ -262,60 +262,31 @@ export class SkiSpecImportExportService {
           return Effect.succeed(data);
         }
 
-        // Calculate total pages
+        // Calculate total pages and generate remaining page numbers (2 to totalPages)
         const totalPages = Math.ceil(total / pageSize);
+        const remainingPages = Array.from({ length: totalPages - 1 }, (_, i) => i + 2);
 
         // Fetch remaining pages sequentially
         return pipe(
-          Effect.succeed(data), // Start with first page data
-          Effect.flatMap((allData) => this.fetchRemainingPages(userId, query, pageSize, totalPages, allData))
+          Effect.all(
+            remainingPages.map((page) =>
+              pipe(
+                this.skiSpecService.listSkiSpecs(userId, {
+                  ...query,
+                  page,
+                  limit: pageSize,
+                }),
+                Effect.map((response) => response.data)
+              )
+            ),
+            { concurrency: 1 } // Sequential to respect sorting
+          ),
+          // Combine all pages into single array
+          Effect.map((pages) => {
+            const allPages = [data, ...pages];
+            return allPages.flat();
+          })
         );
-      })
-    );
-  }
-
-  /**
-   * Fetches remaining pages after the first page.
-   *
-   * This helper method loops through pages 2 to totalPages sequentially,
-   * accumulating results into the allData array.
-   *
-   * @param userId - Authenticated user ID
-   * @param query - Export filters (search, sort_by, sort_order)
-   * @param pageSize - Number of records per page
-   * @param totalPages - Total number of pages to fetch
-   * @param allData - Accumulated data from previous pages
-   * @returns Effect with all accumulated ski specifications
-   */
-  private fetchRemainingPages(
-    userId: string,
-    query: ExportSkiSpecsQuery,
-    pageSize: number,
-    totalPages: number,
-    allData: SkiSpecDTO[]
-  ): Effect.Effect<SkiSpecDTO[], SkiSpecError> {
-    // Generate page numbers for remaining pages (2 to totalPages)
-    const remainingPages = Array.from({ length: totalPages - 1 }, (_, i) => i + 2);
-
-    return pipe(
-      // Fetch all remaining pages sequentially
-      Effect.all(
-        remainingPages.map((page) =>
-          pipe(
-            this.skiSpecService.listSkiSpecs(userId, {
-              ...query,
-              page,
-              limit: pageSize,
-            }),
-            Effect.map((response) => response.data)
-          )
-        ),
-        { concurrency: 1 } // Sequential to respect sorting
-      ),
-      // Combine all pages into single array
-      Effect.map((pages) => {
-        const allPages = [allData, ...pages];
-        return allPages.flat();
       })
     );
   }
