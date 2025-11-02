@@ -407,6 +407,30 @@ export const CompareSkiSpecsResponseSchema = z.object({
 export type CompareSkiSpecsResponse = z.infer<typeof CompareSkiSpecsResponseSchema>;
 
 // ============================================================================
+// Export Query Types
+// ============================================================================
+
+/**
+ * Zod schema for ExportSkiSpecsQuery.
+ * Validates query parameters for exporting ski specifications.
+ * Similar to ListSkiSpecsQuery but without pagination (page, limit).
+ */
+export const ExportSkiSpecsQuerySchema = z.object({
+  search: z.string().optional(),
+  sort_by: z.enum(['name', 'length', 'surface_area', 'relative_weight', 'created_at']).optional().default('created_at'),
+  sort_order: z.enum(['asc', 'desc']).optional().default('desc'),
+});
+
+/**
+ * Query parameters for exporting ski specifications.
+ * Used in: GET /api/ski-specs/export
+ *
+ * Exports all ski specifications matching the filter and sort criteria (no pagination).
+ * Only exports ski specification data - notes are NOT exported.
+ */
+export type ExportSkiSpecsQuery = z.infer<typeof ExportSkiSpecsQuerySchema>;
+
+// ============================================================================
 // Import/Export Types
 // ============================================================================
 

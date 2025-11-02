@@ -23,7 +23,7 @@ Aplikacja jest zbudowana w oparciu o Astro 5 (strony `.astro`) z wyspami React 1
   - Lista kluczowych korzyści aplikacji:
     - Automatyczne obliczenia powierzchni i wagi względnej na podstawie wymiarów.
     - Porównanie do 4 modeli narr jednocześnie w przejrzystej tabeli.
-    - Import i eksport danych w formacie CSV dla łatwego zarządzania kolekcją.
+    - Import/eksport specyfikacji nart w formacie CSV (notatki pozostają w systemie).
     - Notatki do każdego modelu dla przechowywania obserwacji i wrażeń.
   - Social proof lub krótkie case study (opcjonalnie, jeśli dostępne).
 - **Kluczowe komponenty widoku**:
@@ -120,11 +120,12 @@ Aplikacja jest zbudowana w oparciu o Astro 5 (strony `.astro`) z wyspami React 1
   - Toolbar (React island): `search` (debounce 300 ms), `sort_by`, `sort_order`, `page`, `limit` zsynchronizowane z URL; przyciski „Import", „Eksport CSV", „Porównaj".
   - Lista (kartyna gridzie) z checkboxami wyboru do porównania (max 4), akcje: szczegóły, edycja, usuń.
   - Modal Import (duży): upload CSV, podsumowanie (summary), zakładki „Zaimportowane"/„Błędy".
+  - **ExportButton**: automatycznie używa aktualnych parametrów filtrowania (`search`) i sortowania (`sort_by`, `sort_order`) z toolbaru - brak dodatkowych opcji; eksport dotyczy TYLKO specyfikacji nart (notatki NIE są eksportowane).
 - **UX, dostępność i bezpieczeństwo**:
   - Empty state (US-016) z CTA „Dodaj pierwszą specyfikację".
   - Mapowanie błędów API: 400/422 → pola, 409 (konflikt nazwy) → `name`, ogólne → toast.
-  - Eksport: `GET /api/ski-specs/export` z blokadą przycisku i nazwą pliku z `Content-Disposition`.
-  - Import: komunikaty dla 413/415 i błędów CSV; po zamknięciu modala odświeżenie listy.
+  - Eksport: `GET /api/ski-specs/export?search={search}&sort_by={sort_by}&sort_order={sort_order}` gdzie parametry są automatycznie przekazywane z aktualnego stanu URL/toolbaru; eksport nie paginuje - eksportuje WSZYSTKIE specyfikacje pasujące do aktualnego filtra i sortowania; blokada przycisku w trakcie pobierania; nazwa pliku z `Content-Disposition` (format: ski-specs-YYYY-MM-DD.csv); eksport dotyczy TYLKO specyfikacji nart - notatki pozostają w systemie i NIE są eksportowane.
+  - Import: komunikaty dla 413/415 i błędów CSV; import dotyczy TYLKO specyfikacji nart - notatki pozostają w systemie i NIE są importowane z pliku CSV; po zamknięciu modala odświeżenie listy.
   - A11y: rola i etykiety dla toolbaru; dostęp klawiaturą do checkboxów i akcji.
 - **Parametry API i URL**:
   - `GET /api/ski-specs?page&limit&sort_by&sort_order&search` (domyślnie `created_at desc`).
@@ -367,8 +368,31 @@ Aplikacja jest zbudowana w oparciu o Astro 5 (strony `.astro`) z wyspami React 1
 
 6. **Import/eksport danych**
 
-- Import: z menu lub toolbaru listy → modal → upload CSV → POST `/import` → summary (zakładki „Zaimportowane"/„Błędy") → zamknięcie → odświeżenie listy.
-- Eksport: kliknięcie „Eksport CSV" → GET `/export` → pobranie pliku (nazwa z `Content-Disposition`), przycisk zablokowany w trakcie.
+- **Import**:
+  - Z menu lub toolbaru listy → kliknięcie przycisku "Import" → otwarcie modala ImportModal
+  - Upload pliku CSV → POST `/api/ski-specs/import` (multipart/form-data)
+  - System waliduje strukturę pliku (nagłówki kolumn) i dane zgodnie z regułami walidacji specyfikacji
+  - System obsługuje różne separatory: przecinek (`,`) lub średnik (`;`) dla pól; kropka (`.`) lub przecinek (`,`) dla wartości dziesiętnych
+  - System ignoruje kolumny surface_area_cm2 i relative_weight_g_cm2 jeśli obecne (oblicza automatycznie)
+  - Częściowy sukces: poprawne rekordy są importowane nawet jeśli niektóre się nie powiodły
+  - Podsumowanie importu (summary) wyświetlane w modalу z zakładkami "Zaimportowane" i "Błędy"
+  - Błędne rekordy raportowane z numerem wiersza i szczegółowym opisem błędów
+  - **Ważne**: Import dotyczy TYLKO danych specyfikacji - notatki NIE są importowane z pliku CSV i pozostają w systemie
+  - Po zamknięciu modala automatyczne odświeżenie listy specyfikacji
+
+- **Eksport**:
+  - Kliknięcie przycisku "Eksport CSV" w toolbaru listy
+  - **Automatyczne użycie ustawień z widoku**: przycisk eksportu automatycznie używa aktualnych parametrów filtrowania (`search`) i sortowania (`sort_by`, `sort_order`) z toolbaru - brak dodatkowych opcji
+  - Wywołanie `GET /api/ski-specs/export?search={search}&sort_by={sort_by}&sort_order={sort_order}` gdzie parametry są automatycznie przekazywane z aktualnego stanu URL/toolbaru
+  - System generuje plik CSV ze WSZYSTKIMI specyfikacjami pasującymi do aktualnego filtra i sortowania (bez paginacji - eksportuje wszystkie strony)
+  - Jeśli nie ustawiono filtrowania/sortowania w toolbarze: eksportuje wszystkie specyfikacje użytkownika z domyślnym sortowaniem `created_at desc`
+  - Plik zawiera nagłówki kolumn z jednostkami (name, length_cm, tip_mm, waist_mm, tail_mm, radius_m, weight_g, description, surface_area_cm2, relative_weight_g_cm2)
+  - Formatowanie wartości: całkowite dla długości/szerokości/wagi, dwa miejsca po przecinku dla promienia/powierzchni/wagi względnej, separator dziesiętny: kropka (`.`)
+  - Poprawne escapowanie opisów (cudzysłowy, przecinki, nowe linie)
+  - Nazwa pliku: ski-specs-YYYY-MM-DD.csv (data eksportu)
+  - Plik automatycznie pobierany przez przeglądarkę z odpowiednią nazwą (odczyt z `Content-Disposition`)
+  - Przycisk eksportu zablokowany w trakcie pobierania (loading state)
+  - **Ważne**: Eksport dotyczy TYLKO danych specyfikacji - notatki NIE są eksportowane do pliku CSV i pozostają w systemie
 
 7. **Resetowanie hasła**
 
@@ -447,7 +471,7 @@ Aplikacja jest zbudowana w oparciu o Astro 5 (strony `.astro`) z wyspami React 1
   - Dropdown pod avatarem użytkownika (komponent z shadcn/ui).
   - Opcja "Wyloguj" → wywołanie akcji wylogowania + redirect do `/`.
 - **ProtectedRoute/ClientGuard**: przechwytuje 401 i przekierowuje z `redirectTo`.
-- **SkiSpecToolbar**: kontrolki `search/sort_by/sort_order/limit` zsynchronizowane z URL; debounce 300 ms dla `search`.
+- **SkiSpecToolbar**: kontrolki `search/sort_by/sort_order/limit` zsynchronizowane z URL; debounce 300 ms dla `search`. Parametry `search`, `sort_by`, `sort_order` są automatycznie używane przez ExportButton dla zgodnego filtrowania i sortowania eksportowanych specyfikacji.
 - **SkiSpecPagination**: kontrolka do paginacji zsynchronizowana z URL;
 - **SkiSpecGrid**: responsywny grid cart z checkboxami do porównania, akcjami elementów i prezentacją jednostek.
 - **SkiSpecFormDialog** (React):
@@ -464,8 +488,35 @@ Aplikacja jest zbudowana w oparciu o Astro 5 (strony `.astro`) z wyspami React 1
   - Confirm dialog przy zamknięciu z niezapisanymi zmianami.
   - Focus trap i focus management (powrót na CTA button po zamknięciu).
   - ARIA: `role="dialog"`, `aria-labelledby`, `aria-describedby`, `aria-invalid`, `aria-required`.
-- **ImportModal**: upload CSV (multipart), podsumowanie (summary)
-- **ExportButton**: obsługa `GET /export`, blokada w trakcie pobierania, odczyt nazwy z `Content-Disposition`.
+- **ImportModal** (React):
+  - Modal (shadcn/ui Dialog) dla importu specyfikacji z pliku CSV
+  - Upload pliku CSV (multipart/form-data)
+  - Walidacja struktury pliku (nagłówki kolumn z jednostkami)
+  - Obsługa separatorów: przecinek (`,`) lub średnik (`;`) jako separator pól; kropka (`.`) lub przecinek (`,`) jako separator dziesiętny w wartościach numerycznych
+  - Kolumny CSV:
+    - Wymagane: name, length_cm, tip_mm, waist_mm, tail_mm, radius_m, weight_g
+    - Opcjonalne: description
+    - Ignorowane jeśli obecne: surface_area_cm2, relative_weight_g_cm2 (system oblicza je automatycznie)
+  - Walidacja danych zgodnie z regułami walidacji specyfikacji (sekcja 3.3 PRD)
+  - Podsumowanie importu (summary) z zakładkami "Zaimportowane" i "Błędy"
+  - Raportowanie błędów z numerem wiersza i szczegółowym opisem błędów
+  - Częściowy sukces: poprawne rekordy są importowane nawet jeśli niektóre się nie powiodły
+  - **Ważne**: Import dotyczy TYLKO danych specyfikacji nart - notatki NIE są importowane z pliku CSV i pozostają w systemie niezależnie
+  - Po zamknięciu modala automatyczne odświeżenie listy specyfikacji
+- **ExportButton** (React):
+  - Przycisk eksportu specyfikacji do pliku CSV
+  - **Automatyczne użycie parametrów z widoku listy**: komponent automatycznie odczytuje aktualne parametry `search`, `sort_by`, `sort_order` z URL/toolbaru i przekazuje je do endpointu eksportu
+  - Brak dodatkowych kontrolek lub opcji - przycisk eksportu używa tych samych ustawień filtrowania i sortowania co widok listy specyfikacji
+  - Obsługa `GET /api/ski-specs/export?search={search}&sort_by={sort_by}&sort_order={sort_order}` gdzie parametry są automatycznie pobierane z aktualnego stanu toolbaru
+  - Jedyna różnica między widokiem listy a eksportem: eksport pomija paginację (`page`, `limit`) i eksportuje WSZYSTKIE specyfikacje pasujące do aktualnego filtra i sortowania
+  - Blokada przycisku w trakcie pobierania pliku (loading state)
+  - Odczyt nazwy pliku z nagłówka `Content-Disposition` (format: ski-specs-YYYY-MM-DD.csv)
+  - Formatowanie wartości w CSV zgodne z jednostkami:
+    - Całkowite dla długości/szerokości/wagi
+    - Dwa miejsca po przecinku dla promienia/powierzchni/wagi względnej
+    - Separator dziesiętny: kropka (`.`)
+  - Poprawne escapowanie opisów (cudzysłowy, przecinki, nowe linie)
+  - **Ważne**: Eksport dotyczy TYLKO danych specyfikacji nart - notatki NIE są eksportowane do pliku CSV i pozostają w systemie niezależnie
 - **CompareTable**: 2–4 kolumny, wybór kolumny bazowej, sortowanie per wiersz, wyróżnienie `surface_area` i `relative_weight`
 - **NotesList**: paginacja `limit=50`, „Pokaż więcej", formularze dodawania/edycji, confirm delete, aktualizacja licznika po mutacjach.
 - **NumberInput**: pola dla wartości całkowitych (integer) zgodnie z API; wyświetlanie jednostek (cm, mm, m, g); walidacje zakresów zgodnych z API.

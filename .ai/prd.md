@@ -79,10 +79,51 @@ Obecnie narciarze muszą samodzielnie szacować te parametry lub polegać na sub
 
 - Import specyfikacji z pliku CSV
 - Eksport zapisanych specyfikacji do pliku CSV
+- Import/eksport dotyczy TYLKO danych z tabeli ski_specs (specyfikacje nart)
+- Notatki NIE są importowane ani eksportowane - pozostają w systemie niezależnie od operacji importu/eksportu
 - Import/eksport uwzględnia opis specyfikacji o ile jest ona obecna
-- Walidacja importowanych danych
-- Poprawne escapowanie opisów w formacie CSV (obsługa znaków specjalnych, nowych linii)
-- Obsługa błędów podczas importu
+
+**Struktura pliku CSV:**
+- Format: CSV (Comma-Separated Values) z nagłówkiem w pierwszym wierszu
+- Kodowanie: UTF-8
+- Separator: przecinek (`,`)
+- Obsługa separatorów: system akceptuje zarówno kropkę (`.`) jak i przecinek (`,`) jako separator dziesiętny w wartościach numerycznych (parser konwertuje na format wewnętrzny)
+- Separatory pola: przecinek (`,`), system akceptuje również średnik (`;`) jako alternatywny separator
+- Escapowanie: wartości zawierające przecinki, cudzysłowy lub nowe linie są automatycznie escapowane zgodnie ze standardem CSV (podwójne cudzysłowy dla cudzysłowów)
+
+**Kolumny w pliku CSV:**
+- Wymagane kolumny: name, length_cm, tip_mm, waist_mm, tail_mm, radius_m, weight_g
+- Opcjonalne kolumny: description
+- Kolumny automatycznie obliczane (nie w pliku): surface_area_cm2, relative_weight_g_cm2 (system oblicza je automatycznie podczas importu)
+- Nagłówki kolumn zawierają jednostki dla przejrzystości (np. length_cm, tip_mm)
+
+**Filtrowanie eksportu:**
+- Opcjonalny parametr `search` - filtruje eksportowane specyfikacje według tekstu w nazwie lub opisie
+- System eksportuje tylko specyfikacje pasujące do kryterium wyszukiwania
+
+**Sortowanie eksportu:**
+- Opcjonalny parametr `sort_by` - określa pole sortowania: name, length, surface_area, relative_weight, created_at (domyślnie: created_at)
+- Opcjonalny parametr `sort_order` - określa kierunek sortowania: asc, desc (domyślnie: desc)
+- System eksportuje specyfikacje w określonej kolejności
+
+**Walidacja importu:**
+- Walidacja struktury pliku (nagłówki kolumn)
+- Walidacja wszystkich danych zgodnie z regułami walidacji specyfikacji (sekcja 3.3)
+- Walidacja opisu: maksymalnie 2000 znaków (pole opcjonalne)
+- Błędne rekordy są raportowane z numerem wiersza i szczegółowym opisem błędów
+- Poprawne rekordy są dodawane do bazy użytkownika
+- System obsługuje częściowy sukces - poprawne rekordy są importowane nawet jeśli niektóre się nie powiodły
+
+**Obsługa błędów:**
+- Podsumowanie importu zawiera liczbę pomyślnie zaimportowanych rekordów, liczbę błędnych rekordów i szczegóły błędów dla każdego nieudanego wiersza
+- Błędne rekordy są raportowane z numerem wiersza i listą błędów walidacji
+- Poprawne escapowanie opisów w formacie CSV (obsługa znaków specjalnych, nowych linii, cudzysłowów, przecinków)
+
+**Eksport:**
+- Nazwa pliku: ski-specs-YYYY-MM-DD.csv (data eksportu)
+- Automatyczne pobieranie pliku przez przeglądarkę
+- Format wartości numerycznych: użycie kropki (`.`) jako separatora dziesiętnego
+- Formatowanie: wszystkie wartości są poprawnie sformatowane zgodnie z jednostkami (całkowite dla długości/szerokości/wagi, dwa miejsca po przecinku dla promienia/powierzchni/wagi względnej)
 
 ### 3.6 System uwierzytelniania
 
@@ -129,7 +170,7 @@ Obecnie narciarze muszą samodzielnie szacować te parametry lub polegać na sub
   - Kalkulacja wagi względnej (g/cm²) dla obiektywnego porównania modeli
   - Porównywanie do 4 modeli nart jednocześnie
   - Prywatna przestrzeń do zarządzania własnymi specyfikacjami
-  - Import/eksport danych w formacie CSV
+  - Import/eksport specyfikacji nart w formacie CSV (notatki pozostają w systemie)
   - System notatek do dokumentowania testów i obserwacji
 - Wyraźny przycisk Call-to-Action (CTA) do rejestracji/logowania
 - Responsywny design dostosowany do urządzeń mobilnych i desktopowych
@@ -179,7 +220,6 @@ Obecnie narciarze muszą samodzielnie szacować te parametry lub polegać na sub
 
 - Konkretne wartości min/max dla walidacji specyfikacji i notatek
 - Wybór dostawcy uwierzytelniania
-- Schemat pliku CSV (czy uwzględniać notatki w eksporcie)
 - Polityka prywatności i RODO
 - Dokładne wartości KPI
 - Format daty w notatkach (lokalizacja)
@@ -393,7 +433,14 @@ Obecnie narciarze muszą samodzielnie szacować te parametry lub polegać na sub
 - Kryteria akceptacji:
   - Przycisk importu jest dostępny w interfejsie
   - System akceptuje pliki w formacie CSV
-  - Plik CSV może zawierać kolumnę z opisem specyfikacji (opcjonalnie)
+  - System importuje TYLKO dane specyfikacji (nazwa, opis, wymiary, waga) - notatki NIE są importowane z pliku CSV
+  - Plik CSV musi zawierać nagłówek w pierwszym wierszu z nazwami kolumn zawierającymi jednostki
+  - Wymagane kolumny: name, length_cm, tip_mm, waist_mm, tail_mm, radius_m, weight_g
+  - Opcjonalna kolumna: description
+  - System akceptuje zarówno przecinek (`,`) jak i średnik (`;`) jako separator pól
+  - System akceptuje zarówno kropkę (`.`) jak i przecinek (`,`) jako separator dziesiętny w wartościach numerycznych
+  - System automatycznie oblicza powierzchnię i wagę względną dla zaimportowanych specyfikacji
+  - Kolumny surface_area_cm2 i relative_weight_g_cm2 (jeśli obecne w pliku) są ignorowane - system przelicza je automatycznie
   - System waliduje strukturę i dane w pliku, włącznie z długością opisu (max 2000 znaków)
   - Błędne rekordy są raportowane z numerem linii i opisem błędu
   - Poprawne rekordy są dodane do bazy użytkownika wraz z opisami
@@ -406,9 +453,16 @@ Obecnie narciarze muszą samodzielnie szacować te parametry lub polegać na sub
 - Opis: Jako użytkownik chcę wyeksportować moje specyfikacje do CSV, aby archiwizować dane
 - Kryteria akceptacji:
   - Przycisk eksportu jest dostępny w interfejsie
-  - System generuje plik CSV ze wszystkimi specyfikacjami użytkownika
+  - System eksportuje TYLKO dane specyfikacji (nazwa, opis, wymiary, waga, obliczone wartości) - notatki NIE są eksportowane do pliku CSV
+  - System umożliwia filtrowanie eksportowanych specyfikacji za pomocą parametru search (opcjonalnie)
+  - System umożliwia sortowanie eksportowanych specyfikacji za pomocą parametrów sort_by i sort_order (opcjonalnie)
+  - Domyślne sortowanie: created_at desc (najnowsze pierwsze)
+  - System generuje plik CSV ze wszystkimi specyfikacjami użytkownika (lub filtrowanymi jeśli zastosowano filtr)
   - Plik zawiera nagłówki kolumn z jednostkami
   - Plik zawiera kolumnę z opisem specyfikacji (jeśli został wprowadzony)
+  - Plik zawiera wszystkie obliczone wartości: surface_area_cm2, relative_weight_g_cm2
+  - Format wartości numerycznych: kropka (`.`) jako separator dziesiętny
+  - Formatowanie zgodne z jednostkami: całkowite dla długości/szerokości/wagi, dwa miejsca po przecinku dla promienia/powierzchni/wagi względnej
   - Opisy w CSV są poprawnie escapowane (cudzysłowy, przecinki, nowe linie)
   - Dane są poprawnie sformatowane zgodnie ze standardem CSV
   - Plik jest automatycznie pobierany z odpowiednią nazwą (np. ski-specs-YYYY-MM-DD.csv)
