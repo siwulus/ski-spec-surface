@@ -244,4 +244,136 @@ describe('SkiSpecHttpClient Unit Tests', () => {
       }
     });
   });
+
+  describe('postMultipart()', () => {
+    it('should return validated data on successful multipart POST request', async () => {
+      const mockData: TestSuccess = { id: '1', name: 'Test' };
+      mockFetch(200, mockData);
+
+      const formData = new FormData();
+      formData.append('file', new File(['content'], 'test.csv'));
+
+      const effect = skiSpecHttpClient.postMultipart('/api/upload', TestSuccessSchema, formData);
+      const result = await Effect.runPromise(Effect.either(effect));
+
+      expect(result._tag).toBe('Right');
+      if (result._tag === 'Right') {
+        expect(result.right).toEqual(mockData);
+      }
+
+      // Verify fetch was called with correct config
+      expect(global.fetch).toHaveBeenCalledWith(
+        '/api/upload',
+        expect.objectContaining({
+          method: 'POST',
+          credentials: 'include',
+          body: expect.any(FormData),
+        })
+      );
+
+      // Verify Content-Type header was NOT set (browser sets it)
+      const fetchCall = vi.mocked(global.fetch).mock.calls[0];
+      const headers = (fetchCall[1] as RequestInit)?.headers as Record<string, string>;
+      expect(headers['Content-Type']).toBeUndefined();
+    });
+
+    it('should return ValidationError on 400 Bad Request', async () => {
+      const errorResponse = {
+        error: 'Validation failed',
+        details: [{ field: 'file', message: 'File is required' }],
+      };
+      mockFetch(400, errorResponse);
+
+      const formData = new FormData();
+      const effect = skiSpecHttpClient.postMultipart('/api/upload', TestSuccessSchema, formData);
+      const result = await Effect.runPromise(Effect.either(effect));
+
+      expect(result._tag).toBe('Left');
+      if (result._tag === 'Left') {
+        expect(result.left).toBeInstanceOf(ValidationError);
+        if (result.left instanceof ValidationError) {
+          expect(result.left.details).toHaveLength(1);
+          expect(result.left.details[0].field).toBe('file');
+        }
+      }
+    });
+
+    it('should return AuthenticationError on 401 Unauthorized', async () => {
+      const errorResponse = { error: 'Unauthorized' };
+      mockFetch(401, errorResponse);
+
+      const formData = new FormData();
+      const effect = skiSpecHttpClient.postMultipart('/api/upload', TestSuccessSchema, formData);
+      const result = await Effect.runPromise(Effect.either(effect));
+
+      expect(result._tag).toBe('Left');
+      if (result._tag === 'Left') {
+        expect(result.left).toBeInstanceOf(AuthenticationError);
+      }
+    });
+
+    it('should return UnexpectedError on 413 Payload Too Large', async () => {
+      const errorResponse = { error: 'File too large' };
+      mockFetch(413, errorResponse);
+
+      const formData = new FormData();
+      formData.append('file', new File(['x'.repeat(1000000)], 'large.csv'));
+
+      const effect = skiSpecHttpClient.postMultipart('/api/upload', TestSuccessSchema, formData);
+      const result = await Effect.runPromise(Effect.either(effect));
+
+      expect(result._tag).toBe('Left');
+      if (result._tag === 'Left') {
+        expect(result.left).toBeInstanceOf(UnexpectedError);
+        // context.status may vary by mapping; class statusCode remains 500 for UnexpectedError
+      }
+    });
+
+    it('should return UnexpectedError on 415 Unsupported Media Type', async () => {
+      const errorResponse = { error: 'Invalid file type' };
+      mockFetch(415, errorResponse);
+
+      const formData = new FormData();
+      formData.append('file', new File(['content'], 'test.txt'));
+
+      const effect = skiSpecHttpClient.postMultipart('/api/upload', TestSuccessSchema, formData);
+      const result = await Effect.runPromise(Effect.either(effect));
+
+      expect(result._tag).toBe('Left');
+      if (result._tag === 'Left') {
+        expect(result.left).toBeInstanceOf(UnexpectedError);
+        // context.status may vary by mapping; class statusCode remains 500 for UnexpectedError
+      }
+    });
+
+    it('should return NetworkError on network failure', async () => {
+      vi.spyOn(global, 'fetch').mockRejectedValue(new Error('Network failure'));
+
+      const formData = new FormData();
+      const effect = skiSpecHttpClient.postMultipart('/api/upload', TestSuccessSchema, formData);
+      const result = await Effect.runPromise(Effect.either(effect));
+
+      expect(result._tag).toBe('Left');
+      if (result._tag === 'Left') {
+        expect(result.left).toBeInstanceOf(NetworkError);
+      }
+    });
+
+    it('should allow custom headers while not setting Content-Type', async () => {
+      const mockData: TestSuccess = { id: '1', name: 'Test' };
+      mockFetch(200, mockData);
+
+      const formData = new FormData();
+      const customHeaders = { 'X-Custom-Header': 'value' };
+
+      const effect = skiSpecHttpClient.postMultipart('/api/upload', TestSuccessSchema, formData, customHeaders);
+      await Effect.runPromise(Effect.either(effect));
+
+      // Verify custom headers were included but Content-Type was not
+      const fetchCall = vi.mocked(global.fetch).mock.calls[0];
+      const headers = (fetchCall[1] as RequestInit)?.headers as Record<string, string>;
+      expect(headers['X-Custom-Header']).toBe('value');
+      expect(headers['Content-Type']).toBeUndefined();
+    });
+  });
 });

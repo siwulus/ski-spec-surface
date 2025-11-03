@@ -1,3 +1,7 @@
+---
+globs: *.spec.ts
+alwaysApply: false
+---
 ## TESTING
 
 ### Guidelines for UNIT

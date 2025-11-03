@@ -60,10 +60,10 @@ export const SkiDiagram: React.FC<SkiDiagramProps> = ({ spec }) => {
             </div>
           </TooltipTrigger>
           <TooltipContent>
-            <p>
+            <div>
               <SpecValue label="Surface" value={spec.surface_area} unit="cm²" />
               <SpecValue label="Rel. Weight" value={spec.relative_weight} unit="g/cm²" />
-            </p>
+            </div>
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>

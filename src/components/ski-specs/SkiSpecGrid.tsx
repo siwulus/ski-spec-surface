@@ -7,13 +7,15 @@ import { SkiSpecPagination } from '@/components/ski-specs/SkiSpecPagination';
 import { SkiSpecFormDialog } from '@/components/ski-specs/SkiSpecFormDialog';
 import { SkiSpecSelectionToolbar } from '@/components/ski-specs/SkiSpecSelectionToolbar';
 import { Button } from '@/components/ui/button';
-import { PlusIcon, GitCompareIcon } from 'lucide-react';
+import { PlusIcon, GitCompareIcon, UploadIcon } from 'lucide-react';
+import { ExportButton } from '@/components/ski-specs/ExportButton';
 import { useSkiSpecs } from '../hooks/useSkiSpecs';
 import { useSkiSpecsUrlState } from '../hooks/useSkiSpecsUrlState';
 import { useSkiSpecMutation } from '../hooks/useSkiSpecMutation';
 import { useSkiSpecSelection } from '../hooks/useSkiSpecSelection';
 import { toast } from 'sonner';
 import { DeleteSkiSpecDialog } from './DeleteSkiSpecDialog';
+import { ImportCsvDialog } from './ImportCsvDialog';
 
 interface EmptyStateProps {
   onAddClick: () => void;
@@ -37,10 +39,14 @@ export const SkiSpecGrid: React.FC = () => {
 
   // Refs for focus management
   const addButtonRef = React.useRef<HTMLButtonElement>(null);
+  const importButtonRef = React.useRef<HTMLButtonElement>(null);
 
   // Delete state and mutation
   const [isDeletingDialogOpen, setIsDeletingDialogOpen] = React.useState<boolean>(false);
   const [deletingSpecId, setDeletingSpecId] = React.useState<string | null>(null);
+
+  // Import dialog state
+  const [isImportDialogOpen, setIsImportDialogOpen] = React.useState<boolean>(false);
 
   const { deleteSkiSpec, isSubmitting } = useSkiSpecMutation();
 
@@ -135,6 +141,23 @@ export const SkiSpecGrid: React.FC = () => {
     window.location.href = compareUrl;
   }, [canCompare, selectedIds]);
 
+  const handleImportClick = React.useCallback(() => {
+    setIsImportDialogOpen(true);
+  }, []);
+
+  const handleImportDialogClose = React.useCallback(
+    (open: boolean) => {
+      setIsImportDialogOpen(open);
+      if (!open) {
+        // Refresh the list when dialog closes
+        refetch();
+        // Return focus to import button
+        importButtonRef.current?.focus();
+      }
+    },
+    [refetch]
+  );
+
   return (
     <>
       <div className="flex items-center justify-between mb-6">
@@ -153,6 +176,23 @@ export const SkiSpecGrid: React.FC = () => {
             <GitCompareIcon className="h-4 w-4 mr-2" aria-hidden="true" />
             {isCompareMode ? 'Compare Mode' : 'Compare'}
           </Button>
+          <Button
+            ref={importButtonRef}
+            variant="outline"
+            onClick={handleImportClick}
+            aria-label="Import specifications from CSV file"
+            data-testid="import-button"
+          >
+            <UploadIcon className="h-4 w-4 mr-2" aria-hidden="true" />
+            Import
+          </Button>
+          <ExportButton
+            query={{
+              search: queryState.search,
+              sort_by: queryState.sort_by,
+              sort_order: queryState.sort_order,
+            }}
+          />
           <Button ref={addButtonRef} onClick={handleAddClick}>
             <PlusIcon className="h-4 w-4 mr-2" aria-hidden="true" />
             Add Specification
@@ -238,6 +278,9 @@ export const SkiSpecGrid: React.FC = () => {
         onConfirm={handleDeleteConfirm}
         isInProgress={isSubmitting}
       />
+
+      {/* Import CSV Dialog */}
+      <ImportCsvDialog open={isImportDialogOpen} onOpenChange={handleImportDialogClose} />
     </>
   );
 };

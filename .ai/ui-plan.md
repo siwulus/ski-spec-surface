@@ -116,11 +116,21 @@ Aplikacja jest zbudowana w oparciu o Astro 5 (strony `.astro`) z wyspami React 1
 - **Główny cel**: Przeglądanie, filtrowanie, tworzenie/edycja/usuwanie specyfikacji oraz wybór do porównania.
 - **Kluczowe informacje do wyświetlenia**: nazwa, długość, tip/waist/tail, radius, weight, surface_area, relative_weight, liczba notatek.
 - **Kluczowe komponenty widoku**:
-  - Header z przyciskiem CTA „Dodaj specyfikację" w prawym górnym rogu (primary button, wyróżniony wizualnie).
-  - Toolbar (React island): `search` (debounce 300 ms), `sort_by`, `sort_order`, `page`, `limit` zsynchronizowane z URL; przyciski „Import", „Eksport CSV", „Porównaj".
-  - Lista (kartyna gridzie) z checkboxami wyboru do porównania (max 4), akcje: szczegóły, edycja, usuń.
-  - Modal Import (duży): upload CSV, podsumowanie (summary), zakładki „Zaimportowane"/„Błędy".
-  - **ExportButton**: automatycznie używa aktualnych parametrów filtrowania (`search`) i sortowania (`sort_by`, `sort_order`) z toolbaru - brak dodatkowych opcji; eksport dotyczy TYLKO specyfikacji nart (notatki NIE są eksportowane).
+  - **Actions Bar** (prawy górny róg strony):
+    - Grupa przycisków akcji specyfikacji (flex layout, gap między przyciskami, wyrównanie do prawej):
+      - Przycisk „Dodaj specyfikację" (primary button, CTA, wyróżniony wizualnie kolorem primary)
+      - Przycisk „Import" (secondary/outline, ikona upload/import)
+      - Przycisk „Eksport CSV" (secondary/outline, ikona download/export)
+      - Przycisk „Porównaj" (secondary/outline, aktywny gdy zaznaczone 2-4 specyfikacje, disabled state jeśli < 2)
+    - Responsywność: desktop - poziomy layout; mobile - pionowy stack lub dropdown menu z ikoną „•••"
+  - **Toolbar** (React island, poniżej Actions Bar):
+    - Kontrolki filtrowania: `search` (debounce 300 ms)
+    - Kontrolki sortowania: `sort_by`, `sort_order`
+    - Kontrolki paginacji: `page`, `limit`
+    - Wszystkie parametry zsynchronizowane z URL
+  - **Lista specyfikacji** (karty na gridzie) z checkboxami wyboru do porównania (max 4), akcje per item: szczegóły, edycja, usuń.
+  - **Modal Import** (wywołany przyciskiem „Import" z Actions Bar): upload CSV, podsumowanie (summary), zakładki „Zaimportowane"/„Błędy".
+  - **ExportButton** (przycisk „Eksport CSV" w Actions Bar): automatycznie używa aktualnych parametrów filtrowania (`search`) i sortowania (`sort_by`, `sort_order`) z toolbaru - brak dodatkowych opcji; eksport dotyczy TYLKO specyfikacji nart (notatki NIE są eksportowane).
 - **UX, dostępność i bezpieczeństwo**:
   - Empty state (US-016) z CTA „Dodaj pierwszą specyfikację".
   - Mapowanie błędów API: 400/422 → pola, 409 (konflikt nazwy) → `name`, ogólne → toast.
@@ -131,6 +141,133 @@ Aplikacja jest zbudowana w oparciu o Astro 5 (strony `.astro`) z wyspami React 1
   - `GET /api/ski-specs?page&limit&sort_by&sort_order&search` (domyślnie `created_at desc`).
   - Wybór do porównania trzymany wyłącznie w URL `/compare?ids=…`.
 - **Mapowanie US**: US-005 (dodawanie - przycisk CTA otwiera modal), US-006/007/008, US-013/014, US-015/016/017.
+
+### Widok: Import specyfikacji
+
+- **Ścieżka widoku**: Akcja dostępna z listy (`/ski-specs`) przez przycisk „Import" w Actions Bar (prawy górny róg)
+- **Dostępność**: Wymaga autentykacji
+- **Główny cel**: Umożliwienie użytkownikowi zaimportowania wielu specyfikacji nart z pliku CSV z automatyczną walidacją danych i raportem błędów.
+- **Kluczowe informacje do wyświetlenia**:
+  - Interface upload pliku CSV (drag & drop + przycisk wyboru)
+  - Podsumowanie importu (summary) z liczbą pomyślnie zaimportowanych i błędnych rekordów
+  - Zakładki „Zaimportowane" i „Błędy" z tabelami szczegółów
+  - Lista błędnych rekordów z numerami wierszy i szczegółowymi opisami błędów walidacji
+- **Kluczowe komponenty widoku**:
+  - Przycisk „Import" w Actions Bar (prawy górny róg listy specyfikacji, obok przycisków „Dodaj specyfikację", „Eksport CSV", „Porównaj")
+  - Dialog/Modal (shadcn/ui Dialog component) - modal importu bez zmiany URL
+  - FileUpload component (drag & drop area + przycisk „Wybierz plik", accept=".csv")
+  - Tabs component (shadcn/ui Tabs) z zakładkami „Zaimportowane" i „Błędy"
+  - Tabela z podsumowaniem zaimportowanych specyfikacji (kolumny: nazwa, długość, powierzchnia, waga względna)
+  - Tabela z błędami walidacji (kolumny: numer wiersza, pole, opis błędu)
+  - Przyciski akcji: „Zamknij" (dostępny po zakończeniu importu), „Anuluj" (dostępny w trakcie wyboru pliku)
+  - Toast notification dla komunikatów sukcesu i błędów systemowych
+- **UX, dostępność i bezpieczeństwo**:
+  - Wywołanie akcji importu: kliknięcie przycisku „Import" w Actions Bar → otwarcie Dialog bez zmiany URL.
+  - Etap 1: Wybór pliku
+    - Wyświetlenie drag & drop area z instrukcją: „Przeciągnij plik CSV tutaj lub kliknij aby wybrać"
+    - Akceptowane formaty: .csv (text/csv, application/csv)
+    - Maksymalny rozmiar pliku: 10MB
+    - Po wyborze pliku: automatyczne wywołanie `POST /api/ski-specs/import` (multipart/form-data)
+    - Wyświetlenie loadera/spinnera z komunikatem „Importowanie..."
+  - Etap 2: Wyświetlenie podsumowania
+    - Po zakończeniu importu wyświetlenie zakładek „Zaimportowane" / „Błędy"
+    - Domyślnie aktywna zakładka zależna od wyniku:
+      - Jeśli wszystkie rekordy pomyślne: zakładka „Zaimportowane"
+      - Jeśli są błędy: zakładka „Błędy"
+    - Zakładka „Zaimportowane": tabela z listą pomyślnie zaimportowanych specyfikacji
+    - Zakładka „Błędy": tabela z numerem wiersza, nazwą pola i opisem błędu dla każdego niepowodzenia
+    - Przycisk „Zamknij" dostępny po zakończeniu importu (sukces lub częściowy sukces)
+  - Walidacja pliku:
+    - Format pliku: sprawdzenie MIME type (text/csv, application/csv)
+    - Rozmiar: max 10MB (error 413)
+    - Nagłówki CSV: wymagane kolumny (name, length_cm, tip_mm, waist_mm, tail_mm, radius_m, weight_g), opcjonalna (description)
+    - Separatory: system akceptuje przecinek (`,`) lub średnik (`;`) jako separator pól
+    - Separatory dziesiętne: system akceptuje kropkę (`.`) lub przecinek (`,`) jako separator dziesiętny w wartościach numerycznych
+    - Ignorowane kolumny: surface_area_cm2, relative_weight_g_cm2 (system oblicza automatycznie)
+  - Walidacja danych: zgodnie z regułami walidacji specyfikacji (sekcja 3.3 PRD):
+    - Relacja szerokości: tip ≥ waist ≤ tail
+    - Zakresy wartości: length (100-250 cm), tip/waist/tail (50-250 mm), radius (1-30 m), weight (500-3000 g)
+    - Długość opisu: max 2000 znaków
+  - Częściowy sukces: poprawne rekordy są importowane nawet jeśli niektóre się nie powiodły
+  - Mapowanie błędów API:
+    - **413 (Payload Too Large)**:
+      - Toast z komunikatem: „Plik jest zbyt duży (maksymalny rozmiar: 10MB)"
+      - Pozostanie w widoku wyboru pliku z możliwością wyboru innego pliku
+    - **415 (Unsupported Media Type)**:
+      - Toast z komunikatem: „Nieprawidłowy format pliku. Akceptowane formaty: CSV"
+      - Pozostanie w widoku wyboru pliku
+    - **400 (Bad Request - błędy walidacji CSV)**:
+      - Wyświetlenie zakładek z podsumowaniem
+      - Zakładka „Błędy" zawiera szczegółową tabelę z numerem wiersza, polem i opisem błędu dla każdego niepowodzenia
+      - Zakładka „Zaimportowane" zawiera listę pomyślnie zaimportowanych rekordów (jeśli były poprawne rekordy)
+    - **401 (Unauthorized)**:
+      - Przechwytywane globalnie → redirect do `/auth/login?redirectTo=...`
+    - **Błędy sieciowe/500**:
+      - Toast z komunikatem: „Nie udało się zaimportować pliku. Spróbuj ponownie."
+      - Pozostanie w widoku z możliwością ponowienia operacji
+  - Po zamknięciu modala:
+    - Kliknięcie „Zamknij", ESC lub kliknięcie poza modalem → zamknięcie dialogu bez zmiany URL
+    - Automatyczne odświeżenie listy specyfikacji (`/ski-specs`) - nowo zaimportowane specyfikacje są widoczne
+    - Focus wraca na przycisk „Import" w Actions Bar
+  - Przycisk „Import" w Actions Bar jest wyraźnie oznaczony (ikona upload/import, styl secondary/outline)
+  - **Ważne**: Import dotyczy TYLKO danych specyfikacji nart (nazwa, opis, wymiary, waga) - notatki NIE są importowane z pliku CSV i pozostają w systemie niezależnie
+  - A11y:
+    - Przycisk „Import": `aria-label="Importuj specyfikacje z pliku CSV"` dla kontekstu
+    - Dialog: `role="dialog"`, `aria-labelledby` (tytuł: „Import specyfikacji"), `aria-describedby` (instrukcja importu)
+    - Focus trap w dialogu (focus pozostaje w modalu po otwarciu)
+    - Focus management:
+      - Po otwarciu: focus na przycisku „Wybierz plik" lub drag & drop area
+      - Po zamknięciu: focus wraca na przycisk „Import" który wywołał dialog
+    - FileUpload area:
+      - `role="button"` dla drag & drop area
+      - `aria-label="Przeciągnij plik CSV tutaj lub kliknij aby wybrać"`
+      - Input file: ukryty wizualnie ale dostępny dla czytników ekranu
+      - Wyświetlenie nazwy wybranego pliku z `aria-live="polite"`
+    - Tabs component:
+      - `role="tablist"` dla kontenera zakładek
+      - `role="tab"` dla każdej zakładki z `aria-selected="true/false"`
+      - `role="tabpanel"` dla treści zakładki z `aria-labelledby` wskazującym na odpowiedni tab
+      - Nawigacja klawiaturą: strzałki lewo/prawo do przełączania między zakładkami
+    - Tabele:
+      - `role="table"` (lub natywny element `<table>`)
+      - Nagłówki kolumn jako `<th>` z `scope="col"`
+      - Każda tabela ma `aria-label`: „Zaimportowane specyfikacje" lub „Błędy walidacji"
+    - Live region dla statusu importu:
+      - `aria-live="polite"` dla komunikatu „Importowanie..."
+      - `aria-live="assertive"` dla komunikatu sukcesu: „Zaimportowano [n] specyfikacji, [m] błędów"
+    - Klawiaturowa nawigacja:
+      - TAB, SHIFT+TAB: poruszanie się między elementami interaktywnymi
+      - ESC: zamknięcie dialogu
+      - ENTER: wybór pliku (gdy focus na przycisku) lub zamknięcie (gdy focus na „Zamknij")
+      - Strzałki lewo/prawo: nawigacja między zakładkami (gdy focus na tablist)
+    - Widoczny focus indicator dla wszystkich interaktywnych elementów (przyciski, zakładki, wiersze tabel)
+    - Kontrast WCAG AA dla wszystkich tekstów i elementów UI
+- **Parametry API**:
+  - `POST /api/ski-specs/import` (multipart/form-data)
+  - Request body: `file` (binary CSV file)
+  - Response 200: `ImportResponse` z podsumowaniem:
+
+    ```typescript
+    {
+      summary: {
+        imported: number,
+        failed: number
+      },
+      imported_specs: SkiSpecDTO[],
+      validation_errors: Array<{
+        row: number,
+        field: string,
+        message: string
+      }>
+    }
+    ```
+
+  - Response 400: `ApiErrorResponse` - błędy walidacji CSV/danych
+  - Response 413: `ApiErrorResponse` - plik zbyt duży
+  - Response 415: `ApiErrorResponse` - nieprawidłowy format pliku
+  - Response 401: Unauthorized
+
+- **Mapowanie US**: US-013 (Import specyfikacji z CSV), US-015 (walidacja i komunikaty błędów), US-017 (błędy sieciowe).
 
 ### Widok: Dodawanie nowej specyfikacji
 
@@ -472,6 +609,37 @@ Aplikacja jest zbudowana w oparciu o Astro 5 (strony `.astro`) z wyspami React 1
   - Opcja "Wyloguj" → wywołanie akcji wylogowania + redirect do `/`.
 - **ProtectedRoute/ClientGuard**: przechwytuje 401 i przekierowuje z `redirectTo`.
 - **SkiSpecToolbar**: kontrolki `search/sort_by/sort_order/limit` zsynchronizowane z URL; debounce 300 ms dla `search`. Parametry `search`, `sort_by`, `sort_order` są automatycznie używane przez ExportButton dla zgodnego filtrowania i sortowania eksportowanych specyfikacji.
+- **SkiSpecActionsBar** (React):
+  - Kontener przycisków akcji w prawym górnym rogu listy specyfikacji (Actions Bar)
+  - Przyciski w kolejności (od lewej do prawej): „Dodaj specyfikację" (primary), „Import" (secondary), „Eksport CSV" (secondary), „Porównaj" (secondary)
+  - Layout: flex row z gap między przyciskami, wyrównanie do prawej strony (`justify-end`)
+  - Responsywność:
+    - Desktop (≥768px): poziomy layout, wszystkie przyciski widoczne
+    - Mobile (<768px): opcjonalnie pionowy stack lub dropdown menu z ikoną „•••" (overflow menu)
+  - Przycisk „Dodaj specyfikację":
+    - Styl: primary button (kolor primary, wyróżniony wizualnie)
+    - Ikona: plus/add
+    - Akcja: otwiera modal dodawania nowej specyfikacji (`?action=new`)
+  - Przycisk „Import":
+    - Styl: secondary/outline button
+    - Ikona: upload/import
+    - Akcja: otwiera ImportModal (dialog bez zmiany URL)
+  - Przycisk „Eksport CSV":
+    - Styl: secondary/outline button
+    - Ikona: download/export
+    - Akcja: wywołuje ExportButton logic (automatyczne użycie parametrów search/sort z toolbaru)
+  - Przycisk „Porównaj":
+    - Styl: secondary/outline button (lub primary gdy aktywny)
+    - Conditional rendering: aktywny tylko gdy zaznaczone 2-4 specyfikacje
+    - Disabled state: gdy zaznaczone < 2 lub > 4 specyfikacje
+    - Badge/licznik: wyświetla liczbę zaznaczonych specyfikacji (np. „Porównaj (3)")
+    - Akcja: przekierowanie do `/compare?ids=uuid1,uuid2,...`
+  - A11y:
+    - Każdy przycisk ma `aria-label` z pełnym opisem akcji
+    - Przycisk „Porównaj" ma `aria-disabled="true"` gdy nieaktywny (wraz z disabled attribute)
+    - Tooltip/title dla wyjaśnienia warunku aktywacji przycisku „Porównaj" (np. „Zaznacz 2-4 specyfikacje aby porównać")
+    - Focus visible dla wszystkich przycisków
+    - Klawiaturowa nawigacja: TAB, SHIFT+TAB, ENTER/SPACE dla aktywacji
 - **SkiSpecPagination**: kontrolka do paginacji zsynchronizowana z URL;
 - **SkiSpecGrid**: responsywny grid cart z checkboxami do porównania, akcjami elementów i prezentacją jednostek.
 - **SkiSpecFormDialog** (React):
@@ -489,7 +657,14 @@ Aplikacja jest zbudowana w oparciu o Astro 5 (strony `.astro`) z wyspami React 1
   - Focus trap i focus management (powrót na CTA button po zamknięciu).
   - ARIA: `role="dialog"`, `aria-labelledby`, `aria-describedby`, `aria-invalid`, `aria-required`.
 - **ImportModal** (React):
-  - Modal (shadcn/ui Dialog) dla importu specyfikacji z pliku CSV
+  - Lokalizacja: Wywoływany przyciskiem „Import" w SkiSpecActionsBar (prawy górny róg listy specyfikacji, obok przycisków „Dodaj specyfikację", „Eksport CSV", „Porównaj")
+  - Styl przycisku wywołującego: secondary/outline button z ikoną upload/import
+  - Modal (shadcn/ui Dialog) dla importu specyfikacji z pliku CSV - dialog otwiera się bez zmiany URL
+  - Komponenty modala:
+    - FileUpload component (drag & drop area + przycisk „Wybierz plik", accept=".csv")
+    - Tabs component (shadcn/ui Tabs) z zakładkami „Zaimportowane" i „Błędy"
+    - Tabele z podsumowaniem i błędami
+    - Przyciski akcji: „Zamknij" (po zakończeniu), „Anuluj" (w trakcie wyboru)
   - Upload pliku CSV (multipart/form-data)
   - Walidacja struktury pliku (nagłówki kolumn z jednostkami)
   - Obsługa separatorów: przecinek (`,`) lub średnik (`;`) jako separator pól; kropka (`.`) lub przecinek (`,`) jako separator dziesiętny w wartościach numerycznych
@@ -503,7 +678,44 @@ Aplikacja jest zbudowana w oparciu o Astro 5 (strony `.astro`) z wyspami React 1
   - Częściowy sukces: poprawne rekordy są importowane nawet jeśli niektóre się nie powiodły
   - **Ważne**: Import dotyczy TYLKO danych specyfikacji nart - notatki NIE są importowane z pliku CSV i pozostają w systemie niezależnie
   - Po zamknięciu modala automatyczne odświeżenie listy specyfikacji
+  - **A11y**:
+    - Przycisk wywołujący: `aria-label="Importuj specyfikacje z pliku CSV"`
+    - Dialog: `role="dialog"`, `aria-labelledby` (tytuł: „Import specyfikacji"), `aria-describedby` (instrukcja importu)
+    - Focus trap w dialogu (focus pozostaje w modalu po otwarciu, nie można TAB-em wyjść poza modal)
+    - Focus management:
+      - Po otwarciu: focus automatycznie przeniesiony na przycisk „Wybierz plik" lub drag & drop area
+      - Po zamknięciu: focus wraca na przycisk „Import" który wywołał dialog
+    - FileUpload area:
+      - `role="button"` dla drag & drop area (klikalna powierzchnia)
+      - `aria-label="Przeciągnij plik CSV tutaj lub kliknij aby wybrać"`
+      - Input file: ukryty wizualnie (`visually-hidden`) ale dostępny dla czytników ekranu
+      - Wyświetlenie nazwy wybranego pliku z `aria-live="polite"` (np. „Wybrano plik: specyfikacje.csv")
+    - Tabs component:
+      - `role="tablist"` dla kontenera zakładek
+      - `role="tab"` dla każdej zakładki z `aria-selected="true/false"` (wskazuje aktywną zakładkę)
+      - `role="tabpanel"` dla treści zakładki z `aria-labelledby` wskazującym na odpowiedni tab
+      - Nawigacja klawiaturą między zakładkami: strzałki lewo/prawo do przełączania (nie TAB)
+      - `tabindex="0"` dla aktywnej zakładki, `tabindex="-1"` dla nieaktywnych
+    - Tabele:
+      - `role="table"` (lub natywny element `<table>`)
+      - Nagłówki kolumn jako `<th>` z `scope="col"` dla powiązania z komórkami danych
+      - Każda tabela ma `aria-label`: „Zaimportowane specyfikacje" lub „Błędy walidacji"
+      - Tabela błędów z kolumnami: numer wiersza, pole, opis błędu - każda komórka w osobnym `<td>`
+    - Live region dla statusu importu:
+      - `aria-live="polite"` dla komunikatu „Importowanie..." (nie przerywa czytnika)
+      - `aria-live="assertive"` dla komunikatu sukcesu: „Zaimportowano [n] specyfikacji, [m] błędów" (przerywa czytnik)
+      - `role="status"` dla kontenera statusu
+    - Klawiaturowa nawigacja:
+      - TAB, SHIFT+TAB: poruszanie się między elementami interaktywnymi w modalu (przyciski, input file, zakładki, wiersze tabel)
+      - ESC: zamknięcie dialogu
+      - ENTER: wybór pliku (gdy focus na przycisku „Wybierz plik") lub zamknięcie (gdy focus na „Zamknij")
+      - SPACE: aktywacja przycisku (gdy focus na przycisku)
+      - Strzałki lewo/prawo: nawigacja między zakładkami (gdy focus na tablist)
+    - Widoczny focus indicator dla wszystkich interaktywnych elementów (przyciski, zakładki, input file, wiersze tabel)
+    - Kontrast WCAG AA dla wszystkich tekstów i elementów UI (min 4.5:1 dla normalnego tekstu, 3:1 dla dużego tekstu)
 - **ExportButton** (React):
+  - Lokalizacja: Przycisk „Eksport CSV" w SkiSpecActionsBar (prawy górny róg listy specyfikacji, obok przycisków „Dodaj specyfikację", „Import", „Porównaj")
+  - Styl: secondary/outline button z ikoną download/export (nie primary, żeby nie konkurował z CTA „Dodaj specyfikację")
   - Przycisk eksportu specyfikacji do pliku CSV
   - **Automatyczne użycie parametrów z widoku listy**: komponent automatycznie odczytuje aktualne parametry `search`, `sort_by`, `sort_order` z URL/toolbaru i przekazuje je do endpointu eksportu
   - Brak dodatkowych kontrolek lub opcji - przycisk eksportu używa tych samych ustawień filtrowania i sortowania co widok listy specyfikacji
