@@ -99,21 +99,23 @@ const exchangeCodeForSession = (
  * Effect that creates a redirect response to the update password page.
  * Pure function that returns an Effect wrapping the redirect Response.
  *
- * @param origin - Request origin (e.g., http://localhost:3000)
+ * @param redirect - Astro's redirect helper function from context
  * @returns Effect that always succeeds with redirect Response (302)
  */
-const createSuccessRedirect = (origin: string): Effect.Effect<Response, never, never> =>
-  Effect.succeed(Response.redirect(new URL('/auth/update-password', origin).toString(), 302));
+const createSuccessRedirect = (
+  redirect: (path: string, status?: 300 | 301 | 302 | 303 | 304 | 307 | 308) => Response
+): Effect.Effect<Response, never, never> => Effect.succeed(redirect('/auth/update-password', 302));
 
 /**
  * Effect that creates a redirect response to the reset password page with error indicator.
  * Used when code exchange fails (invalid, expired, or already used code).
  *
- * @param origin - Request origin
+ * @param redirect - Astro's redirect helper function from context
  * @returns Effect that always succeeds with redirect Response (302)
  */
-const createErrorRedirect = (origin: string): Effect.Effect<Response, never, never> =>
-  Effect.succeed(Response.redirect(new URL('/auth/reset-password?error=invalid_code', origin).toString(), 302));
+const createErrorRedirect = (
+  redirect: (path: string, status?: 300 | 301 | 302 | 303 | 304 | 307 | 308) => Response
+): Effect.Effect<Response, never, never> => Effect.succeed(redirect('/auth/reset-password?error=invalid_code', 302));
 
 // ============================================================================
 // Main Handler
@@ -132,9 +134,8 @@ const createErrorRedirect = (origin: string): Effect.Effect<Response, never, nev
  * All error handling (logging, response generation) is handled by catchAllSkiSpecErrors utility.
  * This eliminates repetitive error handler code and ensures consistent behavior.
  */
-export const GET: APIRoute = async ({ locals, url }) => {
+export const GET: APIRoute = async ({ locals, url, redirect }) => {
   const { supabase } = locals;
-  const origin = url.origin;
 
   const program = pipe(
     // Step 1: Extract code from URL (can fail with AuthenticationError if missing)
@@ -142,10 +143,10 @@ export const GET: APIRoute = async ({ locals, url }) => {
     // Step 2: Exchange code for session (can fail with AuthOperationError if invalid/expired)
     Effect.flatMap((code) => exchangeCodeForSession(supabase, code)),
     // Step 3: On success, redirect to update password page
-    Effect.flatMap(() => createSuccessRedirect(origin)),
+    Effect.flatMap(() => createSuccessRedirect(redirect)),
     // Step 4: On any error, redirect to reset password page with error indicator
     // This provides a fallback for all error types (missing code, invalid code, expired code)
-    Effect.catchAll(() => createErrorRedirect(origin)),
+    Effect.catchAll(() => createErrorRedirect(redirect)),
     // Step 5: Log any errors that occurred (catchAllSkiSpecErrors logs before the catchAll redirect)
     // Note: This won't catch the errors because we already handled them with catchAll above,
     // but we need to wrap the entire flow for consistency with other endpoints
