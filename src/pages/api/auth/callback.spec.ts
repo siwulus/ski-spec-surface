@@ -26,6 +26,7 @@ describe('GET /api/auth/callback', () => {
   };
 
   let mockContext: APIContext;
+  let mockRedirect: Mock;
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -37,13 +38,28 @@ describe('GET /api/auth/callback', () => {
       },
     };
 
+    // Mock Astro's redirect function
+    // It converts relative paths to absolute URLs based on the current URL's origin
+    const getOrigin = () => mockContext.url.origin;
+    mockRedirect = vi.fn((path: string, status = 302) => {
+      const location = path.startsWith('http') ? path : `${getOrigin()}${path}`;
+      return new Response(null, {
+        status,
+        headers: {
+          Location: location,
+        },
+      });
+    });
+
     // Mock APIContext
+    // We only mock the properties we need for testing
     mockContext = {
       locals: {
         supabase: mockSupabaseClient as unknown as SupabaseClient<Database>,
       },
       url: new URL('http://localhost:3000/api/auth/callback?code=valid-code-123'),
-    } as APIContext;
+      redirect: mockRedirect,
+    } as unknown as APIContext;
   });
 
   describe('Successful code exchange', () => {
@@ -62,6 +78,7 @@ describe('GET /api/auth/callback', () => {
       expect(response.headers.get('Location')).toBe('http://localhost:3000/auth/update-password');
       expect(mockSupabaseClient.auth.exchangeCodeForSession).toHaveBeenCalledWith('valid-code-123');
       expect(mockSupabaseClient.auth.exchangeCodeForSession).toHaveBeenCalledTimes(1);
+      expect(mockRedirect).toHaveBeenCalledWith('/auth/update-password', 302);
     });
 
     it('should preserve origin when creating redirect URL', async () => {
@@ -161,6 +178,7 @@ describe('GET /api/auth/callback', () => {
       expect(response.status).toBe(302);
       expect(response.headers.get('Location')).toBe('http://localhost:3000/auth/reset-password?error=invalid_code');
       expect(mockSupabaseClient.auth.exchangeCodeForSession).toHaveBeenCalledWith('valid-code-123');
+      expect(mockRedirect).toHaveBeenCalledWith('/auth/reset-password?error=invalid_code', 302);
     });
 
     it('should redirect to reset-password with error when code is expired', async () => {
