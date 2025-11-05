@@ -12,13 +12,8 @@ import type {
   ListNotesQuery,
   SkiSpecComparisonDTO,
 } from '@/types/api.types';
-import {
-  NotFoundError,
-  ConflictError,
-  DatabaseError,
-  BusinessLogicError,
-  type SkiSpecError,
-} from '@/types/error.types';
+import { NotFoundError, ConflictError, DatabaseError, type SkiSpecError } from '@/types/error.types';
+import type { SkiSurfaceEquation } from './SkiSurfaceEquation';
 
 /**
  * Service class for managing ski specifications and notes.
@@ -27,75 +22,10 @@ import {
  * including CRUD operations, calculations, and note management.
  */
 export class SkiSpecService {
-  constructor(private readonly supabase: SupabaseClient) {}
-
-  /**
-   * Calculates the surface area of a ski based on its dimensions.
-   *
-   * Algorithm (v1.0.0):
-   * Uses a simplified trapezoidal approximation where the ski is treated as
-   * a trapezoid with average width calculated from tip, waist, and tail dimensions.
-   *
-   * @param dimensions - Ski dimensions
-   * @returns Surface area in cm²
-   */
-  calculateSurfaceArea(dimensions: {
-    length: number;
-    tip: number;
-    waist: number;
-    tail: number;
-    radius: number;
-  }): number {
-    // Calculate average width across tip, waist, and tail
-    const avgWidth = (dimensions.tip + dimensions.waist + dimensions.tail) / 3;
-
-    // Convert mm to cm and calculate surface area
-    const surfaceArea = (dimensions.length * avgWidth) / 10; // length in cm * width in mm / 10 = cm²
-
-    // Round to 2 decimal places
-    return Math.round(surfaceArea * 100) / 100;
-  }
-
-  /**
-   * Calculates the relative weight (weight per unit area).
-   *
-   * This metric helps compare skis of different sizes by normalizing
-   * weight against surface area.
-   *
-   * @param weight - Ski weight in grams
-   * @param surfaceArea - Ski surface area in cm²
-   * @returns Effect that succeeds with relative weight in g/cm² or fails with BusinessLogicError
-   */
-  calculateRelativeWeight(weight: number, surfaceArea: number): Effect.Effect<number, BusinessLogicError> {
-    if (surfaceArea === 0) {
-      return Effect.fail(
-        new BusinessLogicError('Surface area cannot be zero', {
-          code: 'INVALID_SURFACE_AREA',
-          context: { weight, surfaceArea },
-        })
-      );
-    }
-
-    const relativeWeight = weight / surfaceArea;
-
-    // Round to 2 decimal places
-    const rounded = Math.round(relativeWeight * 100) / 100;
-
-    return Effect.succeed(rounded);
-  }
-
-  /**
-   * Returns the current version of the calculation algorithm.
-   *
-   * This version is stored with each ski specification to track which
-   * algorithm was used for calculations, enabling future recalculations
-   * if the algorithm changes.
-   *
-   * @returns Algorithm version string (semantic versioning)
-   */
-  getCurrentAlgorithmVersion(): string {
-    return '1.0.0';
-  }
+  constructor(
+    private readonly supabase: SupabaseClient,
+    private readonly equation: SkiSurfaceEquation
+  ) {}
 
   /**
    * Creates a new ski specification in the database.
@@ -111,27 +41,20 @@ export class SkiSpecService {
    */
   createSkiSpec(userId: string, command: CreateSkiSpecCommand): Effect.Effect<SkiSpecDTO, SkiSpecError> {
     return pipe(
-      // Step 1: Calculate surface area (pure, always succeeds)
-      Effect.succeed(
-        this.calculateSurfaceArea({
+      // Step 1: Calculate derived fields (surface_area, relative_weight)
+      this.equation.calculate(
+        {
           length: command.length,
           tip: command.tip,
           waist: command.waist,
           tail: command.tail,
           radius: command.radius,
-        })
+        },
+        command.weight
       ),
 
-      // Step 2: Calculate relative weight (can fail)
-      Effect.flatMap((surfaceArea) =>
-        pipe(
-          this.calculateRelativeWeight(command.weight, surfaceArea),
-          Effect.map((relativeWeight) => ({ surfaceArea, relativeWeight }))
-        )
-      ),
-
-      // Step 3: Prepare insert data
-      Effect.map(({ surfaceArea, relativeWeight }) => ({
+      // Step 2: Prepare insert data
+      Effect.map(({ surface_area, relative_weight }) => ({
         user_id: userId,
         name: command.name.trim(),
         description: command.description?.trim() || null,
@@ -141,12 +64,12 @@ export class SkiSpecService {
         tail: command.tail,
         radius: command.radius,
         weight: command.weight,
-        surface_area: surfaceArea,
-        relative_weight: relativeWeight,
-        algorithm_version: this.getCurrentAlgorithmVersion(),
+        surface_area,
+        relative_weight,
+        algorithm_version: this.equation.getCurrentAlgorithmVersion(),
       })),
 
-      // Step 4: Insert into database
+      // Step 3: Insert into database
       Effect.flatMap((insertData) =>
         Effect.tryPromise({
           try: () => this.supabase.from('ski_specs').insert(insertData).select().single(),
@@ -159,7 +82,7 @@ export class SkiSpecService {
         })
       ),
 
-      // Step 5: Validate response data
+      // Step 4: Validate response data
       Effect.flatMap(({ data, error }) => {
         if (error) {
           return Effect.fail(
@@ -183,7 +106,7 @@ export class SkiSpecService {
         return Effect.succeed(data);
       }),
 
-      // Step 6: Add notes_count (always 0 for new specs)
+      // Step 5: Add notes_count (always 0 for new specs)
       Effect.map((data) => ({ ...data, notes_count: 0 }))
     );
   }
@@ -431,27 +354,20 @@ export class SkiSpecService {
 
       // Step 3: Calculate derived fields
       Effect.flatMap(() =>
-        pipe(
-          Effect.succeed(
-            this.calculateSurfaceArea({
-              length: command.length,
-              tip: command.tip,
-              waist: command.waist,
-              tail: command.tail,
-              radius: command.radius,
-            })
-          ),
-          Effect.flatMap((surfaceArea) =>
-            pipe(
-              this.calculateRelativeWeight(command.weight, surfaceArea),
-              Effect.map((relativeWeight) => ({ surfaceArea, relativeWeight }))
-            )
-          )
+        this.equation.calculate(
+          {
+            length: command.length,
+            tip: command.tip,
+            waist: command.waist,
+            tail: command.tail,
+            radius: command.radius,
+          },
+          command.weight
         )
       ),
 
       // Step 4: Prepare update data
-      Effect.map(({ surfaceArea, relativeWeight }) => ({
+      Effect.map(({ surface_area, relative_weight }) => ({
         name: command.name.trim(),
         description: command.description?.trim() || null,
         length: command.length,
@@ -460,9 +376,9 @@ export class SkiSpecService {
         tail: command.tail,
         radius: command.radius,
         weight: command.weight,
-        surface_area: surfaceArea,
-        relative_weight: relativeWeight,
-        algorithm_version: this.getCurrentAlgorithmVersion(),
+        surface_area,
+        relative_weight,
+        algorithm_version: this.equation.getCurrentAlgorithmVersion(),
       })),
 
       // Step 5: Update in database

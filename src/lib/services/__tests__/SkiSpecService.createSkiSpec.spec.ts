@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { Effect } from 'effect';
 import { SkiSpecService } from '../SkiSpecService';
+import { SkiSurfaceEquationSimple } from '../SkiSurfaceEquationSimple';
 import { DatabaseError } from '@/types/error.types';
 import type { SupabaseClient } from '@/db/supabase.client';
 import { TEST_USER_ID, createValidSkiSpecCommand, createSkiSpecEntity } from './test-utils';
@@ -25,7 +26,8 @@ describe('SkiSpecService - createSkiSpec', () => {
       from: vi.fn(),
     } as unknown as SupabaseClient;
 
-    service = new SkiSpecService(mockSupabase);
+    const equation = new SkiSurfaceEquationSimple();
+    service = new SkiSpecService(mockSupabase, equation);
   });
 
   it('should create a ski specification successfully', async () => {

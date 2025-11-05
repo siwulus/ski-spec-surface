@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { Effect } from 'effect';
 import { SkiSpecService } from '../SkiSpecService';
+import { SkiSurfaceEquationSimple } from '../SkiSurfaceEquationSimple';
 import { NotFoundError, DatabaseError } from '@/types/error.types';
 import type { SupabaseClient } from '@/db/supabase.client';
 import type { ListNotesQuery } from '@/types/api.types';
@@ -38,7 +39,8 @@ describe('SkiSpecService - Note Management', () => {
       from: vi.fn(),
     } as unknown as SupabaseClient;
 
-    service = new SkiSpecService(mockSupabase);
+    const equation = new SkiSurfaceEquationSimple();
+    service = new SkiSpecService(mockSupabase, equation);
   });
 
   // ==========================================================================

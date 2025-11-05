@@ -3,6 +3,7 @@ import { DatabaseError, NotFoundError } from '@/types/error.types';
 import { Effect } from 'effect';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { SkiSpecService } from '../SkiSpecService';
+import { SkiSurfaceEquationSimple } from '../SkiSurfaceEquationSimple';
 import { TEST_SPEC_ID, TEST_USER_ID } from './test-utils';
 
 /**
@@ -25,7 +26,8 @@ describe('SkiSpecService - deleteSkiSpec', () => {
       from: vi.fn(),
     } as unknown as SupabaseClient;
 
-    service = new SkiSpecService(mockSupabase);
+    const equation = new SkiSurfaceEquationSimple();
+    service = new SkiSpecService(mockSupabase, equation);
   });
 
   it('should delete a ski specification successfully', async () => {
