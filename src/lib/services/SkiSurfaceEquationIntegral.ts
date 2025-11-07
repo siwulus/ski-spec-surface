@@ -122,7 +122,7 @@ export class SkiSurfaceEquationIntegral implements SkiSurfaceEquation {
         return { sections, widths_cm };
       }),
       // Step 4: Calculate total surface area using integral formulas
-      Effect.flatMap(this.calculateSurfaceArea),
+      Effect.flatMap((data) => this.calculateSurfaceArea(data)),
       // Step 6: Calculate relative weight and round results to 2 decimal places
       Effect.map((surface_area) => {
         const roundedSurfaceArea = Math.round(surface_area * 100) / 100;
@@ -163,7 +163,7 @@ export class SkiSurfaceEquationIntegral implements SkiSurfaceEquation {
       const l_tip = this.tipRatio * totalLength;
       const l_front = totalLength - l_back - l_tip;
       return { l_back, l_front, l_tip };
-    }).pipe(Effect.flatMap(this.validateSections));
+    }).pipe(Effect.flatMap((sections) => this.validateSections(sections)));
   }
 
   /**
@@ -219,7 +219,7 @@ export class SkiSurfaceEquationIntegral implements SkiSurfaceEquation {
    * @private
    */
   private calculateBackSectionArea(l_back: number, w_tail_cm: number, w_waist_cm: number): number {
-    return ((w_tail_cm - w_waist_cm) * Math.pow(l_back, 3)) / (6 * Math.pow(l_back, 2)) + (w_waist_cm * l_back) / 2;
+    return l_back * (w_tail_cm / 6 + w_waist_cm / 3);
   }
 
   /**
@@ -237,7 +237,7 @@ export class SkiSurfaceEquationIntegral implements SkiSurfaceEquation {
    * @private
    */
   private calculateFrontSectionArea(l_front: number, w_tip_cm: number, w_waist_cm: number): number {
-    return ((w_tip_cm - w_waist_cm) * Math.pow(l_front, 3)) / (6 * Math.pow(l_front, 2)) + (w_waist_cm * l_front) / 2;
+    return l_front * (w_tip_cm / 6 + w_waist_cm / 3);
   }
 
   /**
@@ -250,7 +250,7 @@ export class SkiSurfaceEquationIntegral implements SkiSurfaceEquation {
    */
   private calculateTipSectionArea(l_tip: number, w_tip_cm: number): Effect.Effect<number, BusinessLogicError> {
     return Effect.succeed(Math.log(l_tip + 1)).pipe(
-      Effect.flatMap(this.validateLogarithmDenominator),
+      Effect.flatMap((lnDenominator) => this.validateLogarithmDenominator(lnDenominator)),
       Effect.map((lnDenominator) => {
         const coefficient = w_tip_cm / (2 * lnDenominator); //p
         const integralValue = (l_tip + 1) * lnDenominator - l_tip;
@@ -262,14 +262,14 @@ export class SkiSurfaceEquationIntegral implements SkiSurfaceEquation {
 
   private validateLogarithmDenominator(lnDenominator: number): Effect.Effect<number, BusinessLogicError> {
     return Effect.if(Math.abs(lnDenominator) < 1e-10, {
-      onTrue: () => Effect.succeed(lnDenominator),
-      onFalse: () =>
+      onTrue: () =>
         Effect.fail(
           new BusinessLogicError('Logarithm denominator too close to zero in tip section calculation', {
             code: 'INVALID_TIP_CALCULATION',
             context: { lnDenominator },
           })
         ),
+      onFalse: () => Effect.succeed(lnDenominator),
     });
   }
 
