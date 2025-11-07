@@ -34,7 +34,7 @@ interface WidthsCm {
  * The total surface area is calculated by integrating the width functions along the length
  * of each section and multiplying by 2 to account for both sides of the ski.
  *
- * Mathematical specification: See .ai/ski-surface-equation.md
+ * Mathematical specification: See .ai/ski-surface-equation.md (repository root)
  *
  * @see {SkiSurfaceEquation}
  */
@@ -112,7 +112,7 @@ export class SkiSurfaceEquationIntegral implements SkiSurfaceEquation {
     return pipe(
       // Step 1: Calculate section lengths from total length
       this.calculateSectionLengths(dimensions.length),
-      // Step 3: Convert widths from mm to cm
+      // Step 2: Convert widths from mm to cm
       Effect.map((sections) => {
         const widths_cm: WidthsCm = {
           tip: dimensions.tip / 10,
@@ -121,9 +121,9 @@ export class SkiSurfaceEquationIntegral implements SkiSurfaceEquation {
         };
         return { sections, widths_cm };
       }),
-      // Step 4: Calculate total surface area using integral formulas
+      // Step 3: Calculate total surface area using integral formulas
       Effect.flatMap((data) => this.calculateSurfaceArea(data)),
-      // Step 6: Calculate relative weight and round results to 2 decimal places
+      // Step 4: Calculate relative weight and round results to 2 decimal places
       Effect.map((surface_area) => {
         const roundedSurfaceArea = Math.round(surface_area * 100) / 100;
         const relativeWeight = weight / roundedSurfaceArea;
@@ -252,7 +252,7 @@ export class SkiSurfaceEquationIntegral implements SkiSurfaceEquation {
     return Effect.succeed(Math.log(l_tip + 1)).pipe(
       Effect.flatMap((lnDenominator) => this.validateLogarithmDenominator(lnDenominator)),
       Effect.map((lnDenominator) => {
-        const coefficient = w_tip_cm / (2 * lnDenominator); //p
+        const coefficient = w_tip_cm / (2 * lnDenominator);
         const integralValue = (l_tip + 1) * lnDenominator - l_tip;
         const area = coefficient * integralValue;
         return area;
