@@ -6,7 +6,7 @@ import { Effect, pipe } from 'effect';
 
 import { SkiSpecService } from '@/lib/services/SkiSpecService';
 import { SkiSpecImportExportService } from '@/lib/services/SkiSpecImportExportService';
-import { SkiSurfaceEquationSimple } from '@/lib/services/SkiSurfaceEquationSimple';
+import { SkiSurfaceEquationIntegral } from '@/lib/services/SkiSurfaceEquationIntegral';
 import { wrapErrorEffect } from '@/lib/utils/error';
 import { AuthenticationError, logError, type SkiSpecError } from '@/types/error.types';
 
@@ -220,7 +220,7 @@ export const onRequest = defineMiddleware(async ({ locals, cookies, url, request
       // Set locals for downstream handlers
       locals.user = result.user;
       locals.supabase = result.supabase;
-      const equation = new SkiSurfaceEquationSimple();
+      const equation = new SkiSurfaceEquationIntegral();
       locals.skiSpecService = new SkiSpecService(result.supabase, equation);
       locals.skiSpecImportExportService = new SkiSpecImportExportService(locals.skiSpecService);
 
