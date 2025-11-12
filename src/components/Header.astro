@@ -43,10 +43,10 @@ const isAuthenticated = !!user;
         ) : (
           // <!-- Show login/register buttons for guests -->
           <div class="flex items-center gap-2">
-            <Button variant="default" size="sm" asChild>
+            <Button size="sm">
               <a href="/auth/login">Log in</a>
             </Button>
-            <Button variant="secondary" size="sm" asChild>
+            <Button variant="outline" size="sm">
               <a href="/auth/register">Sign up</a>
             </Button>
           </div>

@@ -46,7 +46,17 @@ export const SkiSpecCard: React.FC<SkiSpecCardProps> = ({
     <Card data-testid={`ski-spec-card-${spec.id}`} className={isSelected ? 'ring-2 ring-primary bg-primary/5' : ''}>
       <CardHeader>
         <div className="flex items-start justify-between gap-2">
-          <CardTitle className="flex-1">{spec.name}</CardTitle>
+          <CardTitle className="flex-1">
+            <button
+              onClick={handleViewDetails}
+              disabled={isInProgress}
+              className="text-left w-full hover:text-primary transition-colors cursor-pointer hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-sm"
+              aria-label={`View details for ${spec.name}`}
+              data-testid={`ski-spec-card-title-${spec.id}`}
+            >
+              {spec.name}
+            </button>
+          </CardTitle>
           {selectionMode && (
             <div className="flex items-center">
               <Checkbox
