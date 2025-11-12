@@ -35,7 +35,7 @@ export class SkiSpecsPage extends AbstractPage {
     this.header = page.getByTestId('ski-spec-grid-header');
     this.addButton = page.getByRole('button', { name: /add/i }).first();
     this.searchInput = page.getByRole('searchbox');
-    this.skiSpecCards = page.locator('[data-testid*="ski-spec-card"]');
+    this.skiSpecCards = page.locator('[data-testid^="ski-spec-card-"]:not([data-testid*="title"])');
 
     // Form dialog locators
     this.formDialog = page.getByRole('dialog');
@@ -223,7 +223,7 @@ export class SkiSpecsPage extends AbstractPage {
    * @param name - The name of the ski specification to find
    */
   getSkiSpecCardByName(name: string): Locator {
-    return this.page.locator(`[data-testid*="ski-spec-card"]:has-text("${name}")`);
+    return this.page.locator(`[data-testid^="ski-spec-card-"]:not([data-testid*="title"]):has-text("${name}")`);
   }
 
   /**
