@@ -20,10 +20,10 @@ export const SkiDiagram: React.FC<SkiDiagramProps> = ({ spec }) => {
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger>
-              <SpecValue value={spec.tail} unit="mm" />
+              <SpecValue value={spec.tip} unit="mm" />
             </TooltipTrigger>
             <TooltipContent>
-              <p>Tail width</p>
+              <p>Tip width</p>
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
@@ -42,10 +42,10 @@ export const SkiDiagram: React.FC<SkiDiagramProps> = ({ spec }) => {
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger>
-              <SpecValue value={spec.tip} unit="mm" />
+              <SpecValue value={spec.tail} unit="mm" />
             </TooltipTrigger>
             <TooltipContent>
-              <p>Tip width</p>
+              <p>Tail width</p>
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
@@ -56,7 +56,7 @@ export const SkiDiagram: React.FC<SkiDiagramProps> = ({ spec }) => {
         <Tooltip>
           <TooltipTrigger asChild>
             <div className="w-full">
-              <img src="/ski-spec.svg" alt="Ski dimensions diagram" className="w-full h-auto" />
+              <img src="/ski-spec.svg" alt="Ski dimensions diagram" className="w-full h-auto scale-x-[-1]" />
             </div>
           </TooltipTrigger>
           <TooltipContent>
