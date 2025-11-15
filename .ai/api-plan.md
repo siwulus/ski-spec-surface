@@ -1,3 +1,5 @@
+NOTE: Document not maintained, api spec moved to [swagger.yaml](../public/swagger.yaml) (generated and maintained with AI)
+
 # REST API Plan - Ski Surface Spec Extension
 
 ## 1. Resources
